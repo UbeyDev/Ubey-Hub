@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | All-in-One Farm & Utility Hub (With HWID Key System & Discord)
+-- UBEY HUB | All-in-One Farm & Utility Hub (Manual Key System Supabase)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -8,29 +8,47 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local SoundService = game:GetService("SoundService")
 local VirtualUser = game:GetService("VirtualUser")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Konfigurasi Supabase
+-- Konfigurasi Supabase (Tabel: Ubey_Project, Kolom: key_value)
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co"
 local SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3d3h2ZW14ZXp0Zml5dXVyaHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTAwMDIsImV4cCI6MjEwNjg4NjAwMn0.IQNQXBvOHyovn-fahzGR-yAt34-72LG6dyVtUJAa92c"
 
--- Fungsi untuk mendapatkan HWID unik executor
-local function getDeviceHWID()
-    local hwid = ""
+-- Fungsi Validasi Key langsung ke tabel Supabase kamu
+local function validateKey(inputKey)
+    local isValid = false
     pcall(function()
-        if getgenv().gethwid then
-            hwid = getgenv().gethwid()
-        elseif syn and syn.get_hwid then
-            hwid = syn.get_hwid()
-        elseif gethwid then
-            hwid = gethwid()
+        local url = SUPABASE_URL .. "/rest/v1/Ubey_Project?key_value=eq." .. HttpService:UrlEncode(inputKey)
+        local request = (syn and syn.request) or (http and http.request) or http_request or request
+        if request then
+            local res = request({
+                Url = url,
+                Method = "GET",
+                Headers = {
+                    ["apikey"] = SUPABASE_KEY,
+                    ["Authorization"] = "Bearer " .. SUPABASE_KEY
+                }
+            })
+            if res and res.StatusCode == 200 then
+                local data = HttpService:JSONDecode(res.Body)
+                if data and #data > 0 then
+                    isValid = true
+                end
+            end
         end
     end)
-    if hwid == "" then
-        hwid = "ROBLOX-FALLBACK-" .. tostring(LocalPlayer.UserId)
+    
+    -- Fallback lokal untuk cadangan/pengujian
+    if inputKey == "ubey2026" or inputKey == "UBEY_TEST" or inputKey == "UBEY_GANTENG" then
+        isValid = true
     end
-    return hwid
+    
+    return isValid
 end
 
 -- Otomatis menyalin link Discord ke clipboard perangkat
@@ -42,6 +60,106 @@ pcall(function()
     end
 end)
 
+------------------------------------------------------------------
+-- MANUAL KEY SYSTEM GUI
+------------------------------------------------------------------
+pcall(function()
+    if CoreGui:FindFirstChild("UbeyHubKeyScreen") then
+        CoreGui.UbeyHubKeyScreen:Destroy()
+    end
+end)
+
+local KeyGui = Instance.new("ScreenGui")
+KeyGui.Name = "UbeyHubKeyScreen"
+KeyGui.Parent = CoreGui
+KeyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "KeyMain"
+MainFrame.Parent = KeyGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -110)
+MainFrame.Size = UDim2.new(0, 320, 0, 220)
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 0, 0, 15)
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "🔑 UBEY HUB | Key System"
+TitleLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
+TitleLabel.TextSize = 18
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Parent = MainFrame
+SubTitle.BackgroundTransparency = 1
+SubTitle.Position = UDim2.new(0, 0, 0, 45)
+SubTitle.Size = UDim2.new(1, 0, 0, 25)
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.Text = "Masukkan key dari database Supabase"
+SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+SubTitle.TextSize = 12
+
+local TextBox = Instance.new("TextBox")
+TextBox.Parent = MainFrame
+TextBox.BackgroundColor3 = Color3.fromRGB(25, 35, 55)
+TextBox.BorderSizePixel = 0
+TextBox.Position = UDim2.new(0.1, 0, 0, 85)
+TextBox.Size = UDim2.new(0.8, 0, 0, 40)
+TextBox.Font = Enum.Font.Gotham
+TextBox.PlaceholderText = "Ketik key kamu di sini..."
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.PlaceholderColor3 = Color3.fromRGB(120, 130, 150)
+TextBox.TextSize = 14
+
+local BoxCorner = Instance.new("UICorner")
+BoxCorner.CornerRadius = UDim.new(0, 8)
+BoxCorner.Parent = TextBox
+
+local SubmitBtn = Instance.new("TextButton")
+SubmitBtn.Parent = MainFrame
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+SubmitBtn.BorderSizePixel = 0
+SubmitBtn.Position = UDim2.new(0.1, 0, 0, 140)
+SubmitBtn.Size = UDim2.new(0.8, 0, 0, 40)
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Text = "SUBMIT KEY"
+SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitBtn.TextSize = 14
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = SubmitBtn
+
+local keyVerified = false
+
+SubmitBtn.MouseButton1Click:Connect(function()
+    local enteredKey = TextBox.Text
+    SubmitBtn.Text = "MEMERIKSA..."
+    if validateKey(enteredKey) then
+        keyVerified = true
+        KeyGui:Destroy()
+    else
+        SubmitBtn.Text = "SALAH / KEY TIDAK VALID!"
+        SubmitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        task.wait(1.5)
+        SubmitBtn.Text = "SUBMIT KEY"
+        SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    end
+end)
+
+repeat task.wait(0.2) until keyVerified
+
+------------------------------------------------------------------
+-- LOAD RAYFIELD UI KETIKA KEY BENAR
+------------------------------------------------------------------
 local successRayfield, Rayfield = pcall(function()
     return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 end)
@@ -576,7 +694,7 @@ if FishingPhaseEvent then
     end)
 end
 
--- Rayfield Window (UBEY HUB with Key System)
+-- Rayfield Window Setup
 local Window = Rayfield:CreateWindow({
    Name = "🔥 UBEY HUB | Kebun Hangout & Farm 🚀",
    LoadingTitle = "🚀 UBEY HUB Loading...",
@@ -587,16 +705,7 @@ local Window = Rayfield:CreateWindow({
       Invite = "TRkVMKHwzD", 
       RememberJoins = true 
    },
-   KeySystem = true,
-   KeySettings = {
-      Title = "Ubey Hub - Key System",
-      Subtitle = "Aktivasi HWID Web Portal",
-      Note = "Dapatkan key di Discord: discord.gg/TRkVMKHwzD (Link tersalin otomatis!)",
-      FileName = "UbeyKeyStore",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      Key = {"UBEY_GANTENG"}
-   }
+   KeySystem = false -- Dinonaktifkan karena sudah menggunakan Manual Key System di atas
 })
 
 -- Tab 1: Home & Farm
@@ -1262,4 +1371,49 @@ task.spawn(function()
             task.wait(2)
         end
     end
+end)
+
+------------------------------------------------------------------
+-- DRAGGABLE FLOATING LOGO BUTTON (UNTUK MINIMALISASI RAYFIELD DI HP)
+------------------------------------------------------------------
+pcall(function()
+    if CoreGui:FindFirstChild("UbeyHubFloatingLogo") then
+        CoreGui.UbeyHubFloatingLogo:Destroy()
+    end
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "UbeyHubFloatingLogo"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local ImageButton = Instance.new("ImageButton")
+ImageButton.Name = "LogoButton"
+ImageButton.Parent = ScreenGui
+ImageButton.BackgroundColor3 = Color3.fromRGB(15, 25, 45)
+ImageButton.BorderColor3 = Color3.fromRGB(0, 170, 255)
+ImageButton.BorderSizePixel = 3
+ImageButton.Position = UDim2.new(0.05, 0, 0.15, 0)
+ImageButton.Size = UDim2.new(0, 52, 0, 52)
+ImageButton.Image = "rbxassetid://90770802417381"
+ImageButton.Active = true
+ImageButton.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.5, 0)
+UICorner.Parent = ImageButton
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = ImageButton
+UIStroke.Color = Color3.fromRGB(0, 190, 255)
+UIStroke.Thickness = 2
+
+ImageButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        Rayfield:ToggleUI()
+    end)
+    
+    TweenService:Create(ImageButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 44, 0, 44)}):Play()
+    task.wait(0.1)
+    TweenService:Create(ImageButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 52, 0, 52)}):Play()
 end)
