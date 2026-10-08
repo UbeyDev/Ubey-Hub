@@ -67,11 +67,12 @@ local function validateKey(inputKey)
     return isValid
 end
 
+-- Salin Link Discord Otomatis ke HP
 pcall(function()
     if setclipboard then
-        setclipboard("https://discord.gg/TRkVMKHwzD")
+        setclipboard("https://discord.gg/aCbAWe9PYB")
     elseif toclipboard then
-        toclipboard("https://discord.gg/TRkVMKHwzD")
+        toclipboard("https://discord.gg/aCbAWe9PYB")
     end
 end)
 
@@ -117,7 +118,7 @@ SubTitle.BackgroundTransparency = 1
 SubTitle.Position = UDim2.new(0, 0, 0, 45)
 SubTitle.Size = UDim2.new(1, 0, 0, 25)
 SubTitle.Font = Enum.Font.Gotham
-SubTitle.Text = "Masukkan key dari database Supabase"
+SubTitle.Text = "Masukkan key di sini"
 SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
 SubTitle.TextSize = 12
 
@@ -232,21 +233,16 @@ local function OptimizeRodSettings()
     end)
 end
 
--- Fungsi Auto Sell dengan Teleport ke NPC Penjual lalu kembali ke spot mancing
 local function TriggerSellToNpc()
     pcall(function()
         local character = LocalPlayer.Character
         local hrp = character and character:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
         
-        -- Simpan posisi spot mancing saat ini
         local currentSpotCFrame = hrp.CFrame
-        
-        -- Teleport ke NPC Penjual
         hrp.CFrame = NpcSellCFrame
         task.wait(0.8)
         
-        -- Eksekusi Jual Semua
         local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
         local jualSemua = mancing and mancing:FindFirstChild("JualSemua")
         if jualSemua then
@@ -254,7 +250,6 @@ local function TriggerSellToNpc()
         end
         task.wait(0.8)
         
-        -- Kembali lagi ke spot mancing jika auto fishing masih aktif
         if getgenv().AutoFishingEventRunning then
             hrp.CFrame = currentSpotCFrame
         end
@@ -285,7 +280,7 @@ local Tabs = {
 Fluent:Notify({ Title = "UBEY HUB Executed", Content = "Verifikasi Berhasil! Siap Digunakan.", Duration = 4 })
 
 ------------------------------------------------------------------
--- TAB 1: FISHING, DUAL TOGGLE & AUTO SELL TIMER KE NPC
+-- TAB 1: FISHING
 ------------------------------------------------------------------
 Tabs.Fishing:AddParagraph({
     Title = "Auto Farm Fishing & Location",
@@ -309,7 +304,6 @@ Tabs.Fishing:AddButton({
     end,
 })
 
--- TOMBOL 1: AUTO FISHING + TELEPORT KE LOKASI
 Tabs.Fishing:AddToggle("AutoFishTeleportToggle", {
     Title = "Smart Auto Fishing + Teleport Spot",
     Default = false
@@ -373,7 +367,6 @@ Tabs.Fishing:AddToggle("AutoFishTeleportToggle", {
     end
 end)
 
--- TOMBOL 2: AUTO FISHING BIASA DI TEMPAT (TANPA TELEPORT)
 Tabs.Fishing:AddToggle("AutoFishNormalToggle", {
     Title = "Smart Auto Fishing (Di Tempat Saja)",
     Default = false
@@ -473,7 +466,7 @@ Tabs.Fishing:AddInput("SellTimerInputBox", {
 end)
 
 ------------------------------------------------------------------
--- TAB 2: GALATAMA (AUTO JOIN EVENT)
+-- TAB 2: GALATAMA
 ------------------------------------------------------------------
 Tabs.Galatama:AddParagraph({
     Title = "Auto Event Galatama",
@@ -513,7 +506,7 @@ Tabs.Galatama:AddToggle("AutoGalatamaToggle", {
 end)
 
 ------------------------------------------------------------------
--- TAB 3: SUMMIT (AUTO FARM SUMMIT)
+-- TAB 3: SUMMIT
 ------------------------------------------------------------------
 Tabs.Summit:AddParagraph({
     Title = "Auto Summit Farm",
@@ -592,7 +585,7 @@ LocalPlayer.Idled:Connect(function()
 end)
 
 ------------------------------------------------------------------
--- TAB 5: PRIVACY (HIDE NAME & HIDE SUMMIT COUNT) - TERPISAH
+-- TAB 5: PRIVACY
 ------------------------------------------------------------------
 Tabs.Privacy:AddParagraph({
     Title = "Privacy & Content Creator Mode",
