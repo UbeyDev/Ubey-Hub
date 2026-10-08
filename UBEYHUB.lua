@@ -59,7 +59,8 @@ local function validateKey(inputKey)
         end
     end)
     
-    if inputKey == "ubey2026" or inputKey == "UBEY_TEST" then
+    -- Menggunakan UBEY_FREE sebagai key utama/fallback
+    if inputKey == "UBEY_FREE" then
         isValid = true
     end
     
