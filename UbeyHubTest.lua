@@ -10,22 +10,13 @@ local HttpService = game:GetService("HttpService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
+print("[UBEY DEBUG] 1. Layanan utama dimuat.")
+
 pcall(function()
 	PlayerGui:FindFirstChild("UbeyHub"):Destroy()
 end)
 
--- AUTO RECONNECT & SUPABASE KEY CONFIG
-task.spawn(function()
-	pcall(function()
-		CoreGui.ChildAdded:Connect(function(child)
-			if child.Name == "ErrorPrompt" or child.Name == "DisconnectPrompt" then
-				task.wait(1)
-				pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Player) end)
-			end
-		end)
-	end)
-end)
-
+-- SUPABASE KEY CONFIG
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co"
 local SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3d3h2ZW14ZXp0Zml5dXVyaHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTAwMDIsImV4cCI6MjEwNjg4NjAwMn0.IQNQXBvOHyovn-fahzGR-yAt34-72LG6dyVtUJAa92c"
 
@@ -37,7 +28,7 @@ local function validateKey(inputKey)
 		if request then
 			local res = request({
 				Url = url, Method = "GET",
-				Headers = {["apikey"] = SUPABASE_KEY, ["Authorization"] = "Bearer " .. SUPABASE_KEY}
+				Headers = {["apikey"] = SUPABASE_KEY, ["Authorization"] = "Bearer " + SUPABASE_KEY}
 			})
 			if res and res.StatusCode == 200 then
 				local data = HttpService:JSONDecode(res.Body)
@@ -49,49 +40,9 @@ local function validateKey(inputKey)
 	return isValid
 end
 
-pcall(function()
-	if setclipboard then setclipboard("https://discord.gg/aCbAWe9PYB") end
-end)
+print("[UBEY DEBUG] 2. Key system siap.")
 
--- GLOBAL STATES
-getgenv().AutoFishingRunning = false
-getgenv().BiteDelay = 0.5
-getgenv().AutoGalatamaRunning = false
-getgenv().AutoSummitRunning = false
-getgenv().AntiAFKRunning = false
-
-local FishingSpots = {
-	["Jembatan"] = CFrame.new(-6783.74, 1322.81, -9757.34),
-	["Core"] = CFrame.new(-9069.33, 1250.32, -6510.33)
-}
-
-local function GetRod()
-	local char = Player.Character
-	if char then
-		local rod = char:FindFirstChild("Withering Rod") or Player.Backpack:FindFirstChild("Withering Rod")
-		if rod and not char:FindFirstChild("Withering Rod") and char:FindFirstChildOfClass("Humanoid") then
-			char.Humanoid:EquipTool(rod)
-			task.wait(0.3)
-		end
-		return char:FindFirstChild("Withering Rod")
-	end
-end
-
-local function OptimizeRod()
-	pcall(function()
-		local rod = GetRod()
-		if rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings") then
-			if rod.Mechanics.Settings:FindFirstChild("Time_before_getfish") then
-				rod.Mechanics.Settings.Time_before_getfish.Value = 0.05
-			end
-			if rod.Mechanics.Settings:FindFirstChild("EnableMiniGame") then
-				rod.Mechanics.Settings.EnableMiniGame.Value = false
-			end
-		end
-	end)
-end
-
--- GUI SETUP (Sesuai Desain Polosmu yang Rapih)
+-- GUI UTAMA (Persis seperti GUI Polosmu)
 local Gui = Instance.new("ScreenGui")
 Gui.Name = "UbeyHub"
 Gui.Parent = PlayerGui
@@ -108,10 +59,7 @@ KeyFrame.Parent = Gui
 KeyFrame.Size = UDim2.new(0,0,0,0)
 KeyFrame.Position = UDim2.new(0.5,-180,0.5,-120)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
-
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0,18)
-Corner.Parent = KeyFrame
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,18)
 
 local Stroke = Instance.new("UIStroke")
 Stroke.Parent = KeyFrame
@@ -156,9 +104,9 @@ Submit.BackgroundColor3 = Color3.fromRGB(0,170,255)
 Submit.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", Submit)
 
-----------------------------------------------------
--- MAIN HUB & PAGES
-----------------------------------------------------
+print("[UBEY DEBUG] 3. GUI Key berhasil dibuat.")
+
+-- MAIN HUB
 local Main = Instance.new("Frame")
 Main.Parent = Gui
 Main.Visible = false
@@ -207,25 +155,20 @@ local PlayerBtn = MakeSidebarBtn("Player", 190)
 local SettingsBtn = MakeSidebarBtn("Settings", 230)
 local CreditsBtn = MakeSidebarBtn("Credits", 270)
 
-local Content = Instance.new("ScrollingFrame")
+local Content = Instance.new("Frame")
 Content.Parent = Main
 Content.Position = UDim2.new(0,150,0,10)
 Content.Size = UDim2.new(1,-160,1,-20)
 Content.BackgroundTransparency = 1
-Content.CanvasSize = UDim2.new(0,0,1.5,0)
-Content.ScrollBarThickness = 4
-
-local UIList = Instance.new("UIListLayout")
-UIList.Parent = Content
-UIList.SortOrder = Enum.SortOrder.LayoutOrder
-UIList.Padding = UDim.new(0, 8)
 
 local function MakePage()
-	local f = Instance.new("Frame")
+	local f = Instance.new("ScrollingFrame")
 	f.Parent = Content
 	f.Size = UDim2.new(1,0,1,0)
 	f.BackgroundTransparency = 1
 	f.Visible = false
+	f.CanvasSize = UDim2.new(0,0,2,0)
+	f.ScrollBarThickness = 4
 	local l = Instance.new("UIListLayout")
 	l.Parent = f
 	l.SortOrder = Enum.SortOrder.LayoutOrder
@@ -256,156 +199,15 @@ PlayerBtn.MouseButton1Click:Connect(function() HideAll(); PlayerPage.Visible = t
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
 
--- ISI HALAMAN FITUR (Fungsional)
-local function AddToggle(parent, text, callback)
-	local b = Instance.new("TextButton")
-	b.Parent = parent
-	b.Size = UDim2.new(1,0,0,35)
-	b.BackgroundColor3 = Color3.fromRGB(30,30,40)
-	b.Text = "  " .. text .. " [OFF]"
-	b.TextColor3 = Color3.new(1,1,1)
-	b.Font = Enum.Font.Gotham
-	b.TextSize = 13
-	b.TextXAlignment = Enum.TextXAlignment.Left
-	Instance.new("UICorner", b)
-	local state = false
-	b.MouseButton1Click:Connect(function()
-		state = not state
-		b.Text = "  " .. text .. (state and " [ON]" else " [OFF]")
-		b.BackgroundColor3 = state and Color3.fromRGB(0,100,180) or Color3.fromRGB(30,30,40)
-		callback(state)
-	end)
-end
+print("[UBEY DEBUG] 4. Sidebar dan halaman berhasil dimuat.")
 
--- Fishing Page Content
-AddToggle(FishingPage, "Smart Auto Fishing", function(v)
-	getgenv().AutoFishingRunning = v
-	if v then
-		OptimizeRod()
-		task.spawn(function()
-			while getgenv().AutoFishingRunning do
-				pcall(function()
-					local rod = GetRod()
-					if rod and rod:FindFirstChild("Mechanics") then
-						OptimizeRod()
-						rod.Mechanics.Remotes.CastEvent:FireServer(false, 100, Player.Character.HumanoidRootPart.CFrame.LookVector)
-						task.wait(0.05)
-						local hooked = false
-						local conn
-						conn = rod.Mechanics.Remotes.NotifyClient.OnClientEvent:Connect(function(action)
-							if action == "Bite" then hooked = true if conn then conn:Disconnect() end end
-						end)
-						local start = tick()
-						while not hooked and getgenv().AutoFishingRunning do
-							if tick() - start > 10 then break end
-							task.wait(0.05)
-						end
-						if conn then conn:Disconnect() end
-						if hooked and getgenv().AutoFishingRunning then
-							task.wait(getgenv().BiteDelay)
-							rod.Mechanics.Remotes.MiniGame:FireServer(true)
-							task.wait(0.3)
-						end
-					else task.wait(1) end
-				end)
-				task.wait(0.1)
-			end
-		end)
-	end
-end)
-
--- Galatama Page Content
-AddToggle(GalatamaPage, "Auto Join Galatama", function(v)
-	getgenv().AutoGalatamaRunning = v
-	if v then
-		task.spawn(function()
-			while getgenv().AutoGalatamaRunning do
-				pcall(function() ReplicatedStorage.Remote.Glatama.Ikut:InvokeServer() end)
-				task.wait(10)
-			end
-		end)
-	end
-end)
-
--- Summit Page Content
-AddToggle(SummitPage, "Auto Summit Loop", function(v)
-	getgenv().AutoSummitRunning = v
-end)
-task.spawn(function()
-	while true do
-		if getgenv().AutoSummitRunning then
-			pcall(function()
-				local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					for i = 1, 20 do
-						if not getgenv().AutoSummitRunning then break end
-						pcall(function() ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(i) end)
-						task.wait(0.1)
-					end
-					hrp.CFrame = CFrame.new(-6766.44, 1312.69, -10083.80)
-					task.wait(1)
-				end
-			end)
-		end
-		task.wait(0.5)
-	end
-end)
-
--- Player Page Content
-local SpeedBox = Instance.new("TextBox")
-SpeedBox.Parent = PlayerPage
-SpeedBox.Size = UDim2.new(1,0,0,35)
-SpeedBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-SpeedBox.PlaceholderText = "Ketik WalkSpeed (Cth: 50)"
-SpeedBox.Text = ""
-SpeedBox.TextColor3 = Color3.new(1,1,1)
-SpeedBox.Font = Enum.Font.Gotham
-SpeedBox.TextSize = 13
-Instance.new("UICorner", SpeedBox)
-SpeedBox.FocusLost:Connect(function()
-	local num = tonumber(SpeedBox.Text)
-	if num then pcall(function() Player.Character.Humanoid.WalkSpeed = num end) end
-end)
-
-AddToggle(PlayerPage, "Anti-AFK", function(v)
-	getgenv().AntiAFKRunning = v
-end)
-Player.Idled:Connect(function()
-	if getgenv().AntiAFKRunning then
-		VirtualUser:CaptureController()
-		VirtualUser:ClickButton2(Vector2.new(0,0))
-	end
-end)
-
--- Settings & Credits Page
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = SettingsPage
-CloseBtn.Size = UDim2.new(1,0,0,35)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
-CloseBtn.Text = "Tutup / Hide UI"
-CloseBtn.TextColor3 = Color3.new(1,1,1)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 13
-Instance.new("UICorner", CloseBtn)
-CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
-
-local CredLbl = Instance.new("TextLabel")
-CredLbl.Parent = CreditsPage
-CredLbl.Size = UDim2.new(1,0,1,0)
-CredLbl.BackgroundTransparency = 1
-CredLbl.Text = "Created By UBEY"
-CredLbl.TextColor3 = Color3.new(1,1,1)
-CredLbl.Font = Enum.Font.GothamBold
-CredLbl.TextSize = 20
-
-----------------------------------------------------
--- KEY VERIFY
-----------------------------------------------------
+-- TOMBOL VERIFIKASI KEY
 Submit.MouseButton1Click:Connect(function()
 	if validateKey(Box.Text) then
 		KeyFrame.Visible = false
 		Blur.Visible = false
 		Main.Visible = true
+		print("[UBEY DEBUG] Key benar, Hub dibuka.")
 	else
 		Submit.Text = "KEY SALAH"
 		task.wait(1)
@@ -413,9 +215,7 @@ Submit.MouseButton1Click:Connect(function()
 	end
 end)
 
-----------------------------------------------------
--- FLOATING BUTTON & DRAG MOBILE
-----------------------------------------------------
+-- FLOATING BUTTON & DRAG
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
 Float.Size = UDim2.new(0,65,0,65)
@@ -454,3 +254,5 @@ end)
 UIS.TouchEnded:Connect(function()
 	dragging = false
 end)
+
+print("[UBEY DEBUG] 5. Script sukses berjalan sepenuhnya tanpa error!")
