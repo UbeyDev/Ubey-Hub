@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Custom GUI + All Features (Fishing, Sell, Galatama, Summit, Privacy)
+-- UBEY HUB V3 | Custom GUI + Perfect Padding on All Pages
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -251,7 +251,7 @@ HubTitle.Font = Enum.Font.GothamBold
 HubTitle.TextColor3 = Color3.fromRGB(0,170,255)
 HubTitle.TextSize = 20
 
--- Tombol Sidebar (Disesuaikan untuk 6 Menu Lengkap)
+-- Tombol Sidebar
 local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
 HomeBtn.Position = UDim2.new(0,10,0,65)
@@ -309,8 +309,14 @@ local function MakePage()
 	f.Size = UDim2.new(1,0,1,0)
 	f.BackgroundTransparency = 1
 	f.Visible = false
-	f.CanvasSize = UDim2.new(0,0,2.5,0)
+	f.CanvasSize = UDim2.new(0,0,3,0)
 	f.ScrollBarThickness = 4
+	
+	-- Menambahkan padding atas di setiap halaman agar tidak terlalu naik
+	local pad = Instance.new("UIPadding")
+	pad.Parent = f
+	pad.PaddingTop = UDim.new(0, 15)
+	
 	local l = Instance.new("UIListLayout")
 	l.Parent = f
 	l.SortOrder = Enum.SortOrder.LayoutOrder
@@ -372,12 +378,11 @@ local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
 TitleFish.Size = UDim2.new(1,0,0,30)
 TitleFish.BackgroundTransparency = 1
-TitleFish.Text = "--- AUTO FISHING & SELL ---"
+TitleFish.Text = "🔥 AUTO FISHING & SELL UTILITIES"
 TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
--- Dropdown Lokasi Mancing (Sederhana via Tombol Pilihan)
 local SpotLabel = Instance.new("TextLabel")
 SpotLabel.Parent = FishingPage
 SpotLabel.Size = UDim2.new(1,0,0,25)
@@ -463,7 +468,69 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	end
 end)
 
--- Auto Sell Timer Toggle & Input
+AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
+	getgenv().AutoFishingEventRunning = v
+	if v then
+		OptimizeRodSettings()
+		task.spawn(function()
+			while getgenv().AutoFishingEventRunning do
+				pcall(function()
+					local rod = GetRod()
+					if rod and rod:FindFirstChild("Mechanics") then
+						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
+						if remoteFolder then
+							OptimizeRodSettings()
+							local hrp = LocalPlayer.Character.HumanoidRootPart
+							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
+							
+							task.wait(0.05)
+							local hooked = false
+							local conn
+							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+								if actionType == "Bite" then
+									hooked = true
+									if conn then conn:Disconnect() end
+								end
+							end)
+							
+							local start = tick()
+							while not hooked and getgenv().AutoFishingEventRunning do
+								if tick() - start > 10 then break end
+								task.wait(0.05)
+							end
+							if conn then conn:Disconnect() end
+							
+							if hooked and getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+								task.wait(currentDelay)
+								remoteFolder.MiniGame:FireServer(true)
+								task.wait(0.3)
+							end
+						end
+					else
+						task.wait(1)
+					end
+				end)
+				task.wait(0.1)
+			end
+		end)
+	end
+end)
+
+local BiteDelayBox = Instance.new("TextBox")
+BiteDelayBox.Parent = FishingPage
+BiteDelayBox.Size = UDim2.new(1,0,0,35)
+BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
+BiteDelayBox.Text = "0.5"
+BiteDelayBox.TextColor3 = Color3.new(1,1,1)
+BiteDelayBox.Font = Enum.Font.Gotham
+BiteDelayBox.TextSize = 12
+Instance.new("UICorner", BiteDelayBox)
+BiteDelayBox.FocusLost:Connect(function()
+	getgenv().BiteDelayInput = BiteDelayBox.Text
+end)
+
 AddToggle(FishingPage, "Auto Sell Timer ke NPC", function(v)
 	getgenv().AutoSellRunning = v
 	if v then
@@ -499,6 +566,15 @@ end)
 ----------------------------------------------------
 -- 2. GALATAMA PAGE
 ----------------------------------------------------
+local TitleGal = Instance.new("TextLabel")
+TitleGal.Parent = GalatamaPage
+TitleGal.Size = UDim2.new(1,0,0,30)
+TitleGal.BackgroundTransparency = 1
+TitleGal.Text = "🏆 GALATAMA AUTO JOIN"
+TitleGal.TextColor3 = Color3.fromRGB(0,170,255)
+TitleGal.Font = Enum.Font.GothamBold
+TitleGal.TextSize = 13
+
 AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 	getgenv().AutoGalatamaRunning = v
 	if v then
@@ -520,6 +596,15 @@ end)
 ----------------------------------------------------
 -- 3. SUMMIT PAGE
 ----------------------------------------------------
+local TitleSum = Instance.new("TextLabel")
+TitleSum.Parent = SummitPage
+TitleSum.Size = UDim2.new(1,0,0,30)
+TitleSum.BackgroundTransparency = 1
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM"
+TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
+TitleSum.Font = Enum.Font.GothamBold
+TitleSum.TextSize = 13
+
 AddToggle(SummitPage, "Auto Summit Loop", function(v)
 	getgenv().AutoSummitRunning = v
 end)
@@ -549,6 +634,15 @@ end)
 ----------------------------------------------------
 -- 4. PLAYER PAGE
 ----------------------------------------------------
+local TitlePly = Instance.new("TextLabel")
+TitlePly.Parent = PlayerPage
+TitlePly.Size = UDim2.new(1,0,0,30)
+TitlePly.BackgroundTransparency = 1
+TitlePly.Text = "⚡ PLAYER SETTINGS"
+TitlePly.TextColor3 = Color3.fromRGB(0,170,255)
+TitlePly.Font = Enum.Font.GothamBold
+TitlePly.TextSize = 13
+
 local SpeedBox = Instance.new("TextBox")
 SpeedBox.Parent = PlayerPage
 SpeedBox.Size = UDim2.new(1,0,0,35)
@@ -577,6 +671,15 @@ end)
 ----------------------------------------------------
 -- 5. PRIVACY PAGE
 ----------------------------------------------------
+local TitlePrv = Instance.new("TextLabel")
+TitlePrv.Parent = PrivacyPage
+TitlePrv.Size = UDim2.new(1,0,0,30)
+TitlePrv.BackgroundTransparency = 1
+TitlePrv.Text = "🛡️ PRIVACY & CREATOR MODE"
+TitlePrv.TextColor3 = Color3.fromRGB(0,170,255)
+TitlePrv.Font = Enum.Font.GothamBold
+TitlePrv.TextSize = 13
+
 local FakeNameBox = Instance.new("TextBox")
 FakeNameBox.Parent = PrivacyPage
 FakeNameBox.Size = UDim2.new(1,0,0,35)
@@ -624,6 +727,15 @@ end)
 ----------------------------------------------------
 -- 6. SETTINGS & CREDITS PAGE
 ----------------------------------------------------
+local TitleSet = Instance.new("TextLabel")
+TitleSet.Parent = SettingsPage
+TitleSet.Size = UDim2.new(1,0,0,30)
+TitleSet.BackgroundTransparency = 1
+TitleSet.Text = "⚙️ SETTINGS HUB"
+TitleSet.TextColor3 = Color3.fromRGB(0,170,255)
+TitleSet.Font = Enum.Font.GothamBold
+TitleSet.TextSize = 13
+
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = SettingsPage
 CloseBtn.Size = UDim2.new(1,0,0,35)
