@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | All-in-One Farm & Utility Hub (Manual Key System Supabase)
+-- UBEY HUB | All-in-One Farm & Utility Hub (Custom GUI & Supabase Key System)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -15,11 +15,11 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Konfigurasi Supabase (Tabel: Ubey_Project, Kolom: key_value)
+-- Konfigurasi Supabase
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co"
 local SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3d3h2ZW14ZXp0Zml5dXVyaHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTAwMDIsImV4cCI6MjEwNjg4NjAwMn0.IQNQXBvOHyovn-fahzGR-yAt34-72LG6dyVtUJAa92c"
 
--- Fungsi Validasi Key langsung ke tabel Supabase kamu
+-- Fungsi Validasi Key ke Supabase
 local function validateKey(inputKey)
     local isValid = false
     pcall(function()
@@ -44,19 +44,19 @@ local function validateKey(inputKey)
     end)
     
     -- Fallback lokal untuk cadangan/pengujian
-    if inputKey == "ubey2026" or inputKey == "UBEY_TEST" or inputKey == "UBEY_GANTENG" then
+    if inputKey == "UBEY_FREE" or inputKey == "" then
         isValid = true
     end
     
     return isValid
 end
 
--- Otomatis menyalin link Discord ke clipboard perangkat
+-- Salin Link Discord Otomatis ke Clipboard HP
 pcall(function()
     if setclipboard then
-        setclipboard("https://discord.gg/TRkVMKHwzD")
+        setclipboard("https://discord.gg/aCbAWe9PYB")
     elseif toclipboard then
-        toclipboard("https://discord.gg/TRkVMKHwzD")
+        toclipboard("https://discord.gg/aCbAWe9PYB")
     end
 end)
 
@@ -102,7 +102,7 @@ SubTitle.BackgroundTransparency = 1
 SubTitle.Position = UDim2.new(0, 0, 0, 45)
 SubTitle.Size = UDim2.new(1, 0, 0, 25)
 SubTitle.Font = Enum.Font.Gotham
-SubTitle.Text = "Masukkan key dari database Supabase"
+SubTitle.Text = "Masukkan Key Di Sini"
 SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
 SubTitle.TextSize = 12
 
@@ -158,14 +158,8 @@ end)
 repeat task.wait(0.2) until keyVerified
 
 ------------------------------------------------------------------
--- LOAD RAYFIELD UI KETIKA KEY BENAR
+-- MULAI FITUR UTAMA GAME KEBUN & FARM
 ------------------------------------------------------------------
-local successRayfield, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
-
-if not successRayfield or not Rayfield then return end
-
 -- Remote Events (Sawah)
 local SeedShopRemotes = ReplicatedStorage:WaitForChild("SeedShopRemotes", 5)
 local BuySeedEvent = SeedShopRemotes and SeedShopRemotes:WaitForChild("BuySeed", 5)
@@ -194,13 +188,16 @@ local FishingPhaseEvent = FishingRemotes and FishingRemotes:WaitForChild("Phase"
 -- Konfigurasi Default & Pilihan Bibit
 getgenv().SelectedSeed = "Matahari"
 getgenv().AutoSellInterval = 5
+getgenv().AutoSellChickenInterval = 5
+getgenv().AutoSellButterflyInterval = 5
 local SawahModel = Workspace:WaitForChild("Sawah", 5)
 local MAX_PLANTS = 30
 
--- Koordinat Sawah, Water & Sumur
+-- Koordinat Sawah, Water, Fishing Spot & Tempat Jual Baru
 local PlantPosition = Vector3.new(-15.134395599365234, 10.973939895629883, -473.38986206054688)
 local WaterPosition = Vector3.new(-15.134395599365234, 13.673937797546387, -473.38986206054688)
 local FishingCastTarget = Vector3.new(-92.823776245117188, 8, -305.47808837890625)
+local FishingTeleportSpot = CFrame.new(-95.3258133, 12.2262278, -296.833588, 0.758470535, -7.62254473e-08, -0.651707351, -8.10995271e-09, 1, -1.26401218e-07, 0.651707351, 1.01156921e-07, 0.758470535)
 
 local SellCFrame = CFrame.new(
     -6.58236408, 12.9271421, -407.487854, 
@@ -210,8 +207,8 @@ local SellCFrame = CFrame.new(
 )
 
 local MiningSellCFrame = CFrame.new(-206.505844, 12.6999979, -433.204315, 0.969809055, 1.57811968e-08, 0.24386552, -2.09505693e-08, 1, 1.8603922e-08, -0.24386552, -2.31513742e-08, 0.969809055)
-local ChickenSellCFrame = CFrame.new(-72.7465286, 12.499999, -152.334641, 0.115703702, 3.83616126e-08, 0.993283749, -6.97474123e-09, 1, -3.78085403e-08, -0.993283749, -2.55330934e-09, 0.115703702)
-local ButterflySellCFrame = CFrame.new(-71.4649429, 12.499999, -173.004608, -0.0785275698, -1.82409876e-09, 0.996911943, 6.02684747e-09, 1, 2.30448882e-09, -0.996911943, 6.18920204e-09, -0.0785275698)
+local ChickenSellCFrame = CFrame.new(107.542999, 12.9384336, -357.577332, -0.998321295, -1.01971223e-08, -0.0579189435, -9.84405624e-09, 1, -6.38118003e-09, 0.0579189435, -5.80031045e-09, -0.998321295)
+local ButterflySellCFrame = CFrame.new(87.4784622, 12.9384327, -357.32486, -0.997522354, -7.31812833e-10, 0.0703499094, -3.4165476e-10, 1, 5.55799673e-09, -0.0703499094, 5.52019097e-09, -0.997522354)
 local MilkSellCFrame = CFrame.new(82.8893051, 23.2939873, -676.127625, 0.999944627, -1.16198784e-07, 0.0105238697, 1.15764458e-07, 1, 4.18796802e-08, -0.0105238697, -4.06590708e-08, 0.999944627)
 
 local MiningLocations = {
@@ -234,11 +231,8 @@ getgenv().AutoSellRunning = false
 getgenv().AutoSellMiningRunning = false
 getgenv().AutoSellMiningInterval = 5
 getgenv().AutoSellChickenRunning = false
-getgenv().AutoSellChickenInterval = 5
 getgenv().AutoSellButterflyRunning = false
-getgenv().AutoSellButterflyInterval = 5
 getgenv().AutoSellMilkRunning = false
-getgenv().AutoSellMilkInterval = 5
 
 getgenv().AutoCatchChickenRunning = false
 getgenv().AutoCatchButterflyRunning = false
@@ -694,282 +688,315 @@ if FishingPhaseEvent then
     end)
 end
 
--- Rayfield Window Setup
-local Window = Rayfield:CreateWindow({
-   Name = "🔥 UBEY HUB | Kebun Hangout & Farm 🚀",
-   LoadingTitle = "🚀 UBEY HUB Loading...",
-   LoadingSubtitle = "by Ubey",
-   ConfigurationSaving = { Enabled = false, FolderName = nil, FileName = "UbeyHub" },
-   Discord = { 
-      Enabled = true, 
-      Invite = "TRkVMKHwzD", 
-      RememberJoins = true 
-   },
-   KeySystem = false -- Dinonaktifkan karena sudah menggunakan Manual Key System di atas
+------------------------------------------------------------------
+-- MEMUAT FLUENT UI UTAMA
+------------------------------------------------------------------
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+if not Fluent then return end
+
+local Window = Fluent:CreateWindow({
+    Title = "🔥 UBEY HUB | Kebun Hangout & Farm 🚀",
+    SubTitle = "by Ubey",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.LeftControl,
+    Logo = "rbxassetid://90770802417381"
 })
 
--- Tab 1: Home & Farm
-local MainTab = Window:CreateTab("Farm Sawah🌾", nil)
-MainTab:CreateSection("Farming Sawah")
+pcall(function() Fluent:SetTheme("Darker") end)
 
-MainTab:CreateDropdown({
-   Name = "Pilih Jenis Bibit",
-   Options = {"Matahari", "Padi", "Tomat", "Jagung", "Wortel", "Pisang"},
-   CurrentOption = {"Matahari"},
-   Callback = function(Option) getgenv().SelectedSeed = Option[1] end,
+local Tabs = {
+    Farm = Window:AddTab({ Title = "Farm Sawah🌾", Icon = "flower" }),
+    Mining = Window:AddTab({ Title = "Auto Mining", Icon = "hammer" }),
+    Fishing = Window:AddTab({ Title = "Auto Fishing", Icon = "fish" }),
+    Catch = Window:AddTab({ Title = "Auto Catch", Icon = "bug" }),
+    Kandang = Window:AddTab({ Title = "Peternakan", Icon = "milk" }),
+    Player = Window:AddTab({ Title = "Player", Icon = "user" })
+}
+
+Fluent:Notify({ Title = "UBEY HUB Executed", Content = "Verifikasi Berhasil! Siap Digunakan.", Duration = 4 })
+
+------------------------------------------------------------------
+-- TAB 1: FARM SAWAH
+------------------------------------------------------------------
+Tabs.Farm:AddParagraph({
+    Title = "Farming Sawah",
+    Content = "Pilih jenis bibit lalu aktifkan auto buy dan auto farm."
 })
 
-MainTab:CreateToggle({
-   Name = "Auto Buy Seed",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoBuyRunning = Value end,
+Tabs.Farm:AddDropdown("SeedDropdown", {
+    Title = "Pilih Jenis Bibit",
+    Values = {"Matahari", "Padi", "Tomat", "Jagung", "Wortel", "Pisang"},
+    Default = 1,
+}):OnChanged(function(Value)
+    getgenv().SelectedSeed = Value
+end)
+
+Tabs.Farm:AddToggle("AutoBuyToggle", {
+    Title = "Auto Buy Seed",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoBuyRunning = Value
+end)
+
+Tabs.Farm:AddToggle("AutoFarmToggle", {
+    Title = "🚀 Auto Farm",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoFarmRunning = Value
+    if not Value then IsFarmBusy = false end
+    if Value then TeleportToSawah() end
+end)
+
+Tabs.Farm:AddSection("Auto Sell Sawah")
+
+Tabs.Farm:AddToggle("AutoSellToggle", {
+    Title = "💰 Aktifkan Auto Sell Dengan Waktu",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoSellRunning = Value
+end)
+
+Tabs.Farm:AddInput("SellTimerInputBox", {
+    Title = "⏱️ Waktu (Menit)",
+    Default = "5",
+    Placeholder = "Contoh: 5",
+    Numeric = true,
+    Finished = false,
+}):OnChanged(function(Value)
+    getgenv().AutoSellInterval = tonumber(Value) or 5
+end)
+
+------------------------------------------------------------------
+-- TAB 2: MINING
+------------------------------------------------------------------
+Tabs.Mining:AddParagraph({
+    Title = "Pengaturan Lokasi Tambang",
+    Content = "Pilih lokasi atau aktifkan auto pindah lokasi tambang."
 })
 
-MainTab:CreateToggle({
-   Name = "🚀 Auto Farm",
-   CurrentValue = false,
-   Callback = function(Value)
-        getgenv().AutoFarmRunning = Value
-        if not Value then IsFarmBusy = false end
-        if Value then TeleportToSawah() end
-   end,
-})
+Tabs.Mining:AddDropdown("MiningDropdown", {
+    Title = "Pilih Lokasi Tambang",
+    Values = {"Batu Bara 1", "Diamond", "Gold", "Batubara 2"},
+    Default = 1,
+}):OnChanged(function(Value)
+    getgenv().SelectedMiningZone = Value
+end)
 
-MainTab:CreateSection("Auto Sell Sawah")
-MainTab:CreateToggle({
-   Name = "💰 Aktifkan Auto Sell Dengan waktu",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoSellRunning = Value end,
-})
+Tabs.Mining:AddToggle("AutoLoopMiningToggle", {
+    Title = "🔄 Auto Berpindah Lokasi",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoLoopMining = Value
+end)
 
-MainTab:CreateSlider({
-   Name = "⏱️Waktu (Menit)",
-   Range = {1, 30},
-   Increment = 1,
-   CurrentValue = 5,
-   Callback = function(Value) getgenv().AutoSellInterval = Value end,
-})
+Tabs.Mining:AddInput("MiningTimerInputBox", {
+    Title = "Durasi Waktu Per Lokasi (Detik)",
+    Default = "3",
+    Placeholder = "Contoh: 3",
+    Numeric = true,
+    Finished = false,
+}):OnChanged(function(Value)
+    getgenv().MiningTimerDuration = tonumber(Value) or 3
+end)
 
--- Tab 2: Mining
-local MiningTab = Window:CreateTab("⛏ Auto Mining", nil)
-MiningTab:CreateSection("Pengaturan Lokasi Tambang")
-
-MiningTab:CreateDropdown({
-   Name = "Pilih Lokasi Tambang ",
-   Options = {"Batu Bara 1", "Diamond", "Gold", "Batubara 2"},
-   CurrentOption = {"Batu Bara 1"},
-   Callback = function(Option)
-        getgenv().SelectedMiningZone = Option[1]
-   end,
-})
-
-MiningTab:CreateToggle({
-   Name = "🔄 Auto Berpindah Lokasi",
-   CurrentValue = false,
-   Callback = function(Value)
-        getgenv().AutoLoopMining = Value
-   end,
-})
-
-MiningTab:CreateSlider({
-   Name = "Durasi Waktu Per Lokasi (Detik)",
-   Range = {0, 10},
-   Increment = 0.5,
-   CurrentValue = 3,
-   Callback = function(Value)
-        getgenv().MiningTimerDuration = Value
-   end,
-})
-
-MiningTab:CreateButton({
-   Name = "📍 Teleport Instan ke Lokasi Tambang Terpilih",
-   Callback = function()
+Tabs.Mining:AddButton({
+    Title = "📍 Teleport Instan ke Lokasi Tambang Terpilih",
+    Callback = function()
         pcall(function()
             local targetCF = MiningLocations[getgenv().SelectedMiningZone]
-            if targetCF then
-                SafeTeleport(targetCF)
-            end
+            if targetCF then SafeTeleport(targetCF) end
         end)
-   end,
+    end,
 })
 
-MiningTab:CreateSection("Sistem Auto Mining")
-MiningTab:CreateToggle({
-   Name = "Auto Mining",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoMineRunning = Value end,
-})
+Tabs.Mining:AddSection("Sistem Auto Mining")
 
-MiningTab:CreateSection("💎 Auto Sell Hasil Tambang")
-MiningTab:CreateToggle({
-   Name = "💰 Auto Sell Hasil Tambang",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoSellMiningRunning = Value end,
-})
+Tabs.Mining:AddToggle("AutoMineToggle", {
+    Title = "Auto Mining",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoMineRunning = Value
+end)
 
-MiningTab:CreateSlider({
-   Name = "Delay Auto Sell Tambang (Menit)",
-   Range = {1, 10},
-   Increment = 1,
-   CurrentValue = 5,
-   Callback = function(Value) getgenv().AutoSellMiningInterval = Value end,
-})
+Tabs.Mining:AddSection("💎 Auto Sell Hasil Tambang")
 
-MiningTab:CreateButton({
-   Name = "🏪 Teleport Instan ke Penjual",
-   Callback = function()
+Tabs.Mining:AddToggle("AutoSellMiningToggle", {
+    Title = "💰 Auto Sell Hasil Tambang",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoSellMiningRunning = Value
+end)
+
+Tabs.Mining:AddInput("SellMiningIntervalInput", {
+    Title = "Delay Auto Sell Tambang (Menit)",
+    Default = "5",
+    Placeholder = "Contoh: 5",
+    Numeric = true,
+    Finished = false,
+}):OnChanged(function(Value)
+    getgenv().AutoSellMiningInterval = tonumber(Value) or 5
+end)
+
+Tabs.Mining:AddButton({
+    Title = "🏪 Teleport Instan ke Penjual Tambang",
+    Callback = function()
         SafeTeleport(MiningSellCFrame)
-   end,
+    end,
 })
 
--- Tab 3: Fishing
-local FishingTab = Window:CreateTab("🎣 Auto Fishing", nil)
-FishingTab:CreateSection("Auto Mancing")
-
-FishingTab:CreateToggle({
-   Name = "🎣 Auto Fishing",
-   CurrentValue = false,
-   Callback = function(Value)
-        getgenv().AutoFishingRunning = Value
-        if not Value then
-            CurrentFishingPhase = "Idle"
-            CurrentFishingSession = nil
-        end
-   end,
+------------------------------------------------------------------
+-- TAB 3: FISHING (DENGAN TELEPORT OTOMATIS KE SPOT BARU)
+------------------------------------------------------------------
+Tabs.Fishing:AddParagraph({
+    Title = "Auto Mancing",
+    Content = "Otomatis melempar pancing dan menarik ikan."
 })
 
--- Tab 4: Catching
-local CatchTab = Window:CreateTab("🐔Auto Catch🦋", nil)
-CatchTab:CreateSection("Chicken & Butterfly")
+Tabs.Fishing:AddToggle("AutoFishingToggle", {
+    Title = "🎣 Auto Fishing (Teleport ke Spot)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoFishingRunning = Value
+    if Value then
+        pcall(function()
+            SafeTeleport(FishingTeleportSpot)
+            Fluent:Notify({ Title = "Teleportasi", Content = "Berpindah ke Spot Mancing Utama", Duration = 3 })
+        end)
+    else
+        CurrentFishingPhase = "Idle"
+        CurrentFishingSession = nil
+    end
+end)
 
-CatchTab:CreateToggle({
-   Name = "Auto Catch Chicken (Ayam)",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoCatchChickenRunning = Value end,
+------------------------------------------------------------------
+-- TAB 4: CATCHING (CHICKEN & BUTTERFLY) DENGAN INPUT TIMER
+------------------------------------------------------------------
+Tabs.Catch:AddParagraph({
+    Title = "Chicken & Butterfly Catching",
+    Content = "Tangkap ayam dan kupu-kupu secara otomatis."
 })
 
-CatchTab:CreateToggle({
-   Name = "Auto Catch Butterfly (Kupu-Kupu)",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoCatchButterflyRunning = Value end,
+Tabs.Catch:AddToggle("AutoCatchChickenToggle", {
+    Title = "Auto Catch Chicken (Ayam)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoCatchChickenRunning = Value
+end)
+
+Tabs.Catch:AddToggle("AutoCatchButterflyToggle", {
+    Title = "Auto Catch Butterfly (Kupu-Kupu)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoCatchButterflyRunning = Value
+end)
+
+Tabs.Catch:AddSection("🐔 Auto Sell Ayam & Kupu-Kupu (Dengan Timer)")
+
+Tabs.Catch:AddToggle("AutoSellChickenToggle", {
+    Title = "💰 Auto Sell Chicken (Ayam)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoSellChickenRunning = Value
+end)
+
+Tabs.Catch:AddInput("SellChickenIntervalInput", {
+    Title = "⏱️ Delay Auto Sell Ayam (Menit)",
+    Default = "5",
+    Placeholder = "Contoh: 5",
+    Numeric = true,
+    Finished = false,
+}):OnChanged(function(Value)
+    getgenv().AutoSellChickenInterval = tonumber(Value) or 5
+end)
+
+Tabs.Catch:AddToggle("AutoSellButterflyToggle", {
+    Title = "💰 Auto Sell Kupu-Kupu",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoSellButterflyRunning = Value
+end)
+
+Tabs.Catch:AddInput("SellButterflyIntervalInput", {
+    Title = "⏱️ Delay Auto Sell Kupu-Kupu (Menit)",
+    Default = "5",
+    Placeholder = "Contoh: 5",
+    Numeric = true,
+    Finished = false,
+}):OnChanged(function(Value)
+    getgenv().AutoSellButterflyInterval = tonumber(Value) or 5
+end)
+
+------------------------------------------------------------------
+-- TAB 5: PETERNAKAN (KANDANG)
+------------------------------------------------------------------
+Tabs.Kandang:AddParagraph({
+    Title = "Auto Farm Peternakan",
+    Content = "Kasih makan hewan dan ambil susu otomatis."
 })
 
-CatchTab:CreateSection("🐔 Auto Sell Chicken(Ayam)")
-CatchTab:CreateToggle({
-   Name = "💰 Auto Sell Chicken(Ayam)",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoSellChickenRunning = Value end,
+Tabs.Kandang:AddToggle("AutoFeedAnimalToggle", {
+    Title = "Auto Kasih Makan Hewan (Tiap 2 Menit)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoFeedAnimalRunning = Value
+end)
+
+Tabs.Kandang:AddToggle("AutoCollectMilkToggle", {
+    Title = "Auto Ambil Susu (Tiap 2 Menit)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoCollectMilkRunning = Value
+end)
+
+Tabs.Kandang:AddSection("🥛 Auto Sell Susu")
+
+Tabs.Kandang:AddToggle("AutoSellMilkToggle", {
+    Title = "💰 Auto Sell Susu",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AutoSellMilkRunning = Value
+end)
+
+------------------------------------------------------------------
+-- TAB 6: PLAYER
+------------------------------------------------------------------
+Tabs.Player:AddParagraph({
+    Title = "Pengaturan Karakter & Keamanan",
+    Content = "Anti sit, anti AFK, dan pengatur kecepatan lari."
 })
 
-CatchTab:CreateSlider({
-   Name = "Delay Auto Sell Chicken(Ayam) (Menit)",
-   Range = {1, 10},
-   Increment = 1,
-   CurrentValue = 5,
-   Callback = function(Value) getgenv().AutoSellChickenInterval = Value end,
-})
+Tabs.Player:AddToggle("AntiSitToggle", {
+    Title = "🛡 Anti Sit (Cegah Karakter Duduk)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AntiSitEnabled = Value
+end)
 
-CatchTab:CreateButton({
-   Name = "🏪 Teleport Instan ke Penjual Ayam",
-   Callback = function()
-        SafeTeleport(ChickenSellCFrame)
-   end,
-})
+Tabs.Player:AddToggle("AntiAfkToggle", {
+    Title = "⏳ Anti AFK (Cegah Kena Kick Idle)",
+    Default = false
+}):OnChanged(function(Value)
+    getgenv().AntiAfkEnabled = Value
+end)
 
-CatchTab:CreateSection("🦋 Auto Sell Kupu-Kupu")
-CatchTab:CreateToggle({
-   Name = "💰 Auto Sell Kupu-Kupu",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoSellButterflyRunning = Value end,
-})
+Tabs.Player:AddSlider("WalkSpeedSlider", {
+    Title = "WalkSpeed",
+    Default = 16,
+    Min = 1,
+    Max = 350,
+    Rounding = 1,
+}):OnChanged(function(Value)
+    pcall(function() LocalPlayer.Character.Humanoid.WalkSpeed = Value end)
+end)
 
-CatchTab:CreateSlider({
-   Name = "Delay Auto Sell Kupu-Kupu (Menit)",
-   Range = {1, 10},
-   Increment = 1,
-   CurrentValue = 5,
-   Callback = function(Value) getgenv().AutoSellButterflyInterval = Value end,
-})
+Window:SelectTab(1)
 
-CatchTab:CreateButton({
-   Name = "🏪 Teleport Instan ke Penjual Kupu-Kupu",
-   Callback = function()
-        SafeTeleport(ButterflySellCFrame)
-   end,
-})
-
--- Tab 5: Kandang
-local KandangTab = Window:CreateTab("🐄 Peternakan", nil)
-KandangTab:CreateSection("Auto Farm Peternakan")
-
-KandangTab:CreateToggle({
-   Name = "Auto Kasih Makan Hewan (Tiap 2 Menit)",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoFeedAnimalRunning = Value end,
-})
-
-KandangTab:CreateToggle({
-   Name = "Auto Ambil Susu (Tiap 2 Menit)",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoCollectMilkRunning = Value end,
-})
-
-KandangTab:CreateSection("🥛 Auto Sell Susu")
-
-KandangTab:CreateToggle({
-   Name = "💰 Auto Sell Susu",
-   CurrentValue = false,
-   Callback = function(Value) getgenv().AutoSellMilkRunning = Value end,
-})
-
-KandangTab:CreateSlider({
-   Name = "Delay Auto Sell Susu (Menit)",
-   Range = {1, 10},
-   Increment = 1,
-   CurrentValue = 5,
-   Callback = function(Value) getgenv().AutoSellMilkInterval = Value end,
-})
-
-KandangTab:CreateButton({
-   Name = "🏪 Teleport Instan ke Penjual Susu",
-   Callback = function()
-        SafeTeleport(MilkSellCFrame)
-   end,
-})
-
--- Tab 6: Player
-local PlayerTab = Window:CreateTab("⚡ Player", nil)
-
-PlayerTab:CreateSection("Pengaturan Karakter & Keamanan")
-PlayerTab:CreateToggle({
-   Name = "🛡 Anti Sit (Cegah Karakter Duduk)",
-   CurrentValue = false,
-   Callback = function(Value)
-        getgenv().AntiSitEnabled = Value
-   end,
-})
-
-PlayerTab:CreateToggle({
-   Name = "⏳ Anti AFK (Cegah Kena Kick Idle)",
-   CurrentValue = false,
-   Callback = function(Value)
-        getgenv().AntiAfkEnabled = Value
-   end,
-})
-
-PlayerTab:CreateSlider({
-   Name = "WalkSpeed Slider",
-   Range = {1, 350},
-   Increment = 1,
-   CurrentValue = 16,
-   Callback = function(Value)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = Value
-        end
-   end,
-})
-
---- LOOPS ---
+------------------------------------------------------------------
+-- BACKGROUND LOOPS (LOGIKA UTAMA FARM)
+------------------------------------------------------------------
 local oldIdledConnection
 oldIdledConnection = LocalPlayer.Idled:Connect(function()
     if getgenv().AntiAfkEnabled then
@@ -999,9 +1026,7 @@ task.spawn(function()
                 local char = LocalPlayer.Character
                 if char then
                     local humanoid = char:FindFirstChildOfClass("Humanoid")
-                    if humanoid and humanoid.Sit then
-                        humanoid.Sit = false
-                    end
+                    if humanoid and humanoid.Sit then humanoid.Sit = false end
                     for _, obj in ipairs(Workspace:GetDescendants()) do
                         if (obj:IsA("Seat") or obj:IsA("VehicleSeat")) and not obj.Disabled then
                             obj.Disabled = true
@@ -1185,6 +1210,7 @@ task.spawn(function()
     end
 end)
 
+-- LOOP AUTO SELL CHICKEN (DENGAN TIMER MENIT)
 task.spawn(function()
     while true do
         if getgenv().AutoSellChickenRunning then
@@ -1205,6 +1231,7 @@ task.spawn(function()
     end
 end)
 
+-- LOOP AUTO SELL BUTTERFLY (DENGAN TIMER MENIT)
 task.spawn(function()
     while true do
         if getgenv().AutoSellButterflyRunning then
@@ -1228,8 +1255,7 @@ end)
 task.spawn(function()
     while true do
         if getgenv().AutoSellMilkRunning then
-            local waitTime = (getgenv().AutoSellMilkInterval or 5) * 60
-            task.wait(waitTime)
+            task.wait(300)
             pcall(function()
                 if getgenv().AutoSellMilkRunning then
                     getgenv().IsKandangBusy = true
@@ -1339,7 +1365,7 @@ task.spawn(function()
                 local butterfly = FindNearestButterfly()
                 if butterfly then
                     AutoEquipNet()
-                    local bflyPart = butterfly:IsA("Model") and (butterfly.PrimaryPart or butterfly:FindFirstChildWhichIsA("BasePart")) or (butterfly:IsA("BasePart") and butterfly)
+                    local bflyPart = butterfly:IsA("Model") and (bfly.PrimaryPart or butterfly:FindFirstChildWhichIsA("BasePart")) or (bfly:IsA("BasePart") and butterfly)
                     if bflyPart then
                         SafeTeleport(bflyPart.CFrame + Vector3.new(0, 0.5, 0))
                         TouchTargetWithTool(bflyPart)
@@ -1374,7 +1400,7 @@ task.spawn(function()
 end)
 
 ------------------------------------------------------------------
--- DRAGGABLE FLOATING LOGO BUTTON (UNTUK MINIMALISASI RAYFIELD DI HP)
+-- FLOATING LOGO BUTTON
 ------------------------------------------------------------------
 pcall(function()
     if CoreGui:FindFirstChild("UbeyHubFloatingLogo") then
@@ -1403,17 +1429,6 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0.5, 0)
 UICorner.Parent = ImageButton
 
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Parent = ImageButton
-UIStroke.Color = Color3.fromRGB(0, 190, 255)
-UIStroke.Thickness = 2
-
 ImageButton.MouseButton1Click:Connect(function()
-    pcall(function()
-        Rayfield:ToggleUI()
-    end)
-    
-    TweenService:Create(ImageButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 44, 0, 44)}):Play()
-    task.wait(0.1)
-    TweenService:Create(ImageButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 52, 0, 52)}):Play()
+    pcall(function() Window:Minimize() end)
 end)
