@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Custom GUI + Full Features (Fishing, Galatama, Summit, Player)
+-- UBEY HUB V3 | Custom GUI + All Features (Fishing, Sell, Galatama, Summit, Privacy)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -11,8 +11,8 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
 
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 ------------------------------------------------------------------
 -- AUTO RECONNECT SYSTEM
@@ -22,7 +22,7 @@ task.spawn(function()
 		CoreGui.ChildAdded:Connect(function(child)
 			if child.Name == "ErrorPrompt" or child.Name == "DisconnectPrompt" then
 				task.wait(1)
-				pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Player) end)
+				pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
 			end
 		end)
 	end)
@@ -53,38 +53,86 @@ local function validateKey(inputKey)
 end
 
 pcall(function()
-	if setclipboard then setclipboard("https://discord.gg/aCbAWe9PYB") end
+	if setclipboard then
+		setclipboard("https://discord.gg/aCbAWe9PYB")
+	elseif toclipboard then
+		toclipboard("https://discord.gg/aCbAWe9PYB")
+	end
 end)
 
 -- GLOBAL STATES & LOGIC
-getgenv().AutoFishingRunning = false
-getgenv().BiteDelay = 0.5
+getgenv().AutoFishingEventRunning = false
+getgenv().BiteDelayInput = "0.5"
+getgenv().SelectedFishingSpot = "Spot Mancing Jembatan"
+getgenv().AutoSellRunning = false
+getgenv().AutoSellTimerInput = "5"
 getgenv().AutoGalatamaRunning = false
 getgenv().AutoSummitRunning = false
 getgenv().AntiAFKRunning = false
+getgenv().HideNameRunning = false
+getgenv().FakeNameInput = "UBEY HUB"
+
+-- DATA KOORDINAT SPOT & NPC
+local FishingSpots = {
+	["Spot Mancing Jembatan"] = CFrame.new(-6783.74756, 1322.81006, -9757.34473, 0.0899723172, -9.34088291e-08, 0.995944262, 1.76120434e-08, 1, 9.21981638e-08, -0.995944262, 9.24533072e-09, 0.0899723172),
+	["Spot Mancing Core"] = CFrame.new(-9069.33887, 1250.32092, -6510.3374, 0.99812746, -7.96398965e-08, -0.0611686334, 8.05492206e-08, 1, 1.24000188e-08, 0.0611686334, -1.73038845e-08, 0.99812746),
+	["Spot Mancing Ikan Anomali"] = CFrame.new(-8199.52832, 1238.83752, -6278.13135, -0.999144316, 1.1644854e-08, -0.0413601957, 1.63464247e-08, 1, -1.13335595e-07, 0.0413601957, -1.13914709e-07, -0.999144316)
+}
+
+local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
 
 local function GetRod()
-	local char = Player.Character
-	if char then
-		local rod = char:FindFirstChild("Withering Rod") or Player.Backpack:FindFirstChild("Withering Rod")
-		if rod and not char:FindFirstChild("Withering Rod") and char:FindFirstChildOfClass("Humanoid") then
-			char.Humanoid:EquipTool(rod)
-			task.wait(0.3)
+	local character = LocalPlayer.Character
+	if character then
+		local rodInHand = character:FindFirstChild("Withering Rod")
+		if rodInHand then
+			return rodInHand
+		else
+			local rodInBackpack = LocalPlayer.Backpack:FindFirstChild("Withering Rod")
+			if rodInBackpack and character:FindFirstChildOfClass("Humanoid") then
+				character.Humanoid:EquipTool(rodInBackpack)
+				task.wait(0.3)
+				return character:FindFirstChild("Withering Rod")
+			end
 		end
-		return char:FindFirstChild("Withering Rod")
 	end
+	return nil
 end
 
-local function OptimizeRod()
+local function OptimizeRodSettings()
 	pcall(function()
 		local rod = GetRod()
-		if rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings") then
-			if rod.Mechanics.Settings:FindFirstChild("Time_before_getfish") then
-				rod.Mechanics.Settings.Time_before_getfish.Value = 0.05
+		if rod then
+			local settingsFolder = rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+			if settingsFolder then
+				local timeSetting = settingsFolder:FindFirstChild("Time_before_getfish")
+				if timeSetting then timeSetting.Value = 0.05 end
+				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
+				if enableMiniGame then enableMiniGame.Value = false end
 			end
-			if rod.Mechanics.Settings:FindFirstChild("EnableMiniGame") then
-				rod.Mechanics.Settings.EnableMiniGame.Value = false
-			end
+		end
+	end)
+end
+
+local function TriggerSellToNpc()
+	pcall(function()
+		local character = LocalPlayer.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
+		
+		local currentSpotCFrame = hrp.CFrame
+		hrp.CFrame = NpcSellCFrame
+		task.wait(0.8)
+		
+		local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
+		local jualSemua = mancing and mancing:FindFirstChild("JualSemua")
+		if jualSemua then
+			jualSemua:InvokeServer()
+		end
+		task.wait(0.8)
+		
+		if getgenv().AutoFishingEventRunning then
+			hrp.CFrame = currentSpotCFrame
 		end
 	end)
 end
@@ -203,42 +251,47 @@ HubTitle.Font = Enum.Font.GothamBold
 HubTitle.TextColor3 = Color3.fromRGB(0,170,255)
 HubTitle.TextSize = 20
 
--- Tombol Sidebar (Dihasilkan dari kustomisasimu)
+-- Tombol Sidebar (Disesuaikan untuk 6 Menu Lengkap)
 local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
-HomeBtn.Position = UDim2.new(0,10,0,70)
-HomeBtn.Size = UDim2.new(1,-20,0,30)
-HomeBtn.Text = "Fishing"
+HomeBtn.Position = UDim2.new(0,10,0,65)
+HomeBtn.Size = UDim2.new(1,-20,0,28)
+HomeBtn.Text = "Fishing & Sell"
 HomeBtn.TextColor3 = Color3.new(1,1,1)
 HomeBtn.Font = Enum.Font.GothamMedium
-HomeBtn.TextSize = 13
+HomeBtn.TextSize = 12
 
 local GalatamaBtn = HomeBtn:Clone()
 GalatamaBtn.Parent = Sidebar
-GalatamaBtn.Position = UDim2.new(0,10,0,110)
+GalatamaBtn.Position = UDim2.new(0,10,0,100)
 GalatamaBtn.Text = "Galatama"
 
 local SummitBtn = HomeBtn:Clone()
 SummitBtn.Parent = Sidebar
-SummitBtn.Position = UDim2.new(0,10,0,150)
+SummitBtn.Position = UDim2.new(0,10,0,135)
 SummitBtn.Text = "Summit"
 
 local PlayerMenuBtn = HomeBtn:Clone()
 PlayerMenuBtn.Parent = Sidebar
-PlayerMenuBtn.Position = UDim2.new(0,10,0,190)
+PlayerMenuBtn.Position = UDim2.new(0,10,0,170)
 PlayerMenuBtn.Text = "Player"
+
+local PrivacyBtn = HomeBtn:Clone()
+PrivacyBtn.Parent = Sidebar
+PrivacyBtn.Position = UDim2.new(0,10,0,205)
+PrivacyBtn.Text = "Privacy"
 
 local SettingsBtn = HomeBtn:Clone()
 SettingsBtn.Parent = Sidebar
-SettingsBtn.Position = UDim2.new(0,10,0,230)
+SettingsBtn.Position = UDim2.new(0,10,0,240)
 SettingsBtn.Text = "Settings"
 
 local CreditsBtn = HomeBtn:Clone()
 CreditsBtn.Parent = Sidebar
-CreditsBtn.Position = UDim2.new(0,10,0,270)
+CreditsBtn.Position = UDim2.new(0,10,0,275)
 CreditsBtn.Text = "Credits"
 
-for _,v in ipairs({HomeBtn, GalatamaBtn, SummitBtn, PlayerMenuBtn, SettingsBtn, CreditsBtn}) do
+for _,v in ipairs({HomeBtn, GalatamaBtn, SummitBtn, PlayerMenuBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
 	v.BackgroundColor3 = Color3.fromRGB(35,35,45)
 	local c = Instance.new("UICorner")
 	c.Parent = v
@@ -256,7 +309,7 @@ local function MakePage()
 	f.Size = UDim2.new(1,0,1,0)
 	f.BackgroundTransparency = 1
 	f.Visible = false
-	f.CanvasSize = UDim2.new(0,0,2,0)
+	f.CanvasSize = UDim2.new(0,0,2.5,0)
 	f.ScrollBarThickness = 4
 	local l = Instance.new("UIListLayout")
 	l.Parent = f
@@ -269,6 +322,7 @@ local FishingPage = MakePage() FishingPage.Visible = true
 local GalatamaPage = MakePage()
 local SummitPage = MakePage()
 local PlayerPage = MakePage()
+local PrivacyPage = MakePage()
 local SettingsPage = MakePage()
 local CreditsPage = MakePage()
 
@@ -277,6 +331,7 @@ local function HideAll()
 	GalatamaPage.Visible = false
 	SummitPage.Visible = false
 	PlayerPage.Visible = false
+	PrivacyPage.Visible = false
 	SettingsPage.Visible = false
 	CreditsPage.Visible = false
 end
@@ -285,10 +340,11 @@ HomeBtn.MouseButton1Click:Connect(function() HideAll(); FishingPage.Visible = tr
 GalatamaBtn.MouseButton1Click:Connect(function() HideAll(); GalatamaPage.Visible = true end)
 SummitBtn.MouseButton1Click:Connect(function() HideAll(); SummitPage.Visible = true end)
 PlayerMenuBtn.MouseButton1Click:Connect(function() HideAll(); PlayerPage.Visible = true end)
+PrivacyBtn.MouseButton1Click:Connect(function() HideAll(); PrivacyPage.Visible = true end)
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
 
--- FUNGSI PEMBUAT TOMBOL FITUR DALAM HALAMAN
+-- FUNGSI PEMBUAT TOMBOL TOGGLE
 local function AddToggle(parent, text, callback)
 	local b = Instance.new("TextButton")
 	b.Parent = parent
@@ -309,39 +365,97 @@ local function AddToggle(parent, text, callback)
 	end)
 end
 
--- ISI FITUR FISHING
-AddToggle(FishingPage, "Smart Auto Fishing", function(v)
-	getgenv().AutoFishingRunning = v
+----------------------------------------------------
+-- 1. FISHING & SELL PAGE
+----------------------------------------------------
+local TitleFish = Instance.new("TextLabel")
+TitleFish.Parent = FishingPage
+TitleFish.Size = UDim2.new(1,0,0,30)
+TitleFish.BackgroundTransparency = 1
+TitleFish.Text = "--- AUTO FISHING & SELL ---"
+TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
+TitleFish.Font = Enum.Font.GothamBold
+TitleFish.TextSize = 13
+
+-- Dropdown Lokasi Mancing (Sederhana via Tombol Pilihan)
+local SpotLabel = Instance.new("TextLabel")
+SpotLabel.Parent = FishingPage
+SpotLabel.Size = UDim2.new(1,0,0,25)
+SpotLabel.BackgroundTransparency = 1
+SpotLabel.Text = "Pilih Lokasi: Spot Mancing Jembatan"
+SpotLabel.TextColor3 = Color3.new(1,1,1)
+SpotLabel.Font = Enum.Font.Gotham
+SpotLabel.TextSize = 12
+
+local ChangeSpotBtn = Instance.new("TextButton")
+ChangeSpotBtn.Parent = FishingPage
+ChangeSpotBtn.Size = UDim2.new(1,0,0,32)
+ChangeSpotBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
+ChangeSpotBtn.Text = "Ganti Spot (Jembatan -> Core -> Anomali)"
+ChangeSpotBtn.TextColor3 = Color3.new(1,1,1)
+ChangeSpotBtn.Font = Enum.Font.GothamMedium
+ChangeSpotBtn.TextSize = 12
+Instance.new("UICorner", ChangeSpotBtn)
+
+local spotList = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+local spotIndex = 1
+ChangeSpotBtn.MouseButton1Click:Connect(function()
+	spotIndex = spotIndex % #spotList + 1
+	getgenv().SelectedFishingSpot = spotList[spotIndex]
+	SpotLabel.Text = "Pilih Lokasi: " .. getgenv().SelectedFishingSpot
+end)
+
+AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
+	getgenv().AutoFishingEventRunning = v
 	if v then
-		OptimizeRod()
+		pcall(function()
+			local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+			local hrp = character:WaitForChild("HumanoidRootPart", 5)
+			local targetCFrame = FishingSpots[getgenv().SelectedFishingSpot]
+			if hrp and targetCFrame then
+				hrp.CFrame = targetCFrame
+			end
+		end)
+		
+		OptimizeRodSettings()
 		task.spawn(function()
-			while getgenv().AutoFishingRunning do
+			while getgenv().AutoFishingEventRunning do
 				pcall(function()
 					local rod = GetRod()
 					if rod and rod:FindFirstChild("Mechanics") then
-						OptimizeRod()
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
-							remoteFolder.CastEvent:FireServer(false, 100, Player.Character.HumanoidRootPart.CFrame.LookVector)
+							OptimizeRodSettings()
+							local hrp = LocalPlayer.Character.HumanoidRootPart
+							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
+							
 							task.wait(0.05)
 							local hooked = false
 							local conn
-							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(action)
-								if action == "Bite" then hooked = true if conn then conn:Disconnect() end end
+							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+								if actionType == "Bite" then
+									hooked = true
+									if conn then conn:Disconnect() end
+								end
 							end)
+							
 							local start = tick()
-							while not hooked and getgenv().AutoFishingRunning do
+							while not hooked and getgenv().AutoFishingEventRunning do
 								if tick() - start > 10 then break end
 								task.wait(0.05)
 							end
 							if conn then conn:Disconnect() end
-							if hooked and getgenv().AutoFishingRunning then
-								task.wait(getgenv().BiteDelay)
+							
+							if hooked and getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
 								task.wait(0.3)
 							end
 						end
-					else task.wait(1) end
+					else
+						task.wait(1)
+					end
 				end)
 				task.wait(0.1)
 			end
@@ -349,15 +463,53 @@ AddToggle(FishingPage, "Smart Auto Fishing", function(v)
 	end
 end)
 
--- ISI FITUR GALATAMA
-AddToggle(GalatamaPage, "Auto Join Galatama", function(v)
+-- Auto Sell Timer Toggle & Input
+AddToggle(FishingPage, "Auto Sell Timer ke NPC", function(v)
+	getgenv().AutoSellRunning = v
+	if v then
+		task.spawn(function()
+			local lastSellTime = tick()
+			while getgenv().AutoSellRunning do
+				task.wait(1)
+				local elapsedMinutes = (tick() - lastSellTime) / 60
+				local targetMinutes = tonumber(getgenv().AutoSellTimerInput) or 5
+				if elapsedMinutes >= targetMinutes then
+					TriggerSellToNpc()
+					lastSellTime = tick()
+				end
+			end
+		end)
+	end
+end)
+
+local SellTimerBox = Instance.new("TextBox")
+SellTimerBox.Parent = FishingPage
+SellTimerBox.Size = UDim2.new(1,0,0,35)
+SellTimerBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+SellTimerBox.PlaceholderText = "Jeda Waktu Jual (Menit, Cth: 5)"
+SellTimerBox.Text = "5"
+SellTimerBox.TextColor3 = Color3.new(1,1,1)
+SellTimerBox.Font = Enum.Font.Gotham
+SellTimerBox.TextSize = 12
+Instance.new("UICorner", SellTimerBox)
+SellTimerBox.FocusLost:Connect(function()
+	getgenv().AutoSellTimerInput = SellTimerBox.Text
+end)
+
+----------------------------------------------------
+-- 2. GALATAMA PAGE
+----------------------------------------------------
+AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 	getgenv().AutoGalatamaRunning = v
 	if v then
 		task.spawn(function()
 			while getgenv().AutoGalatamaRunning do
 				pcall(function()
-					local ikut = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Glatama") and ReplicatedStorage.Remote.Glatama:FindFirstChild("Ikut")
-					if ikut then ikut:InvokeServer() end
+					local glatamaFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Glatama")
+					local ikutRemote = glatamaFolder and glatamaFolder:FindFirstChild("Ikut")
+					if ikutRemote then
+						ikutRemote:InvokeServer()
+					end
 				end)
 				task.wait(10)
 			end
@@ -365,7 +517,9 @@ AddToggle(GalatamaPage, "Auto Join Galatama", function(v)
 	end
 end)
 
--- ISI FITUR SUMMIT
+----------------------------------------------------
+-- 3. SUMMIT PAGE
+----------------------------------------------------
 AddToggle(SummitPage, "Auto Summit Loop", function(v)
 	getgenv().AutoSummitRunning = v
 end)
@@ -373,15 +527,17 @@ task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
-				local hrp = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-				local tpCP = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Checkpoint") and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
+				local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+				local hrp = character:WaitForChild("HumanoidRootPart", 5)
+				local cpFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
+				local tpCP = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
 				if hrp and tpCP then
 					for i = 1, 20 do
 						if not getgenv().AutoSummitRunning then break end
 						pcall(function() tpCP:FireServer(i) end)
 						task.wait(0.1)
 					end
-					hrp.CFrame = CFrame.new(-6766.44, 1312.69, -10083.80)
+					hrp.CFrame = CFrame.new(-6766.44629, 1312.69983, -10083.8037)
 					task.wait(1)
 				end
 			end)
@@ -390,7 +546,9 @@ task.spawn(function()
 	end
 end)
 
--- ISI FITUR PLAYER (WalkSpeed & Anti-AFK)
+----------------------------------------------------
+-- 4. PLAYER PAGE
+----------------------------------------------------
 local SpeedBox = Instance.new("TextBox")
 SpeedBox.Parent = PlayerPage
 SpeedBox.Size = UDim2.new(1,0,0,35)
@@ -403,20 +561,69 @@ SpeedBox.TextSize = 13
 Instance.new("UICorner", SpeedBox)
 SpeedBox.FocusLost:Connect(function()
 	local num = tonumber(SpeedBox.Text)
-	if num then pcall(function() Player.Character.Humanoid.WalkSpeed = num end) end
+	if num then pcall(function() LocalPlayer.Character.Humanoid.WalkSpeed = num end) end
 end)
 
 AddToggle(PlayerPage, "Anti-AFK", function(v)
 	getgenv().AntiAFKRunning = v
 end)
-Player.Idled:Connect(function()
+LocalPlayer.Idled:Connect(function()
 	if getgenv().AntiAFKRunning then
 		VirtualUser:CaptureController()
 		VirtualUser:ClickButton2(Vector2.new(0,0))
 	end
 end)
 
--- SETTINGS PAGE
+----------------------------------------------------
+-- 5. PRIVACY PAGE
+----------------------------------------------------
+local FakeNameBox = Instance.new("TextBox")
+FakeNameBox.Parent = PrivacyPage
+FakeNameBox.Size = UDim2.new(1,0,0,35)
+FakeNameBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+FakeNameBox.PlaceholderText = "Nama Samaran (Cth: UBEY HUB)"
+FakeNameBox.Text = "UBEY HUB"
+FakeNameBox.TextColor3 = Color3.new(1,1,1)
+FakeNameBox.Font = Enum.Font.Gotham
+FakeNameBox.TextSize = 12
+Instance.new("UICorner", FakeNameBox)
+FakeNameBox.FocusLost:Connect(function()
+	getgenv().FakeNameInput = FakeNameBox.Text
+end)
+
+AddToggle(PrivacyPage, "Privacy Mode (Hide Name & Summit)", function(v)
+	getgenv().HideNameRunning = v
+	if v then
+		task.spawn(function()
+			while getgenv().HideNameRunning do
+				pcall(function()
+					local fakeName = getgenv().FakeNameInput or "UBEY HUB"
+					local character = LocalPlayer.Character
+					if character then
+						local head = character:FindFirstChild("Head")
+						if head then
+							for _, child in ipairs(head:GetDescendants()) do
+								if child:IsA("TextLabel") or child:IsA("TextMesh") then
+									local txt = child.Text
+									if string.find(txt, LocalPlayer.Name) or string.find(txt, LocalPlayer.DisplayName) then
+										child.Text = fakeName
+									elseif string.find(string.lower(txt), "summit") or (tonumber(txt) ~= nil and tonumber(txt) > 0) then
+										child.Text = ""
+									end
+								end
+							end
+						end
+					end
+				end)
+				task.wait(1)
+			end
+		end)
+	end
+end)
+
+----------------------------------------------------
+-- 6. SETTINGS & CREDITS PAGE
+----------------------------------------------------
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = SettingsPage
 CloseBtn.Size = UDim2.new(1,0,0,35)
@@ -428,7 +635,6 @@ CloseBtn.TextSize = 13
 Instance.new("UICorner", CloseBtn)
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
 
--- CREDITS PAGE
 local CredLbl = Instance.new("TextLabel")
 CredLbl.Parent = CreditsPage
 CredLbl.Size = UDim2.new(1,0,1,0)
@@ -439,7 +645,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- KEY VERIFY (Koneksi Supabase)
+-- KEY VERIFY (Supabase)
 ----------------------------------------------------
 Submit.MouseButton1Click:Connect(function()
 	Submit.Text = "MEMERIKSA..."
