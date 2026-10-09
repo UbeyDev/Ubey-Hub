@@ -106,9 +106,9 @@ end)
 
 pcall(function()
 	if setclipboard then
-		setclipboard("https://discord.gg/aCbAWe9PYB")
+		setclipboard("https://discord.gg/YXuYeEpnXE")
 	elseif toclipboard then
-		toclipboard("https://discord.gg/aCbAWe9PYB")
+		toclipboard("https://discord.gg/YXuYeEpnXE")
 	end
 end)
 
@@ -485,7 +485,7 @@ end)
 
 GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	pcall(function()
-		if setclipboard then setclipboard("https://discord.gg/aCbAWe9PYB") end
+		if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end
 	end)
 	StatusKey.TextColor3 = Color3.fromRGB(0,170,255)
 	StatusKey.Text = "Link Discord disalin! Dapatkan key dari bot Discord."
