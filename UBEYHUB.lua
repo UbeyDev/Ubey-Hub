@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless & Fire RGB)
+-- UBEY HUB V3 | Final Complete Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless, Fire RGB, Custom Title & Secure Key System)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -28,7 +28,8 @@ getgenv().UbeyConfig = {
 	AutoSellTimer = "5",
 	AutoExecuteEnabled = true,
 	AntiAdminEnabled = false,
-	TargetGroupId = 7019573
+	TargetGroupId = 7019573,
+	CustomTitleText = "UBEY HUB V3"
 }
 
 local function SaveConfig()
@@ -52,6 +53,7 @@ local function LoadConfig()
 				if data.AutoExecuteEnabled ~= nil then getgenv().UbeyConfig.AutoExecuteEnabled = data.AutoExecuteEnabled end
 				if data.AntiAdminEnabled ~= nil then getgenv().UbeyConfig.AntiAdminEnabled = data.AntiAdminEnabled end
 				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
+				if data.CustomTitleText then getgenv().UbeyConfig.CustomTitleText = data.CustomTitleText end
 			end
 		end
 	end)
@@ -65,7 +67,8 @@ local function ResetConfig()
 			AutoSellTimer = "5",
 			AutoExecuteEnabled = true,
 			AntiAdminEnabled = false,
-			TargetGroupId = 7019573
+			TargetGroupId = 7019573,
+			CustomTitleText = "UBEY HUB V3"
 		}
 		if delfile and isfile and isfile(CONFIG_FILE) then
 			delfile(CONFIG_FILE)
@@ -78,8 +81,8 @@ LoadConfig()
 ------------------------------------------------------------------
 -- SUPABASE CONFIGURATION
 ------------------------------------------------------------------
-local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/keys?key=eq."
-local SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3d3h2ZW14ZXp0Zml5dXVyaHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTAwMDIsImV4cCI6MjEwNjg4NjAwMn0.IQNQXBvOHyovn-fahzGR-yAt34-72LG6dyVtUJAa92c"
+local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
+local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
 
 ------------------------------------------------------------------
 -- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
@@ -124,6 +127,9 @@ getgenv().AntiAFKRunning = false
 getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
+getgenv().CustomTitleActive = false
+getgenv().CustomTitleInputText = getgenv().UbeyConfig.CustomTitleText
+getgenv().KeyVerified = false
 
 -- DATA KOORDINAT SPOT & SHOP
 local FishingSpots = {
@@ -265,7 +271,7 @@ StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
 ----------------------------------------------------
--- MAIN HUB (TERSEMBUNYI SAMPAI KEY VALID)
+-- MAIN HUB
 ----------------------------------------------------
 local Main = Instance.new("Frame")
 Main.Parent = Gui
@@ -282,7 +288,6 @@ local MainStroke = Instance.new("UIStroke")
 MainStroke.Parent = Main
 MainStroke.Color = Color3.fromRGB(0,170,255)
 
--- Indikator Ping di Bagian Atas Hub
 local PingLabel = Instance.new("TextLabel")
 PingLabel.Parent = Main
 PingLabel.Size = UDim2.new(0,200,0,25)
@@ -315,7 +320,7 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Parent = Main
 Sidebar.Size = UDim2.new(0,140,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15,15,20)
-Sidebar.CanvasSize = UDim2.new(0,0,2.1,0)
+Sidebar.CanvasSize = UDim2.new(0,0,2.2,0)
 Sidebar.ScrollBarThickness = 2
 
 local SideCorner = Instance.new("UICorner")
@@ -330,7 +335,6 @@ HubTitle.Font = Enum.Font.GothamBold
 HubTitle.TextColor3 = Color3.fromRGB(0,170,255)
 HubTitle.TextSize = 20
 
--- Tombol Sidebar
 local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
 HomeBtn.Position = UDim2.new(0,10,0,65)
@@ -365,22 +369,27 @@ HaloMenuBtn.Parent = Sidebar
 HaloMenuBtn.Position = UDim2.new(0,10,0,240)
 HaloMenuBtn.Text = "Halo Kepala"
 
+local TitleMenuBtn = HomeBtn:Clone()
+TitleMenuBtn.Parent = Sidebar
+TitleMenuBtn.Position = UDim2.new(0,10,0,275)
+TitleMenuBtn.Text = "Custom Title"
+
 local PrivacyBtn = HomeBtn:Clone()
 PrivacyBtn.Parent = Sidebar
-PrivacyBtn.Position = UDim2.new(0,10,0,275)
+PrivacyBtn.Position = UDim2.new(0,10,0,310)
 PrivacyBtn.Text = "Privacy"
 
 local SettingsBtn = HomeBtn:Clone()
 SettingsBtn.Parent = Sidebar
-SettingsBtn.Position = UDim2.new(0,10,0,310)
+SettingsBtn.Position = UDim2.new(0,10,0,345)
 SettingsBtn.Text = "Settings"
 
 local CreditsBtn = HomeBtn:Clone()
 CreditsBtn.Parent = Sidebar
-CreditsBtn.Position = UDim2.new(0,10,0,345)
+CreditsBtn.Position = UDim2.new(0,10,0,380)
 CreditsBtn.Text = "Credits"
 
-for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
+for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, TitleMenuBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
 	v.BackgroundColor3 = Color3.fromRGB(35,35,45)
 	local c = Instance.new("UICorner")
 	c.Parent = v
@@ -418,6 +427,7 @@ local TeleportShopPage = MakePage()
 local SummitPage = MakePage()
 local PlayerPage = MakePage()
 local HaloPage = MakePage()
+local TitlePage = MakePage()
 local PrivacyPage = MakePage()
 local SettingsPage = MakePage()
 local CreditsPage = MakePage()
@@ -429,6 +439,7 @@ local function HideAll()
 	SummitPage.Visible = false
 	PlayerPage.Visible = false
 	HaloPage.Visible = false
+	TitlePage.Visible = false
 	PrivacyPage.Visible = false
 	SettingsPage.Visible = false
 	CreditsPage.Visible = false
@@ -440,6 +451,7 @@ TeleportShopBtn.MouseButton1Click:Connect(function() HideAll(); TeleportShopPage
 SummitBtn.MouseButton1Click:Connect(function() HideAll(); SummitPage.Visible = true end)
 PlayerMenuBtn.MouseButton1Click:Connect(function() HideAll(); PlayerPage.Visible = true end)
 HaloMenuBtn.MouseButton1Click:Connect(function() HideAll(); HaloPage.Visible = true end)
+TitleMenuBtn.MouseButton1Click:Connect(function() HideAll(); TitlePage.Visible = true end)
 PrivacyBtn.MouseButton1Click:Connect(function() HideAll(); PrivacyPage.Visible = true end)
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
@@ -465,7 +477,7 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- LOGIKA KONEKSI SUPABASE & VERIFIKASI KEY
+-- SUPABASE VERIFICATION
 ----------------------------------------------------
 FreeKeyBackupBtn.MouseButton1Click:Connect(function()
 	KeyBox.Text = "UBEY_FREE"
@@ -481,7 +493,7 @@ GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 		if setclipboard then setclipboard("https://discord.gg/aCbAWe9PYB") end
 	end)
 	StatusKey.TextColor3 = Color3.fromRGB(0,170,255)
-	StatusKey.Text = "Link Discord disalin! Ambil key dari bot."
+	StatusKey.Text = "Link Discord disalin! Dapatkan key dari bot Discord."
 end)
 
 SubmitKeyBtn.MouseButton1Click:Connect(function()
@@ -493,37 +505,66 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 	end
 	
 	if enteredKey == "UBEY_FREE" then
+		getgenv().KeyVerified = true
 		KeyFrame.Visible = false
 		Main.Visible = true
 		return
 	end
 	
 	StatusKey.TextColor3 = Color3.fromRGB(255,200,0)
-	StatusKey.Text = "Menghubungkan ke database Supabase..."
+	StatusKey.Text = "Mengecek key ke database Supabase..."
 	
 	task.spawn(function()
+		local requestFunc = syn and syn.request or http and http.request or request
+		
 		local success, response = pcall(function()
-			return HttpService:GetAsync(SUPABASE_URL .. enteredKey, false, {
-				["apikey"] = SUPABASE_ANON_KEY,
-				["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY
-			})
+			if requestFunc then
+				local res = requestFunc({
+					Url = SUPABASE_URL .. enteredKey,
+					Method = "GET",
+					Headers = {
+						["apikey"] = SUPABASE_ANON_KEY,
+						["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY,
+						["Content-Type"] = "application/json"
+					}
+				})
+				return res.Body
+			else
+				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, {
+					["apikey"] = SUPABASE_ANON_KEY,
+					["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY
+				})
+			end
 		end)
 		
-		if success then
-			local data = HttpService:JSONDecode(response)
-			if data and #data > 0 then
+		if success and response then
+			local decodeSuccess, data = pcall(function()
+				return HttpService:JSONDecode(response)
+			end)
+			
+			if decodeSuccess and data and #data > 0 then
+				local record = data[1]
+				local keyStatus = record.status
+				
+				if keyStatus == false or keyStatus == "inactive" or keyStatus == "used" then
+					StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+					StatusKey.Text = "Key sudah tidak aktif / sudah digunakan!"
+					return
+				end
+				
 				StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
 				StatusKey.Text = "Key Valid! Membuka Hub..."
 				task.wait(1)
+				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
 				Main.Visible = true
 			else
 				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-				StatusKey.Text = "Key Tidak Valid atau Sudah Expired!"
+				StatusKey.Text = "Key Salah atau Belum Dibuat oleh Bot Discord!"
 			end
 		else
 			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-			StatusKey.Text = "Gagal terhubung ke Supabase server."
+			StatusKey.Text = "Gagal terhubung ke server Supabase."
 		end
 	end)
 end)
@@ -822,7 +863,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE
+-- 4. SUMMIT PAGE (DENGAN ANTI-TEMBUS & JEDA DI PUNCAK)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -833,7 +874,8 @@ TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-local summitCFrame = CFrame.new(-6766.44629, 1312.69983, -10083.8037, -0.993305981, 1.64907146e-08, 0.115513086, 1.58947078e-08, 1, -6.08075279e-09, -0.115513086, -4.20400115e-09, -0.993305981)
+-- Ketinggian sumbu Y dinaikkan sedikit (+5) agar aman tidak tembus tanah
+local summitCFrame = CFrame.new(-6766.44629, 1317.69983, -10083.8037, -0.993305981, 1.64907146e-08, 0.115513086, 1.58947078e-08, 1, -6.08075279e-09, -0.115513086, -4.20400115e-09, -0.993305981)
 local bcCFrame = CFrame.new(-6834.84912, 1310.24744, -9902.42285, -1, 0, 0, 0, 1, 0, 0, 0, -1)
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v)
@@ -846,21 +888,33 @@ task.spawn(function()
 			pcall(function()
 				local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 				local hrp = character:WaitForChild("HumanoidRootPart", 5)
-				if hrp then
+				local humanoid = character:WaitForChild("Humanoid", 5)
+				
+				if hrp and humanoid then
 					local cpFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
 					local tpCP = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
+					
+					-- 1. Teleport lewat checkpoint berurutan
 					for i = 1, 20 do
 						if not getgenv().AutoSummitRunning then break end
 						if tpCP then tpCP:FireServer(i) end
 						task.wait(0.1)
 					end
+					
+					-- 2. Teleport ke puncak utama
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = summitCFrame
-						task.wait(1)
+						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+						
+						-- Jeda berhenti sejenak di puncak agar hitungan summit sukses dicatat game
+						task.wait(2.5) 
 					end
+					
+					-- 3. Kembali ke base camp
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = bcCFrame
-						task.wait(0.5)
+						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+						task.wait(0.8)
 					end
 				end
 			end)
@@ -872,7 +926,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 5. PLAYER PAGE (DENGAN HEADLESS & AUTO RGB FIRE)
+-- 5. PLAYER PAGE
 ----------------------------------------------------
 local TitlePly = Instance.new("TextLabel")
 TitlePly.Parent = PlayerPage
@@ -999,7 +1053,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 6. HALO & AKSESORIS KEPALA PAGE
+-- 6. HALO PAGE
 ----------------------------------------------------
 local TitleHalo = Instance.new("TextLabel")
 TitleHalo.Parent = HaloPage
@@ -1108,7 +1162,82 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 7. PRIVACY & ANTI-ADMIN PAGE
+-- 7. CUSTOM TITLE PAGE (TITLE DI ATAS KEPALA)
+----------------------------------------------------
+local TitleHeadLbl = Instance.new("TextLabel")
+TitleHeadLbl.Parent = TitlePage
+TitleHeadLbl.Size = UDim2.new(1,0,0,30)
+TitleHeadLbl.BackgroundTransparency = 1
+TitleHeadLbl.Text = "✨ CUSTOM TITLE DI ATAS KEPALA"
+TitleHeadLbl.TextColor3 = Color3.fromRGB(0,170,255)
+TitleHeadLbl.Font = Enum.Font.GothamBold
+TitleHeadLbl.TextSize = 13
+
+local TitleInputBox = Instance.new("TextBox")
+TitleInputBox.Parent = TitlePage
+TitleInputBox.Size = UDim2.new(1,0,0,35)
+TitleInputBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+TitleInputBox.PlaceholderText = "Ketik Teks Title (Cth: UBEY HUB V3)"
+TitleInputBox.Text = getgenv().UbeyConfig.CustomTitleText
+TitleInputBox.TextColor3 = Color3.new(1,1,1)
+TitleInputBox.Font = Enum.Font.Gotham
+TitleInputBox.TextSize = 12
+Instance.new("UICorner", TitleInputBox)
+
+TitleInputBox.FocusLost:Connect(function()
+	getgenv().CustomTitleInputText = TitleInputBox.Text
+	getgenv().UbeyConfig.CustomTitleText = TitleInputBox.Text
+	SaveConfig()
+end)
+
+local function ApplyCustomTitle()
+	pcall(function()
+		local char = LocalPlayer.Character
+		local head = char and char:FindFirstChild("Head")
+		if not head then return end
+		
+		for _, v in ipairs(head:GetChildren()) do
+			if v.Name == "UbeyCustomTitleBillboard" then
+				v:Destroy()
+			end
+		end
+		
+		if not getgenv().CustomTitleActive then return end
+		
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name = "UbeyCustomTitleBillboard"
+		billboard.Parent = head
+		billboard.Size = UDim2.new(0, 200, 0, 50)
+		billboard.StudsOffset = Vector3.new(0, 2.8, 0)
+		billboard.AlwaysOnTop = true
+		
+		local txtLabel = Instance.new("TextLabel")
+		txtLabel.Parent = billboard
+		txtLabel.Size = UDim2.new(1, 0, 1, 0)
+		txtLabel.BackgroundTransparency = 1
+		txtLabel.Text = getgenv().CustomTitleInputText or "UBEY HUB V3"
+		txtLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+		txtLabel.TextStrokeTransparency = 0
+		txtLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		txtLabel.Font = Enum.Font.GothamBold
+		txtLabel.TextSize = 18
+	end)
+end
+
+AddToggle(TitlePage, "Aktifkan Custom Title di Kepala", function(v)
+	getgenv().CustomTitleActive = v
+	ApplyCustomTitle()
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+	task.wait(1.5)
+	if getgenv().CustomTitleActive then
+		ApplyCustomTitle()
+	end
+end)
+
+----------------------------------------------------
+-- 8. PRIVACY & ANTI-ADMIN PAGE
 ----------------------------------------------------
 local TitlePrv = Instance.new("TextLabel")
 TitlePrv.Parent = PrivacyPage
@@ -1223,7 +1352,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 8. SETTINGS, CONFIG & CREDITS PAGE
+-- 9. SETTINGS, CONFIG & CREDITS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -1337,7 +1466,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG
+-- FLOATING BUTTON HP & DRAG (SECURE LOGIC)
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
@@ -1350,14 +1479,14 @@ local FloatCorner = Instance.new("UICorner")
 FloatCorner.CornerRadius = UDim.new(1,0)
 FloatCorner.Parent = Float
 
-local FloatStroke = Instance.new("UIStroke")
-FloatStroke.Parent = Float
-FloatStroke.Color = Color3.fromRGB(0,170,255)
-
-local Open = false
 Float.MouseButton1Click:Connect(function()
-	Open = not Open
-	Main.Visible = Open
+	if not getgenv().KeyVerified then
+		KeyFrame.Visible = not KeyFrame.Visible
+		Main.Visible = false
+	else
+		Main.Visible = not Main.Visible
+		KeyFrame.Visible = false
+	end
 end)
 
 local dragging = false
@@ -1365,21 +1494,14 @@ local dragStart, startPos
 
 Float.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = Float.Position
+		dragging, dragStart, startPos = true, input.Position, Float.Position
 	end
 end)
 
 UIS.TouchMoved:Connect(function(input)
 	if dragging then
 		local delta = input.Position - dragStart
-		Float.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
+		Float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end)
 
