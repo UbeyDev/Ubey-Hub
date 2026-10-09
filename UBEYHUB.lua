@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Version (Supabase, Ping, Anti-Lag, Shop, Config & Anti-Admin)
+-- UBEY HUB V3 | Final Fixed Version (Supabase, Key System & UI Toggle)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -124,6 +124,7 @@ getgenv().AntiAFKRunning = false
 getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
+getgenv().KeyVerified = false
 
 -- DATA KOORDINAT SPOT & SHOP
 local FishingSpots = {
@@ -493,6 +494,7 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 	end
 	
 	if enteredKey == "UBEY_FREE" then
+		getgenv().KeyVerified = true
 		KeyFrame.Visible = false
 		Main.Visible = true
 		return
@@ -515,6 +517,7 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 				StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
 				StatusKey.Text = "Key Valid! Membuka Hub..."
 				task.wait(1)
+				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
 				Main.Visible = true
 			else
@@ -1330,7 +1333,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG
+-- FLOATING BUTTON HP & DRAG (FIXED TOGGLE LOGIC)
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
@@ -1347,10 +1350,14 @@ local FloatStroke = Instance.new("UIStroke")
 FloatStroke.Parent = Float
 FloatStroke.Color = Color3.fromRGB(0,170,255)
 
-local Open = false
 Float.MouseButton1Click:Connect(function()
-	Open = not Open
-	Main.Visible = Open
+	if not getgenv().KeyVerified then
+		-- Jika key belum diverifikasi, tombol logo mengatur buka/tutup Key System
+		KeyFrame.Visible = not KeyFrame.Visible
+	else
+		-- Jika key sudah valid, tombol logo mengatur buka/tutup Main Hub
+		Main.Visible = not Main.Visible
+	end
 end)
 
 local dragging = false
