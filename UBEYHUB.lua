@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Fixed Version (Supabase, Key System & UI Toggle)
+-- UBEY HUB V3 | Final Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless & Fire RGB)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -124,7 +124,6 @@ getgenv().AntiAFKRunning = false
 getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
-getgenv().KeyVerified = false
 
 -- DATA KOORDINAT SPOT & SHOP
 local FishingSpots = {
@@ -494,7 +493,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 	end
 	
 	if enteredKey == "UBEY_FREE" then
-		getgenv().KeyVerified = true
 		KeyFrame.Visible = false
 		Main.Visible = true
 		return
@@ -517,7 +515,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 				StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
 				StatusKey.Text = "Key Valid! Membuka Hub..."
 				task.wait(1)
-				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
 				Main.Visible = true
 			else
@@ -836,34 +833,46 @@ TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
+local summitCFrame = CFrame.new(-6766.44629, 1312.69983, -10083.8037, -0.993305981, 1.64907146e-08, 0.115513086, 1.58947078e-08, 1, -6.08075279e-09, -0.115513086, -4.20400115e-09, -0.993305981)
+local bcCFrame = CFrame.new(-6834.84912, 1310.24744, -9902.42285, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+
 AddToggle(SummitPage, "Auto Summit Loop", function(v)
 	getgenv().AutoSummitRunning = v
 end)
+
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
 				local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 				local hrp = character:WaitForChild("HumanoidRootPart", 5)
-				local cpFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
-				local tpCP = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
-				if hrp and tpCP then
+				if hrp then
+					local cpFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
+					local tpCP = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
 					for i = 1, 20 do
 						if not getgenv().AutoSummitRunning then break end
-						pcall(function() tpCP:FireServer(i) end)
+						if tpCP then tpCP:FireServer(i) end
 						task.wait(0.1)
 					end
-					hrp.CFrame = CFrame.new(-6766.44629, 1312.69983, -10083.8037)
-					task.wait(1)
+					if getgenv().AutoSummitRunning then
+						hrp.CFrame = summitCFrame
+						task.wait(1)
+					end
+					if getgenv().AutoSummitRunning then
+						hrp.CFrame = bcCFrame
+						task.wait(0.5)
+					end
 				end
 			end)
+			task.wait(0.5)
+		else
+			task.wait(0.5)
 		end
-		task.wait(0.5)
 	end
 end)
 
 ----------------------------------------------------
--- 5. PLAYER PAGE
+-- 5. PLAYER PAGE (DENGAN HEADLESS & AUTO RGB FIRE)
 ----------------------------------------------------
 local TitlePly = Instance.new("TextLabel")
 TitlePly.Parent = PlayerPage
@@ -990,7 +999,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 6. HALO & ACCESSORIES KEPALA PAGE
+-- 6. HALO & AKSESORIS KEPALA PAGE
 ----------------------------------------------------
 local TitleHalo = Instance.new("TextLabel")
 TitleHalo.Parent = HaloPage
@@ -1154,7 +1163,6 @@ AddToggle(PrivacyPage, "Privacy Mode (Hide Name & Summit)", function(v)
 	end
 end)
 
--- Tombol Toggle Anti-Admin di Halaman Privacy
 local AntiAdminToggleBtn = Instance.new("TextButton")
 AntiAdminToggleBtn.Parent = PrivacyPage
 AntiAdminToggleBtn.Size = UDim2.new(1,0,0,35)
@@ -1174,7 +1182,6 @@ AntiAdminToggleBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 end)
 
--- Logika Pengecekan Admin Real-Time Berdasarkan Group ID 7019573
 local function CheckPlayerIsAdmin(player)
 	local groupId = getgenv().UbeyConfig.TargetGroupId or 7019573
 	local success, rank = pcall(function()
@@ -1257,7 +1264,6 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- Tombol Toggle Auto Execute
 local AutoExecToggleBtn = Instance.new("TextButton")
 AutoExecToggleBtn.Parent = SettingsPage
 AutoExecToggleBtn.Size = UDim2.new(1,0,0,35)
@@ -1276,7 +1282,6 @@ AutoExecToggleBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 end)
 
--- Tombol Manual Save Config
 local SaveConfigBtn = Instance.new("TextButton")
 SaveConfigBtn.Parent = SettingsPage
 SaveConfigBtn.Size = UDim2.new(1,0,0,35)
@@ -1294,7 +1299,6 @@ SaveConfigBtn.MouseButton1Click:Connect(function()
 	SaveConfigBtn.Text = "💾 Simpan Konfigurasi (Save Config)"
 end)
 
--- Tombol Reset Config
 local ResetConfigBtn = Instance.new("TextButton")
 ResetConfigBtn.Parent = SettingsPage
 ResetConfigBtn.Size = UDim2.new(1,0,0,35)
@@ -1333,7 +1337,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG (FIXED TOGGLE LOGIC)
+-- FLOATING BUTTON HP & DRAG
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
@@ -1350,14 +1354,10 @@ local FloatStroke = Instance.new("UIStroke")
 FloatStroke.Parent = Float
 FloatStroke.Color = Color3.fromRGB(0,170,255)
 
+local Open = false
 Float.MouseButton1Click:Connect(function()
-	if not getgenv().KeyVerified then
-		-- Jika key belum diverifikasi, tombol logo mengatur buka/tutup Key System
-		KeyFrame.Visible = not KeyFrame.Visible
-	else
-		-- Jika key sudah valid, tombol logo mengatur buka/tutup Main Hub
-		Main.Visible = not Main.Visible
-	end
+	Open = not Open
+	Main.Visible = Open
 end)
 
 local dragging = false
