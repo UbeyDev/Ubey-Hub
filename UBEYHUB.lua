@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Complete Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless, Fire RGB & Secure Key System)
+-- UBEY HUB V3 | Final Complete Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless, Fire RGB, Teleport Player & Secure Key System)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -315,7 +315,7 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Parent = Main
 Sidebar.Size = UDim2.new(0,140,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15,15,20)
-Sidebar.CanvasSize = UDim2.new(0,0,2.0,0)
+Sidebar.CanvasSize = UDim2.new(0,0,2.3,0)
 Sidebar.ScrollBarThickness = 2
 
 local SideCorner = Instance.new("UICorner")
@@ -364,22 +364,27 @@ HaloMenuBtn.Parent = Sidebar
 HaloMenuBtn.Position = UDim2.new(0,10,0,240)
 HaloMenuBtn.Text = "Halo Kepala"
 
+local PlayerTpBtn = HomeBtn:Clone()
+PlayerTpBtn.Parent = Sidebar
+PlayerTpBtn.Position = UDim2.new(0,10,0,275)
+PlayerTpBtn.Text = "Teleport Player"
+
 local PrivacyBtn = HomeBtn:Clone()
 PrivacyBtn.Parent = Sidebar
-PrivacyBtn.Position = UDim2.new(0,10,0,275)
+PrivacyBtn.Position = UDim2.new(0,10,0,310)
 PrivacyBtn.Text = "Privacy"
 
 local SettingsBtn = HomeBtn:Clone()
 SettingsBtn.Parent = Sidebar
-SettingsBtn.Position = UDim2.new(0,10,0,310)
+SettingsBtn.Position = UDim2.new(0,10,0,345)
 SettingsBtn.Text = "Settings"
 
 local CreditsBtn = HomeBtn:Clone()
 CreditsBtn.Parent = Sidebar
-CreditsBtn.Position = UDim2.new(0,10,0,345)
+CreditsBtn.Position = UDim2.new(0,10,0,380)
 CreditsBtn.Text = "Credits"
 
-for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
+for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PlayerTpBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
 	v.BackgroundColor3 = Color3.fromRGB(35,35,45)
 	local c = Instance.new("UICorner")
 	c.Parent = v
@@ -417,6 +422,7 @@ local TeleportShopPage = MakePage()
 local SummitPage = MakePage()
 local PlayerPage = MakePage()
 local HaloPage = MakePage()
+local PlayerTpPage = MakePage()
 local PrivacyPage = MakePage()
 local SettingsPage = MakePage()
 local CreditsPage = MakePage()
@@ -428,6 +434,7 @@ local function HideAll()
 	SummitPage.Visible = false
 	PlayerPage.Visible = false
 	HaloPage.Visible = false
+	PlayerTpPage.Visible = false
 	PrivacyPage.Visible = false
 	SettingsPage.Visible = false
 	CreditsPage.Visible = false
@@ -439,6 +446,7 @@ TeleportShopBtn.MouseButton1Click:Connect(function() HideAll(); TeleportShopPage
 SummitBtn.MouseButton1Click:Connect(function() HideAll(); SummitPage.Visible = true end)
 PlayerMenuBtn.MouseButton1Click:Connect(function() HideAll(); PlayerPage.Visible = true end)
 HaloMenuBtn.MouseButton1Click:Connect(function() HideAll(); HaloPage.Visible = true end)
+PlayerTpBtn.MouseButton1Click:Connect(function() HideAll(); PlayerTpPage.Visible = true end)
 PrivacyBtn.MouseButton1Click:Connect(function() HideAll(); PrivacyPage.Visible = true end)
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
@@ -1143,7 +1151,85 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 7. PRIVACY & ANTI-ADMIN PAGE
+-- 7. TELEPORT PLAYER PAGE (SCAN & PILIH PLAYER)
+----------------------------------------------------
+local TitleTpPly = Instance.new("TextLabel")
+TitleTpPly.Parent = PlayerTpPage
+TitleTpPly.Size = UDim2.new(1,0,0,30)
+TitleTpPly.BackgroundTransparency = 1
+TitleTpPly.Text = "👥 TELEPORT TO OTHER PLAYERS"
+TitleTpPly.TextColor3 = Color3.fromRGB(0,170,255)
+TitleTpPly.Font = Enum.Font.GothamBold
+TitleTpPly.TextSize = 13
+
+local RefreshPlayerBtn = Instance.new("TextButton")
+RefreshPlayerBtn.Parent = PlayerTpPage
+RefreshPlayerBtn.Size = UDim2.new(1,0,0,35)
+RefreshPlayerBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
+RefreshPlayerBtn.Text = "🔄 Refresh / Scan Pemain di Server"
+RefreshPlayerBtn.TextColor3 = Color3.new(1,1,1)
+RefreshPlayerBtn.Font = Enum.Font.GothamBold
+RefreshPlayerBtn.TextSize = 12
+Instance.new("UICorner", RefreshPlayerBtn)
+
+local PlayerListContainer = Instance.new("ScrollingFrame")
+PlayerListContainer.Parent = PlayerTpPage
+PlayerListContainer.Size = UDim2.new(1,0,0,210)
+PlayerListContainer.BackgroundTransparency = 1
+PlayerListContainer.CanvasSize = UDim2.new(0,0,2,0)
+PlayerListContainer.ScrollBarThickness = 3
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Parent = PlayerListContainer
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ListLayout.Padding = UDim.new(0, 5)
+
+local function ScanAndDisplayPlayers()
+	for _, child in ipairs(PlayerListContainer:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer then
+			local pBtn = Instance.new("TextButton")
+			pBtn.Parent = PlayerListContainer
+			pBtn.Size = UDim2.new(1,0,0,32)
+			pBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
+			pBtn.Text = "👤 " .. plr.Name .. " (" .. plr.DisplayName .. ")"
+			pBtn.TextColor3 = Color3.new(1,1,1)
+			pBtn.Font = Enum.Font.GothamMedium
+			pBtn.TextSize = 11
+			Instance.new("UICorner", pBtn)
+			
+			pBtn.MouseButton1Click:Connect(function()
+				pcall(function()
+					local char = plr.Character
+					local hrpTarget = char and char:FindFirstChild("HumanoidRootPart")
+					local myChar = LocalPlayer.Character
+					local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+					
+					if hrpTarget and myHrp then
+						myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 3, 0)
+					end
+				end)
+			end)
+		end
+	end
+end
+
+RefreshPlayerBtn.MouseButton1Click:Connect(function()
+	ScanAndDisplayPlayers()
+end)
+
+task.spawn(function()
+	task.wait(2)
+	ScanAndDisplayPlayers()
+end)
+
+----------------------------------------------------
+-- 8. PRIVACY & ANTI-ADMIN PAGE
 ----------------------------------------------------
 local TitlePrv = Instance.new("TextLabel")
 TitlePrv.Parent = PrivacyPage
@@ -1258,7 +1344,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 8. SETTINGS, CONFIG & CREDITS PAGE
+-- 9. SETTINGS, CONFIG & CREDITS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
