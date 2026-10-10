@@ -11,7 +11,7 @@
         .container { background: #161b22; padding: 25px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.6); max-width: 400px; width: 100%; border: 1px solid #30363d; }
         h1 { color: #58a6ff; font-size: 20px; margin-bottom: 10px; }
         .btn { background: #238636; color: white; padding: 12px 20px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; box-sizing: border-box; }
-        .btn:disabled { background: #165223; cursor: not-allowed; }
+        .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; border: 1px solid #484f58; }
         .btn:hover:not(:disabled) { background: #2ea043; }
         .error { color: #f85149; font-size: 14px; font-weight: bold; }
         #status-msg { margin-top: 15px; font-size: 13px; word-break: break-all; }
@@ -52,11 +52,28 @@
                 <button class="btn" id="gen-btn" onclick="generateAndSaveKey()">Ambil & Simpan Key Unik</button>
                 <p id="status-msg"></p>
             `;
+            
+            // Cek apakah browser ini sudah pernah mengambil key
+            checkExistingKey();
         } else {
             container.innerHTML = `
                 <h1 style="color: #f85149;">❌ Akses Ditolak!</h1>
                 <p class="error">Anda harus melewati link iklan terlebih dahulu untuk mengakses halaman ini.</p>
             `;
+        }
+
+        // Fungsi mengecek apakah key sudah ada di memori browser
+        function checkExistingKey() {
+            const savedKey = localStorage.getItem('ubey_user_key');
+            if (savedKey) {
+                const btn = document.getElementById('gen-btn');
+                const statusMsg = document.getElementById('status-msg');
+                
+                btn.disabled = true;
+                btn.innerText = "Key Sudah Diambil!";
+                statusMsg.style.color = "#3fb950";
+                statusMsg.innerHTML = "✅ Key Anda: <br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + savedKey + "</b>";
+            }
         }
 
         // Fungsi Pembuat Karakter Acak Unik (Cth: UBEY-V3-A9X2K7L1P)
@@ -73,6 +90,12 @@
             const btn = document.getElementById('gen-btn');
             const statusMsg = document.getElementById('status-msg');
             
+            // Mencegah klik ganda jika sudah ada key
+            if (localStorage.getItem('ubey_user_key')) {
+                checkExistingKey();
+                return;
+            }
+
             btn.disabled = true;
             statusMsg.style.color = "#e3b341";
             statusMsg.innerText = "⏳ Sedang mendaftarkan key unik ke database...";
@@ -97,7 +120,12 @@
                     console.error("Supabase Error:", error);
                     statusMsg.style.color = "#f85149";
                     statusMsg.innerText = "⚠️ Gagal Simpan DB: " + error.message;
+                    btn.disabled = false; // Buka tombol lagi jika gagal
                 } else {
+                    // Simpan ke memori browser agar tidak bisa spam
+                    localStorage.setItem('ubey_user_key', generatedKey);
+
+                    btn.innerText = "Key Sudah Diambil!";
                     statusMsg.style.color = "#3fb950";
                     statusMsg.innerHTML = "✅ Key Unik Berhasil Dibuat!<br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + generatedKey + "</b>";
                     
@@ -111,7 +139,6 @@
                 console.error("Catch Error:", err);
                 statusMsg.style.color = "#f85149";
                 statusMsg.innerText = "❌ Terjadi Kesalahan Koneksi.";
-            } finally {
                 btn.disabled = false;
             }
         }
