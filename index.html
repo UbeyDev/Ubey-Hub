@@ -4,30 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ubey Hub V3 - Key Generator</title>
-    <!-- Library Supabase JS -->
+    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; text-align: center; padding: 50px 15px; }
-        .container { background: #161b22; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.5); max-width: 400px; width: 100%; }
-        h1 { color: #58a6ff; font-size: 22px; margin-bottom: 10px; }
-        .btn { background: #238636; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 15px; width: 100%; box-sizing: border-box; }
-        .btn:hover { background: #2ea043; }
-        .error { color: #f85149; font-size: 16px; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; text-align: center; padding: 40px 15px; }
+        .container { background: #161b22; padding: 25px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.6); max-width: 400px; width: 100%; border: 1px solid #30363d; }
+        h1 { color: #58a6ff; font-size: 20px; margin-bottom: 10px; }
+        .btn { background: #238636; color: white; padding: 12px 20px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; box-sizing: border-box; }
+        .btn:disabled { background: #165223; cursor: not-allowed; }
+        .btn:hover:not(:disabled) { background: #2ea043; }
+        .error { color: #f85149; font-size: 14px; font-weight: bold; }
+        #status-msg { margin-top: 15px; font-size: 13px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <div class="container" id="main-container">
-        <!-- Tampilan diatur oleh JS -->
+        <!-- Konten diatur oleh JS -->
     </div>
 
     <script>
-        // Kredensial Supabase Asli Kamu
+        // Kredensial Supabase Kamu
         const SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Token rahasia Linkvertise
+        // Nama Tabel di Supabase
+        const TABLE_NAME = "Ubey_Project";
+
+        // Token Rahasia Linkvertise
         const SECRET_TOKEN = "ubey_secret_pass_2026";
         
         // Membaca token dari URL (?token= atau #token=)
@@ -42,50 +47,70 @@
 
         if (userToken === SECRET_TOKEN) {
             container.innerHTML = `
-                <h1>Ubey Hub V3</h1>
-                <p>Klik tombol di bawah untuk membuat dan menyimpan Key kamu ke database.</p>
-                <button class="btn" id="gen-btn" onclick="generateAndSaveKey()">Ambil & Simpan Key</button>
-                <p id="key-display" style="margin-top: 20px; font-weight: bold; color: #3fb950; word-break: break-all;"></p>
+                <h1>Ubey Hub V3 - Key Generator</h1>
+                <p style="font-size: 13px; color: #8b949e;">Klik tombol di bawah untuk membuat dan mendaftarkan Key unik kamu.</p>
+                <button class="btn" id="gen-btn" onclick="generateAndSaveKey()">Ambil & Simpan Key Unik</button>
+                <p id="status-msg"></p>
             `;
         } else {
             container.innerHTML = `
                 <h1 style="color: #f85149;">❌ Akses Ditolak!</h1>
-                <p class="error">Anda harus melewati link iklan (LootLabs & Linkvertise) terlebih dahulu untuk mengakses halaman ini.</p>
+                <p class="error">Anda harus melewati link iklan terlebih dahulu untuk mengakses halaman ini.</p>
             `;
+        }
+
+        // Fungsi Pembuat Karakter Acak Unik (Cth: UBEY-V3-A9X2K7L1P)
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
         }
 
         async function generateAndSaveKey() {
             const btn = document.getElementById('gen-btn');
-            const display = document.getElementById('key-display');
+            const statusMsg = document.getElementById('status-msg');
             
             btn.disabled = true;
-            display.innerText = "Memproses & menyimpan ke database...";
+            statusMsg.style.color = "#e3b341";
+            statusMsg.innerText = "⏳ Sedang mendaftarkan key unik ke database...";
 
-            // Format key berdasarkan tanggal hari ini
-            const today = new Date().toISOString().slice(0, 10);
-            const generatedKey = "UBEY-V3-" + btoa(today + "_ubeyhub").slice(0, 10).toUpperCase();
+            // Hasilkan Key Acak Unik Setiap Klik
+            const randomCode = generateRandomString(10);
+            const generatedKey = "UBEY-V3-" + randomCode;
 
             try {
-                // Simpan Key ke tabel 'keys' di Supabase
+                // Simpan Key acak baru ke Supabase
                 const { data, error } = await supabaseClient
-                    .from('keys') 
+                    .from(TABLE_NAME) 
                     .insert([
-                        { key_value: generatedKey, created_at: new Date().toISOString() }
+                        { 
+                            key_value: generatedKey, 
+                            status: "active",
+                            created_at: new Date().toISOString() 
+                        }
                     ]);
 
                 if (error) {
-                    console.log("Catatan:", error.message);
+                    console.error("Supabase Error:", error);
+                    statusMsg.style.color = "#f85149";
+                    statusMsg.innerText = "⚠️ Gagal Simpan DB: " + error.message;
+                } else {
+                    statusMsg.style.color = "#3fb950";
+                    statusMsg.innerHTML = "✅ Key Unik Berhasil Dibuat!<br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + generatedKey + "</b>";
+                    
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(generatedKey);
+                        alert("Key unik berhasil dibuat dan disalin:\n" + generatedKey);
+                    }
                 }
 
-                display.innerText = "Key Anda: " + generatedKey;
-                
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(generatedKey);
-                    alert("Key berhasil dibuat dan disimpan di database!\n\nKey: " + generatedKey);
-                }
             } catch (err) {
-                console.error(err);
-                display.innerText = "Key Anda: " + generatedKey;
+                console.error("Catch Error:", err);
+                statusMsg.style.color = "#f85149";
+                statusMsg.innerText = "❌ Terjadi Kesalahan Koneksi.";
             } finally {
                 btn.disabled = false;
             }
