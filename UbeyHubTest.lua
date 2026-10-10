@@ -249,9 +249,9 @@ StatusKey.TextSize = 12
 GetKeyLinkBtn.MouseButton1Click:Connect(function()
 	pcall(function()
 		if setclipboard then
-			setclipboard("https://loot-link.com/s?Q8dFV0HC")
+			setclipboard("https://loot-link.com/s?x7tEhWwP")
 		elseif toclipboard then
-			toclipboard("https://loot-link.com/s?Q8dFV0HC")
+			toclipboard("https://loot-link.com/s?x7tEhWwP")
 		end
 	end)
 	StatusKey.TextColor3 = Color3.fromRGB(0, 170, 255)
