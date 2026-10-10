@@ -3,36 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ubey Hub V3 - Key Generator</title>
+    <title>UBEY HUB V3 - Key Generator</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #0f0f15; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { background: #181824; border: 2px solid #00a2ff; border-radius: 15px; padding: 30px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 0 20px rgba(0, 162, 255, 0.2); }
-        h1 { color: #00a2ff; font-size: 22px; margin-bottom: 10px; }
-        p { color: #aaa; font-size: 13px; margin-bottom: 25px; }
-        .key-box { background: #252535; border: 1px solid #353545; border-radius: 8px; padding: 12px; font-size: 16px; font-weight: bold; color: #00ff88; letter-spacing: 1px; word-break: break-all; margin-bottom: 20px; min-height: 48px; display: flex; align-items: center; justify-content: center; }
-        .btn { background: #00a2ff; color: #fff; border: none; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
-        .btn:hover { background: #0082cc; }
-        .status { margin-top: 15px; font-size: 12px; color: #ffaa00; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #0d0e12;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #161820;
+            border: 2px solid #00a2ff;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 162, 255, 0.2);
+        }
+        h2 {
+            color: #00a2ff;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        p {
+            font-size: 13px;
+            color: #a0a0a0;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .key-box {
+            background-color: #222530;
+            border: 1px solid #333745;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #00ff88;
+            font-size: 16px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        .btn {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background-color: #00a2ff;
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #00ff88;
+        }
+        .error-msg {
+            color: #ff4d4d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>UBEY HUB V3 KEY</h1>
-    <p>Terima kasih telah melewati iklan! Klik tombol di bawah untuk membuat dan menyalin Key kamu.</p>
+    <h2>UBEY HUB V3 KEY</h2>
     
-    <div class="key-box" id="keyDisplay">Membuat Key...</div>
-    <button class="btn" onclick="copyKey()">📋 Salin Key</button>
-    <div class="status" id="statusText">Menghubungkan ke server...</div>
+    <!-- Tampilan jika datang dari LootLabs dengan benar -->
+    <div id="valid-access" style="display: none;">
+        <p>Terima kasih telah melewati iklan! Klik tombol di bawah untuk menyalin Key kamu.</p>
+        <div class="key-box" id="keyDisplay">Membuat Key...</div>
+        <button class="btn" onclick="copyKey()">📋 Salin Key</button>
+        <div class="status" id="statusMsg">✅ Key berhasil dibuat & terdaftar di Database!</div>
+    </div>
+
+    <!-- Tampilan jika orang mencoba membuka langsung (Bypass) -->
+    <div id="invalid-access" style="display: none;">
+        <p class="error-msg">❌ AKSES DITOLAK!</p>
+        <p style="margin-top: 10px;">Kamu tidak boleh membuka tautan ini secara langsung atau mencoba bypass iklan. Silakan lewati iklan dari game Roblox terlebih dahulu!</p>
+    </div>
 </div>
 
 <script>
     const SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project";
-    const SUPABASE_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5";
+    const SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5";
 
-    // Fungsi membuat string acak 12 karakter
-    function generateRandomString(length) {
+    // Cek apakah ada parameter ?ref=lootlabs di URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+
+    if (ref === 'lootlabs') {
+        document.getElementById('valid-access').style.display = 'block';
+        generateAndSaveKey();
+    } else {
+        document.getElementById('invalid-access').style.display = 'block';
+    }
+
+    let generatedKey = "";
+
+    function getRandomString(length) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
         for (let i = 0; i < length; i++) {
@@ -42,19 +126,15 @@
     }
 
     async function generateAndSaveKey() {
-        const statusEl = document.getElementById("statusText");
-        const keyEl = document.getElementById("keyDisplay");
-        
-        // Buat key berawalan UBEY-
-        const generatedKey = "UBEY-" + generateRandomString(12);
+        generatedKey = "UBEY-" + getRandomString(12);
+        document.getElementById('keyDisplay').innerText = generatedKey;
 
         try {
-            // Simpan ke Supabase (Kolom key_value)
-            const response = await fetch(SUPABASE_URL, {
+            await fetch(SUPABASE_URL, {
                 method: "POST",
                 headers: {
-                    "apikey": SUPABASE_KEY,
-                    "Authorization": "Bearer " + SUPABASE_KEY,
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": "Bearer " + SUPABASE_ANON_KEY,
                     "Content-Type": "application/json",
                     "Prefer": "return=minimal"
                 },
@@ -62,38 +142,15 @@
                     key_value: generatedKey
                 })
             });
-
-            if (response.ok) {
-                keyEl.innerText = generatedKey;
-                statusEl.style.color = "#00ff88";
-                statusEl.innerText = "✅ Key berhasil dibuat & terdaftar di Database!";
-            } else {
-                const errText = await response.text();
-                keyEl.innerText = "Gagal!";
-                statusEl.style.color = "#ff4444";
-                statusEl.innerText = "❌ Gagal menyimpan ke Database (Cek RLS/Supabase)";
-                console.error("Supabase Error:", errText);
-            }
         } catch (err) {
-            keyEl.innerText = "Error!";
-            statusEl.style.color = "#ff4444";
-            statusEl.innerText = "❌ Kesalahan jaringan / koneksi server.";
-            console.error(err);
+            console.error("Gagal menyimpan ke Supabase:", err);
         }
     }
 
     function copyKey() {
-        const keyText = document.getElementById("keyDisplay").innerText;
-        const statusEl = document.getElementById("statusText");
-        if (keyText.startsWith("UBEY-")) {
-            navigator.clipboard.writeText(keyText);
-            statusEl.style.color = "#00a2ff";
-            statusEl.innerText = "📋 Key berhasil disalin ke Clipboard!";
-        }
+        navigator.clipboard.writeText(generatedKey);
+        alert("Key berhasil disalin: " + generatedKey);
     }
-
-    // Jalankan otomatis saat halaman dibuka
-    generateAndSaveKey();
 </script>
 
 </body>
