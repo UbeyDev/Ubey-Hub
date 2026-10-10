@@ -246,12 +246,13 @@ StatusKey.Font = Enum.Font.Gotham
 StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
+-- LINK LOOTLABS BARU YANG SUDAH DIPERBARUI
 GetKeyLinkBtn.MouseButton1Click:Connect(function()
 	pcall(function()
 		if setclipboard then
-			setclipboard("https://loot-link.com/s?x7tEhWwP")
+			setclipboard("https://loot-link.com/s?Bk7mrnMx")
 		elseif toclipboard then
-			toclipboard("https://loot-link.com/s?x7tEhWwP")
+			toclipboard("https://loot-link.com/s?Bk7mrnMx")
 		end
 	end)
 	StatusKey.TextColor3 = Color3.fromRGB(0, 170, 255)
@@ -329,7 +330,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 				local deviceHWID = game:GetService("RbxAnalyticsService"):GetClientId()
 				
 				if record.hwid == nil or record.hwid == "" or record.hwid == "null" then
-					-- Jika kolom hwid masih kosong, kunci perangkat ini ke Supabase
 					local patchUrl = SUPABASE_URL .. "?key_value=eq." .. HttpService:UrlEncode(enteredKey)
 					pcall(function()
 						if requestFunc then
@@ -349,7 +349,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 						end
 					end)
 				elseif record.hwid ~= deviceHWID then
-					-- Jika hwid sudah terisi tapi dicoba di perangkat lain
 					StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50)
 					StatusKey.Text = "Key ini sudah terkunci di perangkat lain!"
 					return
