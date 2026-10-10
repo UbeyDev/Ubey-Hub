@@ -4,57 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ubey Hub V3 - Key Generator</title>
+    <!-- Library Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; text-align: center; padding: 50px; }
-        .container { background: #161b22; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        h1 { color: #58a6ff; }
-        .btn { background: #238636; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 15px; }
+        body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; text-align: center; padding: 50px 15px; }
+        .container { background: #161b22; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.5); max-width: 400px; width: 100%; }
+        h1 { color: #58a6ff; font-size: 22px; margin-bottom: 10px; }
+        .btn { background: #238636; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 15px; width: 100%; box-sizing: border-box; }
         .btn:hover { background: #2ea043; }
-        .error { color: #f85149; font-size: 18px; font-weight: bold; }
+        .error { color: #f85149; font-size: 16px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="container" id="main-container">
-        <!-- Konten akan diatur oleh JavaScript di bawah -->
+        <!-- Tampilan diatur oleh JS -->
     </div>
 
     <script>
-        // Token rahasia yang dikirim dari Linkvertise
+        // Kredensial Supabase Asli Kamu
+        const SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Token rahasia Linkvertise
         const SECRET_TOKEN = "ubey_secret_pass_2026";
         
+        // Membaca token dari URL (?token= atau #token=)
         const urlParams = new URLSearchParams(window.location.search);
-        const userToken = urlParams.get('token');
+        let userToken = urlParams.get('token');
+        if (!userToken && window.location.hash) {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            userToken = hashParams.get('token');
+        }
+
         const container = document.getElementById('main-container');
 
         if (userToken === SECRET_TOKEN) {
-            // Jika token valid (melewati iklan)
             container.innerHTML = `
-                <h1>Ubey Hub V3 - Key Generator</h1>
-                <p>Selamat! Anda telah melewati alur iklan dengan sukses.</p>
-                <button class="btn" onclick="generateKey()">Ambil Key Anda</button>
-                <p id="key-display" style="margin-top: 20px; font-weight: bold; color: #3fb950;"></p>
+                <h1>Ubey Hub V3</h1>
+                <p>Klik tombol di bawah untuk membuat dan menyimpan Key kamu ke database.</p>
+                <button class="btn" id="gen-btn" onclick="generateAndSaveKey()">Ambil & Simpan Key</button>
+                <p id="key-display" style="margin-top: 20px; font-weight: bold; color: #3fb950; word-break: break-all;"></p>
             `;
         } else {
-            // Jika seseorang mencoba membuka langsung tanpa token / bypass
             container.innerHTML = `
                 <h1 style="color: #f85149;">❌ Akses Ditolak!</h1>
                 <p class="error">Anda harus melewati link iklan (LootLabs & Linkvertise) terlebih dahulu untuk mengakses halaman ini.</p>
-                <p>Silakan salin ulang link dari dalam skrip Roblox Ubey Hub V3.</p>
             `;
         }
 
-        function generateKey() {
-            // Buat key otomatis (bisa disesuaikan dengan sistem key kamu)
+        async function generateAndSaveKey() {
+            const btn = document.getElementById('gen-btn');
+            const display = document.getElementById('key-display');
+            
+            btn.disabled = true;
+            display.innerText = "Memproses & menyimpan ke database...";
+
+            // Format key berdasarkan tanggal hari ini
             const today = new Date().toISOString().slice(0, 10);
             const generatedKey = "UBEY-V3-" + btoa(today + "_ubeyhub").slice(0, 10).toUpperCase();
-            
-            document.getElementById('key-display').innerText = "Key Anda: " + generatedKey;
-            
-            // Salin otomatis ke clipboard jika didukung
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(generatedKey);
-                alert("Key berhasil disalin ke clipboard: " + generatedKey);
+
+            try {
+                // Simpan Key ke tabel 'keys' di Supabase
+                const { data, error } = await supabaseClient
+                    .from('keys') 
+                    .insert([
+                        { key_value: generatedKey, created_at: new Date().toISOString() }
+                    ]);
+
+                if (error) {
+                    console.log("Catatan:", error.message);
+                }
+
+                display.innerText = "Key Anda: " + generatedKey;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(generatedKey);
+                    alert("Key berhasil dibuat dan disimpan di database!\n\nKey: " + generatedKey);
+                }
+            } catch (err) {
+                console.error(err);
+                display.innerText = "Key Anda: " + generatedKey;
+            } finally {
+                btn.disabled = false;
             }
         }
     </script>
