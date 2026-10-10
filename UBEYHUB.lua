@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM
+-- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM (PREMIUM EDITION)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -325,19 +325,31 @@ Sidebar.ScrollBarThickness = 2
 local SideCorner = Instance.new("UICorner")
 SideCorner.Parent = Sidebar
 
+-- JUDUL UTAMA (UBEY HUB)
 local HubTitle = Instance.new("TextLabel")
 HubTitle.Parent = Sidebar
 HubTitle.BackgroundTransparency = 1
-HubTitle.Size = UDim2.new(1,0,0,60)
-HubTitle.Text = "UBEY HUB\n<font size='11' color='#00AAFF'>👑 Premium</font>"
-HubTitle.RichText = true
+HubTitle.Position = UDim2.new(0, 0, 0, 8)
+HubTitle.Size = UDim2.new(1, 0, 0, 22)
+HubTitle.Text = "UBEY HUB"
 HubTitle.Font = Enum.Font.GothamBold
-HubTitle.TextColor3 = Color3.fromRGB(0,170,255)
-HubTitle.TextSize = 20
+HubTitle.TextColor3 = Color3.fromRGB(0, 170, 255)
+HubTitle.TextSize = 17
+
+-- SUBTITLE (👑 Premium)
+local HubSubTitle = Instance.new("TextLabel")
+HubSubTitle.Parent = Sidebar
+HubSubTitle.BackgroundTransparency = 1
+HubSubTitle.Position = UDim2.new(0, 0, 0, 32)
+HubSubTitle.Size = UDim2.new(1, 0, 0, 18)
+HubSubTitle.Text = "👑 Premium"
+HubSubTitle.Font = Enum.Font.GothamBold
+HubSubTitle.TextColor3 = Color3.fromRGB(255, 215, 0) -- Warna Emas
+HubSubTitle.TextSize = 12
 
 local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
-HomeBtn.Position = UDim2.new(0,10,0,65)
+HomeBtn.Position = UDim2.new(0,10,0,60)
 HomeBtn.Size = UDim2.new(1,-20,0,28)
 HomeBtn.Text = "Fishing & Sell"
 HomeBtn.TextColor3 = Color3.new(1,1,1)
@@ -346,47 +358,47 @@ HomeBtn.TextSize = 12
 
 local GalatamaBtn = HomeBtn:Clone()
 GalatamaBtn.Parent = Sidebar
-GalatamaBtn.Position = UDim2.new(0,10,0,100)
+GalatamaBtn.Position = UDim2.new(0,10,0,95)
 GalatamaBtn.Text = "Galatama"
 
 local TeleportShopBtn = HomeBtn:Clone()
 TeleportShopBtn.Parent = Sidebar
-TeleportShopBtn.Position = UDim2.new(0,10,0,135)
+TeleportShopBtn.Position = UDim2.new(0,10,0,130)
 TeleportShopBtn.Text = "Teleport Shop"
 
 local SummitBtn = HomeBtn:Clone()
 SummitBtn.Parent = Sidebar
-SummitBtn.Position = UDim2.new(0,10,0,170)
+SummitBtn.Position = UDim2.new(0,10,0,165)
 SummitBtn.Text = "Summit"
 
 local PlayerMenuBtn = HomeBtn:Clone()
 PlayerMenuBtn.Parent = Sidebar
-PlayerMenuBtn.Position = UDim2.new(0,10,0,205)
+PlayerMenuBtn.Position = UDim2.new(0,10,0,200)
 PlayerMenuBtn.Text = "Player"
 
 local HaloMenuBtn = HomeBtn:Clone()
 HaloMenuBtn.Parent = Sidebar
-HaloMenuBtn.Position = UDim2.new(0,10,0,240)
+HaloMenuBtn.Position = UDim2.new(0,10,0,235)
 HaloMenuBtn.Text = "Halo Kepala"
 
 local PlayerTpBtn = HomeBtn:Clone()
 PlayerTpBtn.Parent = Sidebar
-PlayerTpBtn.Position = UDim2.new(0,10,0,275)
+PlayerTpBtn.Position = UDim2.new(0,10,0,270)
 PlayerTpBtn.Text = "Teleport Player"
 
 local PrivacyBtn = HomeBtn:Clone()
 PrivacyBtn.Parent = Sidebar
-PrivacyBtn.Position = UDim2.new(0,10,0,310)
+PrivacyBtn.Position = UDim2.new(0,10,0,305)
 PrivacyBtn.Text = "Privacy"
 
 local SettingsBtn = HomeBtn:Clone()
 SettingsBtn.Parent = Sidebar
-SettingsBtn.Position = UDim2.new(0,10,0,345)
+SettingsBtn.Position = UDim2.new(0,10,0,340)
 SettingsBtn.Text = "Settings"
 
 local CreditsBtn = HomeBtn:Clone()
 CreditsBtn.Parent = Sidebar
-CreditsBtn.Position = UDim2.new(0,10,0,380)
+CreditsBtn.Position = UDim2.new(0,10,0,375)
 CreditsBtn.Text = "Credits"
 
 for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PlayerTpBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
