@@ -184,12 +184,12 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ----------------------------------------------------
--- KEY SYSTEM UI (SUPABASE INTEGRATION)
+-- KEY SYSTEM UI (SUPABASE & LOOTLABS INTEGRATION)
 ----------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
-KeyFrame.Size = UDim2.new(0,380,0,220)
-KeyFrame.Position = UDim2.new(0.5,-190,0.5,-110)
+KeyFrame.Size = UDim2.new(0,380,0,210)
+KeyFrame.Position = UDim2.new(0.5,-190,0.5,-105)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 KeyFrame.Visible = true
 
@@ -203,7 +203,7 @@ KeyStroke.Color = Color3.fromRGB(0,170,255)
 
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
-KeyTitle.Size = UDim2.new(1,0,0,50)
+KeyTitle.Size = UDim2.new(1,0,0,45)
 KeyTitle.BackgroundTransparency = 1
 KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM"
 KeyTitle.Font = Enum.Font.GothamBold
@@ -213,9 +213,9 @@ KeyTitle.TextSize = 15
 local KeyBox = Instance.new("TextBox")
 KeyBox.Parent = KeyFrame
 KeyBox.Size = UDim2.new(0,340,0,38)
-KeyBox.Position = UDim2.new(0,20,0,60)
+KeyBox.Position = UDim2.new(0,20,0,55)
 KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-KeyBox.PlaceholderText = "Masukkan Key dari Bot Discord..."
+KeyBox.PlaceholderText = "Masukkan Key dari Website..."
 KeyBox.Text = ""
 KeyBox.TextColor3 = Color3.new(1,1,1)
 KeyBox.Font = Enum.Font.Gotham
@@ -225,7 +225,7 @@ Instance.new("UICorner", KeyBox)
 local SubmitKeyBtn = Instance.new("TextButton")
 SubmitKeyBtn.Parent = KeyFrame
 SubmitKeyBtn.Size = UDim2.new(0,165,0,35)
-SubmitKeyBtn.Position = UDim2.new(0,20,0,115)
+SubmitKeyBtn.Position = UDim2.new(0,20,0,105)
 SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
 SubmitKeyBtn.Text = "Verifikasi Key"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
@@ -233,32 +233,21 @@ SubmitKeyBtn.Font = Enum.Font.GothamBold
 SubmitKeyBtn.TextSize = 13
 Instance.new("UICorner", SubmitKeyBtn)
 
-local GetKeyDiscordBtn = Instance.new("TextButton")
-GetKeyDiscordBtn.Parent = KeyFrame
-GetKeyDiscordBtn.Size = UDim2.new(0,165,0,35)
-GetKeyDiscordBtn.Position = UDim2.new(0,195,0,115)
-GetKeyDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-GetKeyDiscordBtn.Text = "Get Key via Bot Discord"
-GetKeyDiscordBtn.TextColor3 = Color3.new(1,1,1)
-GetKeyDiscordBtn.Font = Enum.Font.GothamBold
-GetKeyDiscordBtn.TextSize = 12
-Instance.new("UICorner", GetKeyDiscordBtn)
-
-local FreeKeyBackupBtn = Instance.new("TextButton")
-FreeKeyBackupBtn.Parent = KeyFrame
-FreeKeyBackupBtn.Size = UDim2.new(0,340,0,30)
-FreeKeyBackupBtn.Position = UDim2.new(0,20,0,160)
-FreeKeyBackupBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
-FreeKeyBackupBtn.Text = "Gunakan Free Key (UBEY_FREE)"
-FreeKeyBackupBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
-FreeKeyBackupBtn.Font = Enum.Font.GothamMedium
-FreeKeyBackupBtn.TextSize = 12
-Instance.new("UICorner", FreeKeyBackupBtn)
+local GetKeyLinkBtn = Instance.new("TextButton")
+GetKeyLinkBtn.Parent = KeyFrame
+GetKeyLinkBtn.Size = UDim2.new(0,165,0,35)
+GetKeyLinkBtn.Position = UDim2.new(0,195,0,105)
+GetKeyLinkBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+GetKeyLinkBtn.Text = "Get Key (Copy Link)"
+GetKeyLinkBtn.TextColor3 = Color3.new(1,1,1)
+GetKeyLinkBtn.Font = Enum.Font.GothamBold
+GetKeyLinkBtn.TextSize = 13
+Instance.new("UICorner", GetKeyLinkBtn)
 
 local StatusKey = Instance.new("TextLabel")
 StatusKey.Parent = KeyFrame
-StatusKey.Size = UDim2.new(1,0,0,20)
-StatusKey.Position = UDim2.new(0,0,0,195)
+StatusKey.Size = UDim2.new(1,0,0,25)
+StatusKey.Position = UDim2.new(0,0,0,160)
 StatusKey.BackgroundTransparency = 1
 StatusKey.Text = ""
 StatusKey.Font = Enum.Font.Gotham
@@ -472,23 +461,18 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- SUPABASE VERIFICATION
+-- SUPABASE & LOOTLABS VERIFICATION (FIXED)
 ----------------------------------------------------
-FreeKeyBackupBtn.MouseButton1Click:Connect(function()
-	KeyBox.Text = "UBEY_FREE"
+GetKeyLinkBtn.MouseButton1Click:Connect(function()
 	pcall(function()
-		if setclipboard then setclipboard("UBEY_FREE") end
+		if setclipboard then
+			setclipboard("https://loot-link.com/s?Q8dFV0HC")
+		elseif toclipboard then
+			toclipboard("https://loot-link.com/s?Q8dFV0HC")
+		end
 	end)
-	StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
-	StatusKey.Text = "Free Key (UBEY_FREE) disalin!"
-end)
-
-GetKeyDiscordBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end
-	end)
-	StatusKey.TextColor3 = Color3.fromRGB(0,170,255)
-	StatusKey.Text = "Link Discord disalin! Dapatkan key dari bot Discord."
+	StatusKey.TextColor3 = Color3.fromRGB(0, 170, 255)
+	StatusKey.Text = "Link Key disalin! Buka browser untuk melewati iklan."
 end)
 
 SubmitKeyBtn.MouseButton1Click:Connect(function()
@@ -496,13 +480,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 	if enteredKey == "" then
 		StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 		StatusKey.Text = "Masukkan key terlebih dahulu!"
-		return
-	end
-	
-	if enteredKey == "UBEY_FREE" then
-		getgenv().KeyVerified = true
-		KeyFrame.Visible = false
-		Main.Visible = true
 		return
 	end
 	
@@ -538,15 +515,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 			end)
 			
 			if decodeSuccess and data and #data > 0 then
-				local record = data[1]
-				local keyStatus = record.status
-				
-				if keyStatus == false or keyStatus == "inactive" or keyStatus == "used" then
-					StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-					StatusKey.Text = "Key sudah tidak aktif / sudah digunakan!"
-					return
-				end
-				
 				StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
 				StatusKey.Text = "Key Valid! Membuka Hub..."
 				task.wait(1)
@@ -555,7 +523,7 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 				Main.Visible = true
 			else
 				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-				StatusKey.Text = "Key Salah atau Belum Dibuat oleh Bot Discord!"
+				StatusKey.Text = "Key Salah atau Tidak Ditemukan di Database!"
 			end
 		else
 			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
@@ -858,7 +826,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE (DENGAN ANTI-TEMBUS & JEDA DI PUNCAK)
+-- 4. SUMMIT PAGE
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1151,7 +1119,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 7. TELEPORT PLAYER PAGE (SCAN & PILIH PLAYER)
+-- 7. TELEPORT PLAYER PAGE
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1458,7 +1426,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG (SECURE LOGIC)
+-- FLOATING BUTTON HP & DRAG
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
