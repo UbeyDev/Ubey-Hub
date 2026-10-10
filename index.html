@@ -3,155 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBEY HUB V3 - Key Generator</title>
+    <title>Ubey Hub V3 - Key Generator</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background-color: #0d0e12;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            background-color: #161820;
-            border: 2px solid #00a2ff;
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0, 162, 255, 0.2);
-        }
-        h2 {
-            color: #00a2ff;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-        p {
-            font-size: 13px;
-            color: #a0a0a0;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        .key-box {
-            background-color: #222530;
-            border: 1px solid #333745;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            color: #00ff88;
-            font-size: 16px;
-            margin-bottom: 15px;
-            word-break: break-all;
-        }
-        .btn {
-            background-color: #0088cc;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
-        }
-        .btn:hover {
-            background-color: #00a2ff;
-        }
-        .status {
-            margin-top: 15px;
-            font-size: 12px;
-            color: #00ff88;
-        }
-        .error-msg {
-            color: #ff4d4d;
-            font-size: 14px;
-            margin-top: 10px;
-        }
+        body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; text-align: center; padding: 50px; }
+        .container { background: #161b22; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h1 { color: #58a6ff; }
+        .btn { background: #238636; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 15px; }
+        .btn:hover { background: #2ea043; }
+        .error { color: #f85149; font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>UBEY HUB V3 KEY</h2>
-    
-    <!-- Tampilan jika datang dari LootLabs dengan benar -->
-    <div id="valid-access" style="display: none;">
-        <p>Terima kasih telah melewati iklan! Klik tombol di bawah untuk menyalin Key kamu.</p>
-        <div class="key-box" id="keyDisplay">Membuat Key...</div>
-        <button class="btn" onclick="copyKey()">📋 Salin Key</button>
-        <div class="status" id="statusMsg">✅ Key berhasil dibuat & terdaftar di Database!</div>
+    <div class="container" id="main-container">
+        <!-- Konten akan diatur oleh JavaScript di bawah -->
     </div>
 
-    <!-- Tampilan jika orang mencoba membuka langsung (Bypass) -->
-    <div id="invalid-access" style="display: none;">
-        <p class="error-msg">❌ AKSES DITOLAK!</p>
-        <p style="margin-top: 10px;">Kamu tidak boleh membuka tautan ini secara langsung atau mencoba bypass iklan. Silakan lewati iklan dari game Roblox terlebih dahulu!</p>
-    </div>
-</div>
+    <script>
+        // Token rahasia yang dikirim dari Linkvertise
+        const SECRET_TOKEN = "ubey_secret_pass_2026";
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const userToken = urlParams.get('token');
+        const container = document.getElementById('main-container');
 
-<script>
-    const SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project";
-    const SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5";
-
-    // Cek apakah ada parameter ?ref=lootlabs di URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-
-    if (ref === 'lootlabs') {
-        document.getElementById('valid-access').style.display = 'block';
-        generateAndSaveKey();
-    } else {
-        document.getElementById('invalid-access').style.display = 'block';
-    }
-
-    let generatedKey = "";
-
-    function getRandomString(length) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        if (userToken === SECRET_TOKEN) {
+            // Jika token valid (melewati iklan)
+            container.innerHTML = `
+                <h1>Ubey Hub V3 - Key Generator</h1>
+                <p>Selamat! Anda telah melewati alur iklan dengan sukses.</p>
+                <button class="btn" onclick="generateKey()">Ambil Key Anda</button>
+                <p id="key-display" style="margin-top: 20px; font-weight: bold; color: #3fb950;"></p>
+            `;
+        } else {
+            // Jika seseorang mencoba membuka langsung tanpa token / bypass
+            container.innerHTML = `
+                <h1 style="color: #f85149;">❌ Akses Ditolak!</h1>
+                <p class="error">Anda harus melewati link iklan (LootLabs & Linkvertise) terlebih dahulu untuk mengakses halaman ini.</p>
+                <p>Silakan salin ulang link dari dalam skrip Roblox Ubey Hub V3.</p>
+            `;
         }
-        return result;
-    }
 
-    async function generateAndSaveKey() {
-        generatedKey = "UBEY-" + getRandomString(12);
-        document.getElementById('keyDisplay').innerText = generatedKey;
-
-        try {
-            await fetch(SUPABASE_URL, {
-                method: "POST",
-                headers: {
-                    "apikey": SUPABASE_ANON_KEY,
-                    "Authorization": "Bearer " + SUPABASE_ANON_KEY,
-                    "Content-Type": "application/json",
-                    "Prefer": "return=minimal"
-                },
-                body: JSON.stringify({
-                    key_value: generatedKey
-                })
-            });
-        } catch (err) {
-            console.error("Gagal menyimpan ke Supabase:", err);
+        function generateKey() {
+            // Buat key otomatis (bisa disesuaikan dengan sistem key kamu)
+            const today = new Date().toISOString().slice(0, 10);
+            const generatedKey = "UBEY-V3-" + btoa(today + "_ubeyhub").slice(0, 10).toUpperCase();
+            
+            document.getElementById('key-display').innerText = "Key Anda: " + generatedKey;
+            
+            // Salin otomatis ke clipboard jika didukung
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(generatedKey);
+                alert("Key berhasil disalin ke clipboard: " + generatedKey);
+            }
         }
-    }
-
-    function copyKey() {
-        navigator.clipboard.writeText(generatedKey);
-        alert("Key berhasil disalin: " + generatedKey);
-    }
-</script>
+    </script>
 
 </body>
 </html>
