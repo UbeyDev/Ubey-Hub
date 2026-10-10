@@ -184,12 +184,12 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ----------------------------------------------------
--- KEY SYSTEM UI (SUPABASE & LOOTLABS INTEGRATION)
+-- KEY SYSTEM UI (SUPABASE INTEGRATION)
 ----------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
-KeyFrame.Size = UDim2.new(0,380,0,210)
-KeyFrame.Position = UDim2.new(0.5,-190,0.5,-105)
+KeyFrame.Size = UDim2.new(0,380,0,220)
+KeyFrame.Position = UDim2.new(0.5,-190,0.5,-110)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 KeyFrame.Visible = true
 
@@ -203,7 +203,7 @@ KeyStroke.Color = Color3.fromRGB(0,170,255)
 
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
-KeyTitle.Size = UDim2.new(1,0,0,45)
+KeyTitle.Size = UDim2.new(1,0,0,50)
 KeyTitle.BackgroundTransparency = 1
 KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM"
 KeyTitle.Font = Enum.Font.GothamBold
@@ -213,9 +213,9 @@ KeyTitle.TextSize = 15
 local KeyBox = Instance.new("TextBox")
 KeyBox.Parent = KeyFrame
 KeyBox.Size = UDim2.new(0,340,0,38)
-KeyBox.Position = UDim2.new(0,20,0,55)
+KeyBox.Position = UDim2.new(0,20,0,60)
 KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-KeyBox.PlaceholderText = "Masukkan Key dari Website..."
+KeyBox.PlaceholderText = "Masukkan Key dari Bot Discord..."
 KeyBox.Text = ""
 KeyBox.TextColor3 = Color3.new(1,1,1)
 KeyBox.Font = Enum.Font.Gotham
@@ -225,7 +225,7 @@ Instance.new("UICorner", KeyBox)
 local SubmitKeyBtn = Instance.new("TextButton")
 SubmitKeyBtn.Parent = KeyFrame
 SubmitKeyBtn.Size = UDim2.new(0,165,0,35)
-SubmitKeyBtn.Position = UDim2.new(0,20,0,105)
+SubmitKeyBtn.Position = UDim2.new(0,20,0,115)
 SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
 SubmitKeyBtn.Text = "Verifikasi Key"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
@@ -233,21 +233,32 @@ SubmitKeyBtn.Font = Enum.Font.GothamBold
 SubmitKeyBtn.TextSize = 13
 Instance.new("UICorner", SubmitKeyBtn)
 
-local GetKeyLinkBtn = Instance.new("TextButton")
-GetKeyLinkBtn.Parent = KeyFrame
-GetKeyLinkBtn.Size = UDim2.new(0,165,0,35)
-GetKeyLinkBtn.Position = UDim2.new(0,195,0,105)
-GetKeyLinkBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
-GetKeyLinkBtn.Text = "Get Key (Copy Link)"
-GetKeyLinkBtn.TextColor3 = Color3.new(1,1,1)
-GetKeyLinkBtn.Font = Enum.Font.GothamBold
-GetKeyLinkBtn.TextSize = 13
-Instance.new("UICorner", GetKeyLinkBtn)
+local GetKeyDiscordBtn = Instance.new("TextButton")
+GetKeyDiscordBtn.Parent = KeyFrame
+GetKeyDiscordBtn.Size = UDim2.new(0,165,0,35)
+GetKeyDiscordBtn.Position = UDim2.new(0,195,0,115)
+GetKeyDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+GetKeyDiscordBtn.Text = "Get Key via Bot Discord"
+GetKeyDiscordBtn.TextColor3 = Color3.new(1,1,1)
+GetKeyDiscordBtn.Font = Enum.Font.GothamBold
+GetKeyDiscordBtn.TextSize = 12
+Instance.new("UICorner", GetKeyDiscordBtn)
+
+local FreeKeyBackupBtn = Instance.new("TextButton")
+FreeKeyBackupBtn.Parent = KeyFrame
+FreeKeyBackupBtn.Size = UDim2.new(0,340,0,30)
+FreeKeyBackupBtn.Position = UDim2.new(0,20,0,160)
+FreeKeyBackupBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
+FreeKeyBackupBtn.Text = "Gunakan Free Key (UBEY_FREE)"
+FreeKeyBackupBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
+FreeKeyBackupBtn.Font = Enum.Font.GothamMedium
+FreeKeyBackupBtn.TextSize = 12
+Instance.new("UICorner", FreeKeyBackupBtn)
 
 local StatusKey = Instance.new("TextLabel")
 StatusKey.Parent = KeyFrame
-StatusKey.Size = UDim2.new(1,0,0,25)
-StatusKey.Position = UDim2.new(0,0,0,160)
+StatusKey.Size = UDim2.new(1,0,0,20)
+StatusKey.Position = UDim2.new(0,0,0,195)
 StatusKey.BackgroundTransparency = 1
 StatusKey.Text = ""
 StatusKey.Font = Enum.Font.Gotham
@@ -461,18 +472,23 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- SUPABASE & LOOTLABS VERIFICATION
+-- SUPABASE VERIFICATION
 ----------------------------------------------------
-GetKeyLinkBtn.MouseButton1Click:Connect(function()
+FreeKeyBackupBtn.MouseButton1Click:Connect(function()
+	KeyBox.Text = "UBEY_FREE"
 	pcall(function()
-		if setclipboard then
-			setclipboard("https://loot-link.com/s?Q8dFV0HC")
-		elseif toclipboard then
-			toclipboard("https://loot-link.com/s?Q8dFV0HC")
-		end
+		if setclipboard then setclipboard("UBEY_FREE") end
 	end)
-	StatusKey.TextColor3 = Color3.fromRGB(0, 170, 255)
-	StatusKey.Text = "Link Key disalin! Buka browser untuk melewati iklan."
+	StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
+	StatusKey.Text = "Free Key (UBEY_FREE) disalin!"
+end)
+
+GetKeyDiscordBtn.MouseButton1Click:Connect(function()
+	pcall(function()
+		if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end
+	end)
+	StatusKey.TextColor3 = Color3.fromRGB(0,170,255)
+	StatusKey.Text = "Link Discord disalin! Dapatkan key dari bot Discord."
 end)
 
 SubmitKeyBtn.MouseButton1Click:Connect(function()
@@ -480,6 +496,13 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 	if enteredKey == "" then
 		StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 		StatusKey.Text = "Masukkan key terlebih dahulu!"
+		return
+	end
+	
+	if enteredKey == "UBEY_FREE" then
+		getgenv().KeyVerified = true
+		KeyFrame.Visible = false
+		Main.Visible = true
 		return
 	end
 	
@@ -532,7 +555,7 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 				Main.Visible = true
 			else
 				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-				StatusKey.Text = "Key Salah atau Belum Terdaftar di Database!"
+				StatusKey.Text = "Key Salah atau Belum Dibuat oleh Bot Discord!"
 			end
 		else
 			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
@@ -835,7 +858,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE
+-- 4. SUMMIT PAGE (DENGAN ANTI-TEMBUS & JEDA DI PUNCAK)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1128,7 +1151,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 7. TELEPORT PLAYER PAGE
+-- 7. TELEPORT PLAYER PAGE (SCAN & PILIH PLAYER)
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1322,3 +1345,158 @@ end)
 
 ----------------------------------------------------
 -- 9. SETTINGS, CONFIG & CREDITS PAGE
+----------------------------------------------------
+local TitleSet = Instance.new("TextLabel")
+TitleSet.Parent = SettingsPage
+TitleSet.Size = UDim2.new(1,0,0,30)
+TitleSet.BackgroundTransparency = 1
+TitleSet.Text = "⚙️ SETTINGS & CONFIGURATION"
+TitleSet.TextColor3 = Color3.fromRGB(0,170,255)
+TitleSet.Font = Enum.Font.GothamBold
+TitleSet.TextSize = 13
+
+local AntiLagBtn = Instance.new("TextButton")
+AntiLagBtn.Parent = SettingsPage
+AntiLagBtn.Size = UDim2.new(1,0,0,35)
+AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
+AntiLagBtn.Text = "⚡ Aktifkan Anti-Lag (Boost FPS)"
+AntiLagBtn.TextColor3 = Color3.new(1,1,1)
+AntiLagBtn.Font = Enum.Font.GothamBold
+AntiLagBtn.TextSize = 13
+Instance.new("UICorner", AntiLagBtn)
+
+AntiLagBtn.MouseButton1Click:Connect(function()
+	pcall(function()
+		Lighting.GlobalShadows = false
+		Lighting.FogEnd = 999999
+		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+		
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+				v.Enabled = false
+			elseif v:IsA("BasePart") then
+				v.Material = Enum.Material.SmoothPlastic
+				v.Reflectance = 0
+			end
+		end
+		
+		AntiLagBtn.Text = "⚡ Anti-Lag Aktif (Boosted!)"
+		AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+	end)
+end)
+
+local AutoExecToggleBtn = Instance.new("TextButton")
+AutoExecToggleBtn.Parent = SettingsPage
+AutoExecToggleBtn.Size = UDim2.new(1,0,0,35)
+AutoExecToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AutoExecuteEnabled and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(30, 30, 40)
+AutoExecToggleBtn.Text = "  Auto Execute (Teleport): " .. (getgenv().UbeyConfig.AutoExecuteEnabled and "[ON]" or "[OFF]")
+AutoExecToggleBtn.TextColor3 = Color3.new(1,1,1)
+AutoExecToggleBtn.Font = Enum.Font.Gotham
+AutoExecToggleBtn.TextSize = 13
+AutoExecToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner", AutoExecToggleBtn)
+
+AutoExecToggleBtn.MouseButton1Click:Connect(function()
+	getgenv().UbeyConfig.AutoExecuteEnabled = not getgenv().UbeyConfig.AutoExecuteEnabled
+	AutoExecToggleBtn.Text = "  Auto Execute (Teleport): " .. (getgenv().UbeyConfig.AutoExecuteEnabled and "[ON]" or "[OFF]")
+	AutoExecToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AutoExecuteEnabled and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(30, 30, 40)
+	SaveConfig()
+end)
+
+local SaveConfigBtn = Instance.new("TextButton")
+SaveConfigBtn.Parent = SettingsPage
+SaveConfigBtn.Size = UDim2.new(1,0,0,35)
+SaveConfigBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+SaveConfigBtn.Text = "💾 Simpan Konfigurasi (Save Config)"
+SaveConfigBtn.TextColor3 = Color3.new(1,1,1)
+SaveConfigBtn.Font = Enum.Font.GothamBold
+SaveConfigBtn.TextSize = 13
+Instance.new("UICorner", SaveConfigBtn)
+
+SaveConfigBtn.MouseButton1Click:Connect(function()
+	SaveConfig()
+	SaveConfigBtn.Text = "✅ Config Berhasil Disimpan!"
+	task.wait(1.5)
+	SaveConfigBtn.Text = "💾 Simpan Konfigurasi (Save Config)"
+end)
+
+local ResetConfigBtn = Instance.new("TextButton")
+ResetConfigBtn.Parent = SettingsPage
+ResetConfigBtn.Size = UDim2.new(1,0,0,35)
+ResetConfigBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+ResetConfigBtn.Text = "🔄 Reset Konfigurasi (Reset Config)"
+ResetConfigBtn.TextColor3 = Color3.new(1,1,1)
+ResetConfigBtn.Font = Enum.Font.GothamBold
+ResetConfigBtn.TextSize = 13
+Instance.new("UICorner", ResetConfigBtn)
+
+ResetConfigBtn.MouseButton1Click:Connect(function()
+	ResetConfig()
+	ResetConfigBtn.Text = "🔄 Config Direset! (Restart Game)"
+	task.wait(1.5)
+	ResetConfigBtn.Text = "🔄 Reset Konfigurasi (Reset Config)"
+end)
+
+local TheCloseBtn = Instance.new("TextButton")
+TheCloseBtn.Parent = SettingsPage
+TheCloseBtn.Size = UDim2.new(1,0,0,35)
+TheCloseBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+TheCloseBtn.Text = "Tutup / Hide UI"
+TheCloseBtn.TextColor3 = Color3.new(1,1,1)
+TheCloseBtn.Font = Enum.Font.GothamBold
+TheCloseBtn.TextSize = 13
+Instance.new("UICorner", TheCloseBtn)
+TheCloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
+
+local CredLbl = Instance.new("TextLabel")
+CredLbl.Parent = CreditsPage
+CredLbl.Size = UDim2.new(1,0,1,0)
+CredLbl.BackgroundTransparency = 1
+CredLbl.Text = "Created By UBEY"
+CredLbl.TextColor3 = Color3.new(1,1,1)
+CredLbl.Font = Enum.Font.GothamBold
+CredLbl.TextSize = 20
+
+----------------------------------------------------
+-- FLOATING BUTTON HP & DRAG (SECURE LOGIC)
+----------------------------------------------------
+local Float = Instance.new("ImageButton")
+Float.Parent = Gui
+Float.Size = UDim2.new(0,65,0,65)
+Float.Position = UDim2.new(0,20,0,120)
+Float.Image = "rbxassetid://90770802417381"
+Float.BackgroundColor3 = Color3.fromRGB(20,20,25)
+
+local FloatCorner = Instance.new("UICorner")
+FloatCorner.CornerRadius = UDim.new(1,0)
+FloatCorner.Parent = Float
+
+Float.MouseButton1Click:Connect(function()
+	if not getgenv().KeyVerified then
+		KeyFrame.Visible = not KeyFrame.Visible
+		Main.Visible = false
+	else
+		Main.Visible = not Main.Visible
+		KeyFrame.Visible = false
+	end
+end)
+
+local dragging = false
+local dragStart, startPos
+
+Float.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch then
+		dragging, dragStart, startPos = true, input.Position, Float.Position
+	end
+end)
+
+UIS.TouchMoved:Connect(function(input)
+	if dragging then
+		local delta = input.Position - dragStart
+		Float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+UIS.TouchEnded:Connect(function()
+	dragging = false
+end)
