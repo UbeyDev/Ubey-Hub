@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Complete Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless, Fire RGB, Teleport Player & Secure Key System)
+-- UBEY HUB V3 | Final Complete Version (Supabase 24h Key System, Auto Fishing, Summit, Anti-Admin, FPS Boost)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -78,7 +78,7 @@ LoadConfig()
 ------------------------------------------------------------------
 -- SUPABASE CONFIGURATION
 ------------------------------------------------------------------
-local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
+local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project"
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
 
 ------------------------------------------------------------------
@@ -101,14 +101,6 @@ pcall(function()
 			task.wait(3)
 			loadstring(game:HttpGet("LINK_GITHUB_ATAU_KODE_KAMU"))()
 		]])
-	end
-end)
-
-pcall(function()
-	if setclipboard then
-		setclipboard("https://discord.gg/YXuYeEpnXE")
-	elseif toclipboard then
-		toclipboard("https://discord.gg/YXuYeEpnXE")
 	end
 end)
 
@@ -184,7 +176,7 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ----------------------------------------------------
--- KEY SYSTEM UI (SUPABASE & LOOTLABS INTEGRATION)
+-- KEY SYSTEM UI (SUPABASE 24H VERIFICATION)
 ----------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
@@ -205,7 +197,7 @@ local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
 KeyTitle.Size = UDim2.new(1,0,0,45)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM"
+KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM (24H)"
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.TextColor3 = Color3.fromRGB(0,170,255)
 KeyTitle.TextSize = 15
@@ -254,8 +246,104 @@ StatusKey.Font = Enum.Font.Gotham
 StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
+GetKeyLinkBtn.MouseButton1Click:Connect(function()
+	pcall(function()
+		if setclipboard then
+			setclipboard("https://loot-link.com/s?Q8dFV0HC")
+		elseif toclipboard then
+			toclipboard("https://loot-link.com/s?Q8dFV0HC")
+		end
+	end)
+	StatusKey.TextColor3 = Color3.fromRGB(0, 170, 255)
+	StatusKey.Text = "Link Key disalin! Buka browser untuk melewati iklan."
+end)
+
+SubmitKeyBtn.MouseButton1Click:Connect(function()
+	local enteredKey = KeyBox.Text
+	if enteredKey == "" then
+		StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+		StatusKey.Text = "Masukkan key terlebih dahulu!"
+		return
+	end
+	
+	StatusKey.TextColor3 = Color3.fromRGB(255,200,0)
+	StatusKey.Text = "Mengecek key ke database Supabase..."
+	
+	task.spawn(function()
+		local requestFunc = syn and syn.request or http and http.request or request
+		local queryUrl = SUPABASE_URL .. "?key_value=eq." .. HttpService:UrlEncode(enteredKey)
+		
+		local success, response = pcall(function()
+			if requestFunc then
+				local res = requestFunc({
+					Url = queryUrl,
+					Method = "GET",
+					Headers = {
+						["apikey"] = SUPABASE_ANON_KEY,
+						["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY,
+						["Content-Type"] = "application/json"
+					}
+				})
+				return res.Body
+			else
+				return HttpService:GetAsync(queryUrl, false, {
+					["apikey"] = SUPABASE_ANON_KEY,
+					["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY
+				})
+			end
+		end)
+		
+		if success and response then
+			local decodeSuccess, data = pcall(function()
+				return HttpService:JSONDecode(response)
+			end)
+			
+			if decodeSuccess and data and #data > 0 then
+				local record = data[1]
+				
+				-- ⏳ PENGECEKAN KEDALUWARSA 24 JAM
+				if record.created_at then
+					local year, month, day, hour, min, sec = record.created_at:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
+					if year then
+						local createdTime = os.time({
+							year = tonumber(year),
+							month = tonumber(month),
+							day = tonumber(day),
+							hour = tonumber(hour),
+							min = tonumber(min),
+							sec = tonumber(sec)
+						})
+						
+						local currentTime = os.time()
+						local hoursPassed = os.difftime(currentTime, createdTime) / 3600
+						
+						if hoursPassed > 24 then
+							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50)
+							StatusKey.Text = "Key sudah kedaluwarsa! (Dapatkan key baru)"
+							return
+						end
+					end
+				end
+
+				StatusKey.TextColor3 = Color3.fromRGB(0, 255, 100)
+				StatusKey.Text = "Key Valid! Membuka Hub..."
+				task.wait(1)
+				getgenv().KeyVerified = true
+				KeyFrame.Visible = false
+				Main.Visible = true
+			else
+				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+				StatusKey.Text = "Key Salah atau Tidak Ditemukan!"
+			end
+		else
+			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+			StatusKey.Text = "Gagal terhubung ke server Supabase."
+		end
+	end)
+end)
+
 ----------------------------------------------------
--- MAIN HUB
+-- MAIN HUB UI
 ----------------------------------------------------
 local Main = Instance.new("Frame")
 Main.Parent = Gui
@@ -459,78 +547,6 @@ local function AddToggle(parent, text, callback)
 		callback(state)
 	end)
 end
-
-----------------------------------------------------
--- SUPABASE & LOOTLABS VERIFICATION (FIXED)
-----------------------------------------------------
-GetKeyLinkBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		if setclipboard then
-			setclipboard("https://loot-link.com/s?Q8dFV0HC")
-		elseif toclipboard then
-			toclipboard("https://loot-link.com/s?Q8dFV0HC")
-		end
-	end)
-	StatusKey.TextColor3 = Color3.fromRGB(0, 170, 255)
-	StatusKey.Text = "Link Key disalin! Buka browser untuk melewati iklan."
-end)
-
-SubmitKeyBtn.MouseButton1Click:Connect(function()
-	local enteredKey = KeyBox.Text
-	if enteredKey == "" then
-		StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-		StatusKey.Text = "Masukkan key terlebih dahulu!"
-		return
-	end
-	
-	StatusKey.TextColor3 = Color3.fromRGB(255,200,0)
-	StatusKey.Text = "Mengecek key ke database Supabase..."
-	
-	task.spawn(function()
-		local requestFunc = syn and syn.request or http and http.request or request
-		
-		local success, response = pcall(function()
-			if requestFunc then
-				local res = requestFunc({
-					Url = SUPABASE_URL .. enteredKey,
-					Method = "GET",
-					Headers = {
-						["apikey"] = SUPABASE_ANON_KEY,
-						["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY,
-						["Content-Type"] = "application/json"
-					}
-				})
-				return res.Body
-			else
-				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, {
-					["apikey"] = SUPABASE_ANON_KEY,
-					["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY
-				})
-			end
-		end)
-		
-		if success and response then
-			local decodeSuccess, data = pcall(function()
-				return HttpService:JSONDecode(response)
-			end)
-			
-			if decodeSuccess and data and #data > 0 then
-				StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
-				StatusKey.Text = "Key Valid! Membuka Hub..."
-				task.wait(1)
-				getgenv().KeyVerified = true
-				KeyFrame.Visible = false
-				Main.Visible = true
-			else
-				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-				StatusKey.Text = "Key Salah atau Tidak Ditemukan di Database!"
-			end
-		else
-			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-			StatusKey.Text = "Gagal terhubung ke server Supabase."
-		end
-	end)
-end)
 
 ----------------------------------------------------
 -- 1. FISHING & SELL PAGE
