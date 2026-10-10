@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Complete Version (Supabase 24h Key System, Auto Fishing, Summit, Anti-Admin, FPS Boost)
+-- UBEY HUB V3 | Final Complete Version (Supabase 24h + HWID Lock, Auto Fishing, Summit, Anti-Admin, FPS Boost)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -176,7 +176,7 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ----------------------------------------------------
--- KEY SYSTEM UI (SUPABASE 24H VERIFICATION)
+-- KEY SYSTEM UI (SUPABASE 24H + HWID LOCK VERIFICATION)
 ----------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
@@ -197,17 +197,17 @@ local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
 KeyTitle.Size = UDim2.new(1,0,0,45)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM (24H)"
+KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM (24H + HWID)"
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.TextColor3 = Color3.fromRGB(0,170,255)
-KeyTitle.TextSize = 15
+KeyTitle.TextSize = 14
 
 local KeyBox = Instance.new("TextBox")
 KeyBox.Parent = KeyFrame
 KeyBox.Size = UDim2.new(0,340,0,38)
 KeyBox.Position = UDim2.new(0,20,0,55)
 KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-KeyBox.PlaceholderText = "Masukkan Key dari Website..."
+KeyBox.PlaceholderText = "Masukkan Key dari Website / VIP..."
 KeyBox.Text = ""
 KeyBox.TextColor3 = Color3.new(1,1,1)
 KeyBox.Font = Enum.Font.Gotham
@@ -301,8 +301,8 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 			if decodeSuccess and data and #data > 0 then
 				local record = data[1]
 				
-				-- ⏳ PENGECEKAN KEDALUWARSA 24 JAM
-				if record.created_at then
+				-- ⏳ PENGECEKAN KEDALUWARSA 24 JAM (Khusus Key Free/Non-VIP)
+				if record.created_at and not string.match(enteredKey, "^UBEY%-VIP%-") then
 					local year, month, day, hour, min, sec = record.created_at:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
 					if year then
 						local createdTime = os.time({
@@ -325,8 +325,38 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 					end
 				end
 
+				-- 🔒 PENGECEKAN & PENGUNCIAN HWID KE SUPABASE
+				local deviceHWID = game:GetService("RbxAnalyticsService"):GetClientId()
+				
+				if record.hwid == nil or record.hwid == "" or record.hwid == "null" then
+					-- Jika kolom hwid masih kosong, kunci perangkat ini ke Supabase
+					local patchUrl = SUPABASE_URL .. "?key_value=eq." .. HttpService:UrlEncode(enteredKey)
+					pcall(function()
+						if requestFunc then
+							requestFunc({
+								Url = patchUrl,
+								Method = "PATCH",
+								Headers = {
+									["apikey"] = SUPABASE_ANON_KEY,
+									["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY,
+									["Content-Type"] = "application/json",
+									["Prefer"] = "return=minimal"
+								},
+								Body = HttpService:JSONEncode({
+									hwid = deviceHWID
+								})
+							})
+						end
+					end)
+				elseif record.hwid ~= deviceHWID then
+					-- Jika hwid sudah terisi tapi dicoba di perangkat lain
+					StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50)
+					StatusKey.Text = "Key ini sudah terkunci di perangkat lain!"
+					return
+				end
+
 				StatusKey.TextColor3 = Color3.fromRGB(0, 255, 100)
-				StatusKey.Text = "Key Valid! Membuka Hub..."
+				StatusKey.Text = "Key Valid & HWID Terkunci! Membuka Hub..."
 				task.wait(1)
 				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
