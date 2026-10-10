@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Complete Version (Supabase, Ping, Anti-Lag, Shop, Config, Anti-Admin, Summit, Galatama, Headless, Fire RGB, Teleport Player & Secure Key System)
+-- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -8,11 +8,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
-local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -21,6 +20,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 -- CONFIGURATION & FILE SAVE SYSTEM
 ------------------------------------------------------------------
 local CONFIG_FILE = "UbeyHubV3_Config.json"
+local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
 	BiteDelay = "0.5",
@@ -67,8 +67,9 @@ local function ResetConfig()
 			AntiAdminEnabled = false,
 			TargetGroupId = 7019573
 		}
-		if delfile and isfile and isfile(CONFIG_FILE) then
-			delfile(CONFIG_FILE)
+		if delfile and isfile then
+			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
+			if isfile(KEY_FILE) then delfile(KEY_FILE) end
 		end
 	end)
 end
@@ -76,10 +77,24 @@ end
 LoadConfig()
 
 ------------------------------------------------------------------
--- SUPABASE CONFIGURATION
+-- SUPABASE CONFIGURATION & HWID RETRIEVAL
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
+
+local function GetDeviceHWID()
+	local hwid = nil
+	pcall(function()
+		if gethwid then
+			hwid = gethwid()
+		elseif RbxAnalyticsService then
+			hwid = RbxAnalyticsService:GetClientId()
+		end
+	end)
+	return hwid or "UNKNOWN_DEVICE_" .. LocalPlayer.UserId
+end
+
+local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
 -- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
@@ -184,14 +199,14 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ----------------------------------------------------
--- KEY SYSTEM UI (SUPABASE INTEGRATION)
+-- KEY SYSTEM UI
 ----------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
-KeyFrame.Size = UDim2.new(0,380,0,220)
-KeyFrame.Position = UDim2.new(0.5,-190,0.5,-110)
+KeyFrame.Size = UDim2.new(0,380,0,185)
+KeyFrame.Position = UDim2.new(0.5,-190,0.5,-92)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
-KeyFrame.Visible = true
+KeyFrame.Visible = false
 
 local KeyCorner = Instance.new("UICorner")
 KeyCorner.CornerRadius = UDim.new(0,15)
@@ -205,10 +220,10 @@ local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
 KeyTitle.Size = UDim2.new(1,0,0,50)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "UBEY HUB V3 - KEY SYSTEM"
+KeyTitle.Text = "UBEY HUB V3 - HWID KEY SYSTEM"
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.TextColor3 = Color3.fromRGB(0,170,255)
-KeyTitle.TextSize = 15
+KeyTitle.TextSize = 14
 
 local KeyBox = Instance.new("TextBox")
 KeyBox.Parent = KeyFrame
@@ -225,40 +240,29 @@ Instance.new("UICorner", KeyBox)
 local SubmitKeyBtn = Instance.new("TextButton")
 SubmitKeyBtn.Parent = KeyFrame
 SubmitKeyBtn.Size = UDim2.new(0,165,0,35)
-SubmitKeyBtn.Position = UDim2.new(0,20,0,115)
+SubmitKeyBtn.Position = UDim2.new(0,20,0,110)
 SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
-SubmitKeyBtn.Text = "Verifikasi Key"
+SubmitKeyBtn.Text = "Verifikasi Perangkat"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
 SubmitKeyBtn.Font = Enum.Font.GothamBold
-SubmitKeyBtn.TextSize = 13
+SubmitKeyBtn.TextSize = 12
 Instance.new("UICorner", SubmitKeyBtn)
 
 local GetKeyDiscordBtn = Instance.new("TextButton")
 GetKeyDiscordBtn.Parent = KeyFrame
 GetKeyDiscordBtn.Size = UDim2.new(0,165,0,35)
-GetKeyDiscordBtn.Position = UDim2.new(0,195,0,115)
+GetKeyDiscordBtn.Position = UDim2.new(0,195,0,110)
 GetKeyDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-GetKeyDiscordBtn.Text = "Get Key via Bot Discord"
+GetKeyDiscordBtn.Text = "Get Key via Discord"
 GetKeyDiscordBtn.TextColor3 = Color3.new(1,1,1)
 GetKeyDiscordBtn.Font = Enum.Font.GothamBold
 GetKeyDiscordBtn.TextSize = 12
 Instance.new("UICorner", GetKeyDiscordBtn)
 
-local FreeKeyBackupBtn = Instance.new("TextButton")
-FreeKeyBackupBtn.Parent = KeyFrame
-FreeKeyBackupBtn.Size = UDim2.new(0,340,0,30)
-FreeKeyBackupBtn.Position = UDim2.new(0,20,0,160)
-FreeKeyBackupBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
-FreeKeyBackupBtn.Text = "Gunakan Free Key (UBEY_FREE)"
-FreeKeyBackupBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
-FreeKeyBackupBtn.Font = Enum.Font.GothamMedium
-FreeKeyBackupBtn.TextSize = 12
-Instance.new("UICorner", FreeKeyBackupBtn)
-
 local StatusKey = Instance.new("TextLabel")
 StatusKey.Parent = KeyFrame
 StatusKey.Size = UDim2.new(1,0,0,20)
-StatusKey.Position = UDim2.new(0,0,0,195)
+StatusKey.Position = UDim2.new(0,0,0,155)
 StatusKey.BackgroundTransparency = 1
 StatusKey.Text = ""
 StatusKey.Font = Enum.Font.Gotham
@@ -325,7 +329,8 @@ local HubTitle = Instance.new("TextLabel")
 HubTitle.Parent = Sidebar
 HubTitle.BackgroundTransparency = 1
 HubTitle.Size = UDim2.new(1,0,0,60)
-HubTitle.Text = "UBEY HUB"
+HubTitle.Text = "UBEY HUB\n<font size='11' color='#00AAFF'>👑 Premium</font>"
+HubTitle.RichText = true
 HubTitle.Font = Enum.Font.GothamBold
 HubTitle.TextColor3 = Color3.fromRGB(0,170,255)
 HubTitle.TextSize = 20
@@ -472,42 +477,30 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- SUPABASE VERIFICATION
+-- VERIFICATION & HWID CHECK LOGIC
 ----------------------------------------------------
-FreeKeyBackupBtn.MouseButton1Click:Connect(function()
-	KeyBox.Text = "UBEY_FREE"
-	pcall(function()
-		if setclipboard then setclipboard("UBEY_FREE") end
-	end)
-	StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
-	StatusKey.Text = "Free Key (UBEY_FREE) disalin!"
-end)
-
 GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	pcall(function()
 		if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end
 	end)
 	StatusKey.TextColor3 = Color3.fromRGB(0,170,255)
-	StatusKey.Text = "Link Discord disalin! Dapatkan key dari bot Discord."
+	StatusKey.Text = "Link Discord disalin!"
 end)
 
-SubmitKeyBtn.MouseButton1Click:Connect(function()
-	local enteredKey = KeyBox.Text
+local function ValidateKey(enteredKey, isAutoLogin)
 	if enteredKey == "" then
-		StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-		StatusKey.Text = "Masukkan key terlebih dahulu!"
+		if not isAutoLogin then
+			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+			StatusKey.Text = "Masukkan key terlebih dahulu!"
+		end
+		KeyFrame.Visible = true
 		return
 	end
 	
-	if enteredKey == "UBEY_FREE" then
-		getgenv().KeyVerified = true
-		KeyFrame.Visible = false
-		Main.Visible = true
-		return
+	if not isAutoLogin then
+		StatusKey.TextColor3 = Color3.fromRGB(255,200,0)
+		StatusKey.Text = "Memeriksa HWID & Key ke Server..."
 	end
-	
-	StatusKey.TextColor3 = Color3.fromRGB(255,200,0)
-	StatusKey.Text = "Mengecek key ke database Supabase..."
 	
 	task.spawn(function()
 		local requestFunc = syn and syn.request or http and http.request or request
@@ -540,28 +533,71 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 			if decodeSuccess and data and #data > 0 then
 				local record = data[1]
 				local keyStatus = record.status
+				local savedHwid = record.hwid_value
 				
 				if keyStatus == false or keyStatus == "inactive" or keyStatus == "used" then
-					StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-					StatusKey.Text = "Key sudah tidak aktif / sudah digunakan!"
+					if not isAutoLogin then
+						StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+						StatusKey.Text = "Key sudah tidak aktif!"
+					end
+					if isfile and isfile(KEY_FILE) then delfile(KEY_FILE) end
+					KeyFrame.Visible = true
 					return
 				end
 				
-				StatusKey.TextColor3 = Color3.fromRGB(0,255,100)
-				StatusKey.Text = "Key Valid! Membuka Hub..."
-				task.wait(1)
+				if savedHwid and savedHwid ~= "" and savedHwid ~= CurrentHWID then
+					if not isAutoLogin then
+						StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+						StatusKey.Text = "Key terikat di perangkat lain! Silakan Reset HWID."
+					end
+					if isfile and isfile(KEY_FILE) then delfile(KEY_FILE) end
+					KeyFrame.Visible = true
+					return
+				end
+				
+				pcall(function()
+					if writefile then
+						writefile(KEY_FILE, enteredKey)
+					end
+				end)
+				
 				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
 				Main.Visible = true
 			else
-				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-				StatusKey.Text = "Key Salah atau Belum Dibuat oleh Bot Discord!"
+				if not isAutoLogin then
+					StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+					StatusKey.Text = "Key Salah atau Tidak Ditemukan!"
+				end
+				if isfile and isfile(KEY_FILE) then delfile(KEY_FILE) end
+				KeyFrame.Visible = true
 			end
 		else
-			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-			StatusKey.Text = "Gagal terhubung ke server Supabase."
+			if not isAutoLogin then
+				StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
+				StatusKey.Text = "Gagal terhubung ke database."
+			end
+			KeyFrame.Visible = true
 		end
 	end)
+end
+
+SubmitKeyBtn.MouseButton1Click:Connect(function()
+	ValidateKey(KeyBox.Text, false)
+end)
+
+task.spawn(function()
+	if readfile and isfile and isfile(KEY_FILE) then
+		local savedKey = readfile(KEY_FILE)
+		if savedKey and savedKey ~= "" then
+			KeyBox.Text = savedKey
+			ValidateKey(savedKey, true)
+		else
+			KeyFrame.Visible = true
+		end
+	else
+		KeyFrame.Visible = true
+	end
 end)
 
 ----------------------------------------------------
@@ -858,7 +894,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE (DENGAN ANTI-TEMBUS & JEDA DI PUNCAK)
+-- 4. SUMMIT PAGE
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1151,7 +1187,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 7. TELEPORT PLAYER PAGE (SCAN & PILIH PLAYER)
+-- 7. TELEPORT PLAYER PAGE
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1424,7 +1460,7 @@ local ResetConfigBtn = Instance.new("TextButton")
 ResetConfigBtn.Parent = SettingsPage
 ResetConfigBtn.Size = UDim2.new(1,0,0,35)
 ResetConfigBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-ResetConfigBtn.Text = "🔄 Reset Konfigurasi (Reset Config)"
+ResetConfigBtn.Text = "🔄 Reset Konfigurasi & Clear Key"
 ResetConfigBtn.TextColor3 = Color3.new(1,1,1)
 ResetConfigBtn.Font = Enum.Font.GothamBold
 ResetConfigBtn.TextSize = 13
@@ -1432,9 +1468,9 @@ Instance.new("UICorner", ResetConfigBtn)
 
 ResetConfigBtn.MouseButton1Click:Connect(function()
 	ResetConfig()
-	ResetConfigBtn.Text = "🔄 Config Direset! (Restart Game)"
+	ResetConfigBtn.Text = "🔄 Config & Key Direset!"
 	task.wait(1.5)
-	ResetConfigBtn.Text = "🔄 Reset Konfigurasi (Reset Config)"
+	ResetConfigBtn.Text = "🔄 Reset Konfigurasi & Clear Key"
 end)
 
 local TheCloseBtn = Instance.new("TextButton")
