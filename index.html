@@ -1,1 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBEY HUB V3 - Key Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 90%;
+            width: 380px;
+        }
+        h1 {
+            color: #38bdf8;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .key-box {
+            background-color: #0f172a;
+            border: 2px dashed #38bdf8;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #4ade80;
+            word-break: break-all;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        button:hover {
+            background-color: #0284c7;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>UBEY HUB V3</h1>
+        <p>Key 24 Jam Kamu Berhasil Dibuat!</p>
+        <div class="key-box" id="keyDisplay">Membuat Key...</div>
+        <button onclick="copyKey()">Salin Key</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"; 
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function generateRandomKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = 'UBEY-';
+            for (let i = 0; i < 12; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        async function createAndDisplayKey() {
+            const newKey = generateRandomKey();
+            document.getElementById('keyDisplay').innerText = newKey;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Ubey_Project')
+                    .insert([{ key: newKey }]);
+                
+                if (error) console.error("Error Supabase:", error);
+            } catch (err) {
+                console.error("Gagal konek Supabase:", err);
+            }
+        }
+
+        function copyKey() {
+            const keyText = document.getElementById('keyDisplay').innerText;
+            navigator.clipboard.writeText(keyText);
+            alert("Key berhasil disalin: " + keyText);
+        }
+
+        createAndDisplayKey();
+    </script>
+</body>
+</html>
 
