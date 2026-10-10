@@ -1,11 +1,10 @@
 -- ==============================================================================
--- UBEY HUB V3 | Final Complete Version (Supabase 24h + HWID Lock, Auto Fishing, Summit, Anti-Admin, FPS Boost)
+-- UBEY HUB V3 | Cleaned Version (No Galatama, Summit, Halo, Anti-AFK, Config, Auto Sell)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -18,71 +17,13 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 ------------------------------------------------------------------
--- CONFIGURATION & FILE SAVE SYSTEM
-------------------------------------------------------------------
-local CONFIG_FILE = "UbeyHubV3_Config.json"
-
-getgenv().UbeyConfig = {
-	BiteDelay = "0.5",
-	SelectedSpot = "Spot Mancing Jembatan",
-	AutoSellTimer = "5",
-	AutoExecuteEnabled = true,
-	AntiAdminEnabled = false,
-	TargetGroupId = 7019573
-}
-
-local function SaveConfig()
-	pcall(function()
-		if writefile then
-			local data = HttpService:JSONEncode(getgenv().UbeyConfig)
-			writefile(CONFIG_FILE, data)
-		end
-	end)
-end
-
-local function LoadConfig()
-	pcall(function()
-		if readfile and isfile and isfile(CONFIG_FILE) then
-			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
-			if data then
-				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
-				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
-				if data.AutoSellTimer then getgenv().UbeyConfig.AutoSellTimer = data.AutoSellTimer end
-				if data.AutoExecuteEnabled ~= nil then getgenv().UbeyConfig.AutoExecuteEnabled = data.AutoExecuteEnabled end
-				if data.AntiAdminEnabled ~= nil then getgenv().UbeyConfig.AntiAdminEnabled = data.AntiAdminEnabled end
-				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
-			end
-		end
-	end)
-end
-
-local function ResetConfig()
-	pcall(function()
-		getgenv().UbeyConfig = {
-			BiteDelay = "0.5",
-			SelectedSpot = "Spot Mancing Jembatan",
-			AutoSellTimer = "5",
-			AutoExecuteEnabled = true,
-			AntiAdminEnabled = false,
-			TargetGroupId = 7019573
-		}
-		if delfile and isfile and isfile(CONFIG_FILE) then
-			delfile(CONFIG_FILE)
-		end
-	end)
-end
-
-LoadConfig()
-
-------------------------------------------------------------------
 -- SUPABASE CONFIGURATION
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project"
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
 
 ------------------------------------------------------------------
--- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
+-- AUTO RECONNECT
 ------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
@@ -95,37 +36,21 @@ task.spawn(function()
 	end)
 end)
 
-pcall(function()
-	if queue_on_teleport and getgenv().UbeyConfig.AutoExecuteEnabled then
-		queue_on_teleport([[
-			task.wait(3)
-			loadstring(game:HttpGet("LINK_GITHUB_ATAU_KODE_KAMU"))()
-		]])
-	end
-end)
-
 -- GLOBAL STATES & LOGIC
 getgenv().AutoFishingEventRunning = false
-getgenv().BiteDelayInput = getgenv().UbeyConfig.BiteDelay
-getgenv().SelectedFishingSpot = getgenv().UbeyConfig.SelectedSpot
-getgenv().AutoSellRunning = false
-getgenv().AutoSellTimerInput = getgenv().UbeyConfig.AutoSellTimer
-getgenv().AutoGalatamaRunning = false
-getgenv().AutoSummitRunning = false
-getgenv().AntiAFKRunning = false
+getgenv().BiteDelayInput = "0.6" -- Permanen 0.6 detik
+getgenv().SelectedFishingSpot = "Spot Mancing Jembatan"
 getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
-getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
+getgenv().AntiAdminEnabled = false
 
--- DATA KOORDINAT SPOT & SHOP
+-- DATA KOORDINAT SPOT
 local FishingSpots = {
 	["Spot Mancing Jembatan"] = CFrame.new(-6783.74756, 1322.81006, -9757.34473, 0.0899723172, -9.34088291e-08, 0.995944262, 1.76120434e-08, 1, 9.21981638e-08, -0.995944262, 9.24533072e-09, 0.0899723172),
 	["Spot Mancing Core"] = CFrame.new(-9069.33887, 1250.32092, -6510.3374, 0.99812746, -7.96398965e-08, -0.0611686334, 8.05492206e-08, 1, 1.24000188e-08, 0.0611686334, -1.73038845e-08, 0.99812746),
 	["Spot Mancing Ikan Anomali"] = CFrame.new(-8199.52832, 1238.83752, -6278.13135, -0.999144316, 1.1644854e-08, -0.0413601957, 1.63464247e-08, 1, -1.13335595e-07, 0.0413601957, -1.13914709e-07, -0.999144316)
 }
-
-local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
 
 local function OptimizeRodSettings()
 	pcall(function()
@@ -139,29 +64,6 @@ local function OptimizeRodSettings()
 				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
 				if enableMiniGame then enableMiniGame.Value = false end
 			end
-		end
-	end)
-end
-
-local function TriggerSellToNpc()
-	pcall(function()
-		local character = LocalPlayer.Character
-		local hrp = character and character:FindFirstChild("HumanoidRootPart")
-		if not hrp then return end
-		
-		local currentSpotCFrame = hrp.CFrame
-		hrp.CFrame = NpcSellCFrame
-		task.wait(0.8)
-		
-		local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
-		local jualSemua = mancing and mancing:FindFirstChild("JualSemua")
-		if jualSemua then
-			jualSemua:InvokeServer()
-		end
-		task.wait(0.8)
-		
-		if getgenv().AutoFishingEventRunning then
-			hrp.CFrame = currentSpotCFrame
 		end
 	end)
 end
@@ -246,7 +148,6 @@ StatusKey.Font = Enum.Font.Gotham
 StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
--- LINK LOOTLABS BARU YANG SUDAH DIPERBARUI
 GetKeyLinkBtn.MouseButton1Click:Connect(function()
 	pcall(function()
 		if setclipboard then
@@ -302,19 +203,13 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 			if decodeSuccess and data and #data > 0 then
 				local record = data[1]
 				
-				-- ⏳ PENGECEKAN KEDALUWARSA 24 JAM (Khusus Key Free/Non-VIP)
 				if record.created_at and not string.match(enteredKey, "^UBEY%-VIP%-") then
 					local year, month, day, hour, min, sec = record.created_at:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
 					if year then
 						local createdTime = os.time({
-							year = tonumber(year),
-							month = tonumber(month),
-							day = tonumber(day),
-							hour = tonumber(hour),
-							min = tonumber(min),
-							sec = tonumber(sec)
+							year = tonumber(year), month = tonumber(month), day = tonumber(day),
+							hour = tonumber(hour), min = tonumber(min), sec = tonumber(sec)
 						})
-						
 						local currentTime = os.time()
 						local hoursPassed = os.difftime(currentTime, createdTime) / 3600
 						
@@ -326,7 +221,6 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 					end
 				end
 
-				-- 🔒 PENGECEKAN & PENGUNCIAN HWID KE SUPABASE
 				local deviceHWID = game:GetService("RbxAnalyticsService"):GetClientId()
 				
 				if record.hwid == nil or record.hwid == "" or record.hwid == "null" then
@@ -342,9 +236,7 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 									["Content-Type"] = "application/json",
 									["Prefer"] = "return=minimal"
 								},
-								Body = HttpService:JSONEncode({
-									hwid = deviceHWID
-								})
+								Body = HttpService:JSONEncode({ hwid = deviceHWID })
 							})
 						end
 					end)
@@ -421,7 +313,7 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Parent = Main
 Sidebar.Size = UDim2.new(0,140,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15,15,20)
-Sidebar.CanvasSize = UDim2.new(0,0,2.3,0)
+Sidebar.CanvasSize = UDim2.new(0,0,1.8,0)
 Sidebar.ScrollBarThickness = 2
 
 local SideCorner = Instance.new("UICorner")
@@ -440,57 +332,42 @@ local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
 HomeBtn.Position = UDim2.new(0,10,0,65)
 HomeBtn.Size = UDim2.new(1,-20,0,28)
-HomeBtn.Text = "Fishing & Sell"
+HomeBtn.Text = "Fishing"
 HomeBtn.TextColor3 = Color3.new(1,1,1)
 HomeBtn.Font = Enum.Font.GothamMedium
 HomeBtn.TextSize = 12
 
-local GalatamaBtn = HomeBtn:Clone()
-GalatamaBtn.Parent = Sidebar
-GalatamaBtn.Position = UDim2.new(0,10,0,100)
-GalatamaBtn.Text = "Galatama"
-
 local TeleportShopBtn = HomeBtn:Clone()
 TeleportShopBtn.Parent = Sidebar
-TeleportShopBtn.Position = UDim2.new(0,10,0,135)
+TeleportShopBtn.Position = UDim2.new(0,10,0,100)
 TeleportShopBtn.Text = "Teleport Shop"
-
-local SummitBtn = HomeBtn:Clone()
-SummitBtn.Parent = Sidebar
-SummitBtn.Position = UDim2.new(0,10,0,170)
-SummitBtn.Text = "Summit"
 
 local PlayerMenuBtn = HomeBtn:Clone()
 PlayerMenuBtn.Parent = Sidebar
-PlayerMenuBtn.Position = UDim2.new(0,10,0,205)
+PlayerMenuBtn.Position = UDim2.new(0,10,0,135)
 PlayerMenuBtn.Text = "Player"
-
-local HaloMenuBtn = HomeBtn:Clone()
-HaloMenuBtn.Parent = Sidebar
-HaloMenuBtn.Position = UDim2.new(0,10,0,240)
-HaloMenuBtn.Text = "Halo Kepala"
 
 local PlayerTpBtn = HomeBtn:Clone()
 PlayerTpBtn.Parent = Sidebar
-PlayerTpBtn.Position = UDim2.new(0,10,0,275)
+PlayerTpBtn.Position = UDim2.new(0,10,0,170)
 PlayerTpBtn.Text = "Teleport Player"
 
 local PrivacyBtn = HomeBtn:Clone()
 PrivacyBtn.Parent = Sidebar
-PrivacyBtn.Position = UDim2.new(0,10,0,310)
+PrivacyBtn.Position = UDim2.new(0,10,0,205)
 PrivacyBtn.Text = "Privacy"
 
 local SettingsBtn = HomeBtn:Clone()
 SettingsBtn.Parent = Sidebar
-SettingsBtn.Position = UDim2.new(0,10,0,345)
+SettingsBtn.Position = UDim2.new(0,10,0,240)
 SettingsBtn.Text = "Settings"
 
 local CreditsBtn = HomeBtn:Clone()
 CreditsBtn.Parent = Sidebar
-CreditsBtn.Position = UDim2.new(0,10,0,380)
+CreditsBtn.Position = UDim2.new(0,10,0,275)
 CreditsBtn.Text = "Credits"
 
-for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PlayerTpBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
+for _,v in ipairs({HomeBtn, TeleportShopBtn, PlayerMenuBtn, PlayerTpBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
 	v.BackgroundColor3 = Color3.fromRGB(35,35,45)
 	local c = Instance.new("UICorner")
 	c.Parent = v
@@ -508,7 +385,7 @@ local function MakePage()
 	f.Size = UDim2.new(1,0,1,0)
 	f.BackgroundTransparency = 1
 	f.Visible = false
-	f.CanvasSize = UDim2.new(0,0,6,0)
+	f.CanvasSize = UDim2.new(0,0,4,0)
 	f.ScrollBarThickness = 4
 	
 	local pad = Instance.new("UIPadding")
@@ -523,11 +400,8 @@ local function MakePage()
 end
 
 local FishingPage = MakePage() FishingPage.Visible = true
-local GalatamaPage = MakePage()
 local TeleportShopPage = MakePage()
-local SummitPage = MakePage()
 local PlayerPage = MakePage()
-local HaloPage = MakePage()
 local PlayerTpPage = MakePage()
 local PrivacyPage = MakePage()
 local SettingsPage = MakePage()
@@ -535,11 +409,8 @@ local CreditsPage = MakePage()
 
 local function HideAll()
 	FishingPage.Visible = false
-	GalatamaPage.Visible = false
 	TeleportShopPage.Visible = false
-	SummitPage.Visible = false
 	PlayerPage.Visible = false
-	HaloPage.Visible = false
 	PlayerTpPage.Visible = false
 	PrivacyPage.Visible = false
 	SettingsPage.Visible = false
@@ -547,11 +418,8 @@ local function HideAll()
 end
 
 HomeBtn.MouseButton1Click:Connect(function() HideAll(); FishingPage.Visible = true end)
-GalatamaBtn.MouseButton1Click:Connect(function() HideAll(); GalatamaPage.Visible = true end)
 TeleportShopBtn.MouseButton1Click:Connect(function() HideAll(); TeleportShopPage.Visible = true end)
-SummitBtn.MouseButton1Click:Connect(function() HideAll(); SummitPage.Visible = true end)
 PlayerMenuBtn.MouseButton1Click:Connect(function() HideAll(); PlayerPage.Visible = true end)
-HaloMenuBtn.MouseButton1Click:Connect(function() HideAll(); HaloPage.Visible = true end)
 PlayerTpBtn.MouseButton1Click:Connect(function() HideAll(); PlayerTpPage.Visible = true end)
 PrivacyBtn.MouseButton1Click:Connect(function() HideAll(); PrivacyPage.Visible = true end)
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
@@ -578,13 +446,13 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE
+-- 1. FISHING PAGE
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
 TitleFish.Size = UDim2.new(1,0,0,30)
 TitleFish.BackgroundTransparency = 1
-TitleFish.Text = "🔥 AUTO FISHING & SELL UTILITIES"
+TitleFish.Text = "🔥 AUTO FISHING UTILITIES"
 TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
@@ -618,9 +486,52 @@ ChangeSpotBtn.MouseButton1Click:Connect(function()
 	spotIndex = spotIndex % #spotList + 1
 	getgenv().SelectedFishingSpot = spotList[spotIndex]
 	SpotLabel.Text = "Pilih Lokasi: " .. getgenv().SelectedFishingSpot
-	getgenv().UbeyConfig.SelectedSpot = getgenv().SelectedFishingSpot
-	SaveConfig()
 end)
+
+-- Logika Auto Fishing Utama (Delay permanen 0.6s)
+local function RunAutoFishingLogic()
+	task.spawn(function()
+		while getgenv().AutoFishingEventRunning do
+			pcall(function()
+				local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
+				if rod and rod:FindFirstChild("Mechanics") then
+					local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
+					if remoteFolder then
+						OptimizeRodSettings()
+						local hrp = LocalPlayer.Character.HumanoidRootPart
+						remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
+						
+						task.wait(0.05)
+						local hooked = false
+						local conn
+						conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+							if actionType == "Bite" then
+								hooked = true
+								if conn then conn:Disconnect() end
+							end
+						end)
+						
+						local start = tick()
+						while not hooked and getgenv().AutoFishingEventRunning do
+							if tick() - start > 10 then break end
+							task.wait(0.05)
+						end
+						if conn then conn:Disconnect() end
+						
+						if hooked and getgenv().AutoFishingEventRunning then
+							task.wait(0.6) -- Permanen delay bite 0.6s
+							remoteFolder.MiniGame:FireServer(true)
+							task.wait(0.3)
+						end
+					end
+				else
+					task.wait(1)
+				end
+			end)
+			task.wait(0.1)
+		end
+	end)
+end
 
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
@@ -633,50 +544,8 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 				hrp.CFrame = targetCFrame
 			end
 		end)
-		
 		OptimizeRodSettings()
-		task.spawn(function()
-			while getgenv().AutoFishingEventRunning do
-				pcall(function()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
-					if rod and rod:FindFirstChild("Mechanics") then
-						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-						if remoteFolder then
-							OptimizeRodSettings()
-							local hrp = LocalPlayer.Character.HumanoidRootPart
-							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
-							
-							task.wait(0.05)
-							local hooked = false
-							local conn
-							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then
-									hooked = true
-									if conn then conn:Disconnect() end
-								end
-							end)
-							
-							local start = tick()
-							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
-								task.wait(0.05)
-							end
-							if conn then conn:Disconnect() end
-							
-							if hooked and getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
-								task.wait(currentDelay)
-								remoteFolder.MiniGame:FireServer(true)
-								task.wait(0.3)
-							end
-						end
-					else
-						task.wait(1)
-					end
-				end)
-				task.wait(0.1)
-			end
-		end)
+		RunAutoFishingLogic()
 	end
 end)
 
@@ -684,153 +553,12 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
 		OptimizeRodSettings()
-		task.spawn(function()
-			while getgenv().AutoFishingEventRunning do
-				pcall(function()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
-					if rod and rod:FindFirstChild("Mechanics") then
-						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-						if remoteFolder then
-							OptimizeRodSettings()
-							local hrp = LocalPlayer.Character.HumanoidRootPart
-							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
-							
-							task.wait(0.05)
-							local hooked = false
-							local conn
-							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then
-									hooked = true
-									if conn then conn:Disconnect() end
-								end
-							end)
-							
-							local start = tick()
-							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
-								task.wait(0.05)
-							end
-							if conn then conn:Disconnect() end
-							
-							if hooked and getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
-								task.wait(currentDelay)
-								remoteFolder.MiniGame:FireServer(true)
-								task.wait(0.3)
-							end
-						end
-					else
-						task.wait(1)
-					end
-				end)
-				task.wait(0.1)
-			end
-		end)
-	end
-end)
-
-local BiteDelayBox = Instance.new("TextBox")
-BiteDelayBox.Parent = FishingPage
-BiteDelayBox.Size = UDim2.new(1,0,0,35)
-BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
-BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
-BiteDelayBox.TextColor3 = Color3.new(1,1,1)
-BiteDelayBox.Font = Enum.Font.Gotham
-BiteDelayBox.TextSize = 12
-Instance.new("UICorner", BiteDelayBox)
-BiteDelayBox.FocusLost:Connect(function()
-	getgenv().BiteDelayInput = BiteDelayBox.Text
-	getgenv().UbeyConfig.BiteDelay = BiteDelayBox.Text
-	SaveConfig()
-end)
-
-AddToggle(FishingPage, "Auto Sell Timer ke NPC", function(v)
-	getgenv().AutoSellRunning = v
-	if v then
-		task.spawn(function()
-			local lastSellTime = tick()
-			while getgenv().AutoSellRunning do
-				task.wait(1)
-				local elapsedMinutes = (tick() - lastSellTime) / 60
-				local targetMinutes = tonumber(getgenv().AutoSellTimerInput) or 5
-				if elapsedMinutes >= targetMinutes then
-					TriggerSellToNpc()
-					lastSellTime = tick()
-				end
-			end
-		end)
-	end
-end)
-
-local SellTimerBox = Instance.new("TextBox")
-SellTimerBox.Parent = FishingPage
-SellTimerBox.Size = UDim2.new(1,0,0,35)
-SellTimerBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-SellTimerBox.PlaceholderText = "Jeda Waktu Jual (Menit, Cth: 5)"
-SellTimerBox.Text = tostring(getgenv().UbeyConfig.AutoSellTimer)
-SellTimerBox.TextColor3 = Color3.new(1,1,1)
-SellTimerBox.Font = Enum.Font.Gotham
-SellTimerBox.TextSize = 12
-Instance.new("UICorner", SellTimerBox)
-SellTimerBox.FocusLost:Connect(function()
-	getgenv().AutoSellTimerInput = SellTimerBox.Text
-	getgenv().UbeyConfig.AutoSellTimer = SellTimerBox.Text
-	SaveConfig()
-end)
-
-----------------------------------------------------
--- 2. GALATAMA PAGE
-----------------------------------------------------
-local TitleGal = Instance.new("TextLabel")
-TitleGal.Parent = GalatamaPage
-TitleGal.Size = UDim2.new(1,0,0,30)
-TitleGal.BackgroundTransparency = 1
-TitleGal.Text = "🏆 GALATAMA AUTO JOIN & TELEPORT"
-TitleGal.TextColor3 = Color3.fromRGB(0,170,255)
-TitleGal.Font = Enum.Font.GothamBold
-TitleGal.TextSize = 13
-
-local TeleportGalatamaBtn = Instance.new("TextButton")
-TeleportGalatamaBtn.Parent = GalatamaPage
-TeleportGalatamaBtn.Size = UDim2.new(1,0,0,35)
-TeleportGalatamaBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
-TeleportGalatamaBtn.Text = "📍 Teleport ke Galatama"
-TeleportGalatamaBtn.TextColor3 = Color3.new(1,1,1)
-TeleportGalatamaBtn.Font = Enum.Font.GothamBold
-TeleportGalatamaBtn.TextSize = 13
-Instance.new("UICorner", TeleportGalatamaBtn)
-
-TeleportGalatamaBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		local character = LocalPlayer.Character
-		local hrp = character and character:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			hrp.CFrame = CFrame.new(-8008.12744, 1227.96838, -6091.92627, 1, 5.81026569e-08, -1.99986468e-12, -5.81026569e-08, 1, -2.64906923e-08, 1.99832555e-12, 2.64906923e-08, 1)
-		end
-	end)
-end)
-
-AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
-	getgenv().AutoGalatamaRunning = v
-	if v then
-		task.spawn(function()
-			while getgenv().AutoGalatamaRunning do
-				pcall(function()
-					local glatamaFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Glatama")
-					local ikutRemote = glatamaFolder and glatamaFolder:FindFirstChild("Ikut")
-					if ikutRemote then
-						ikutRemote:InvokeServer()
-					end
-				end)
-				task.wait(10)
-			end
-		end)
+		RunAutoFishingLogic()
 	end
 end)
 
 ----------------------------------------------------
--- 3. TELEPORT SHOP PAGE
+-- 2. TELEPORT SHOP PAGE
 ----------------------------------------------------
 local TitleShop = Instance.new("TextLabel")
 TitleShop.Parent = TeleportShopPage
@@ -856,9 +584,7 @@ local function AddShopTeleportBtn(parent, name, cf)
 		pcall(function()
 			local character = LocalPlayer.Character
 			local hrp = character and character:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				hrp.CFrame = cf
-			end
+			if hrp then hrp.CFrame = cf end
 		end)
 	end)
 end
@@ -871,64 +597,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE
-----------------------------------------------------
-local TitleSum = Instance.new("TextLabel")
-TitleSum.Parent = SummitPage
-TitleSum.Size = UDim2.new(1,0,0,30)
-TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM"
-TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
-TitleSum.Font = Enum.Font.GothamBold
-TitleSum.TextSize = 13
-
-local summitCFrame = CFrame.new(-6766.44629, 1317.69983, -10083.8037, -0.993305981, 1.64907146e-08, 0.115513086, 1.58947078e-08, 1, -6.08075279e-09, -0.115513086, -4.20400115e-09, -0.993305981)
-local bcCFrame = CFrame.new(-6834.84912, 1310.24744, -9902.42285, -1, 0, 0, 0, 1, 0, 0, 0, -1)
-
-AddToggle(SummitPage, "Auto Summit Loop", function(v)
-	getgenv().AutoSummitRunning = v
-end)
-
-task.spawn(function()
-	while true do
-		if getgenv().AutoSummitRunning then
-			pcall(function()
-				local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-				local hrp = character:WaitForChild("HumanoidRootPart", 5)
-				local humanoid = character:WaitForChild("Humanoid", 5)
-				
-				if hrp and humanoid then
-					local cpFolder = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
-					local tpCP = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
-					
-					for i = 1, 20 do
-						if not getgenv().AutoSummitRunning then break end
-						if tpCP then tpCP:FireServer(i) end
-						task.wait(0.1)
-					end
-					
-					if getgenv().AutoSummitRunning then
-						hrp.CFrame = summitCFrame
-						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						task.wait(2.5) 
-					end
-					
-					if getgenv().AutoSummitRunning then
-						hrp.CFrame = bcCFrame
-						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						task.wait(0.8)
-					end
-				end
-			end)
-			task.wait(0.5)
-		else
-			task.wait(0.5)
-		end
-	end
-end)
-
-----------------------------------------------------
--- 5. PLAYER PAGE
+-- 3. PLAYER PAGE
 ----------------------------------------------------
 local TitlePly = Instance.new("TextLabel")
 TitlePly.Parent = PlayerPage
@@ -954,16 +623,6 @@ SpeedBox.FocusLost:Connect(function()
 	if num then pcall(function() LocalPlayer.Character.Humanoid.WalkSpeed = num end) end
 end)
 
-AddToggle(PlayerPage, "Anti-AFK", function(v)
-	getgenv().AntiAFKRunning = v
-end)
-LocalPlayer.Idled:Connect(function()
-	if getgenv().AntiAFKRunning then
-		VirtualUser:CaptureController()
-		VirtualUser:ClickButton2(Vector2.new(0,0))
-	end
-end)
-
 local HeadlessBtn = Instance.new("TextButton")
 HeadlessBtn.Parent = PlayerPage
 HeadlessBtn.Size = UDim2.new(1,0,0,35)
@@ -982,9 +641,7 @@ HeadlessBtn.MouseButton1Click:Connect(function()
 			if head then
 				head.Transparency = 1
 				for _, child in ipairs(head:GetChildren()) do
-					if child:IsA("Decal") then
-						child.Transparency = 1
-					end
+					if child:IsA("Decal") then child.Transparency = 1 end
 				end
 			end
 		end
@@ -1002,7 +659,6 @@ FireRgbBtn.TextSize = 13
 Instance.new("UICorner", FireRgbBtn)
 
 local autoRgbActive = false
-
 FireRgbBtn.MouseButton1Click:Connect(function()
 	autoRgbActive = not autoRgbActive
 	FireRgbBtn.Text = "🔥🌈 Auto RGB Fire: " .. (autoRgbActive and "[ON]" or "[OFF]")
@@ -1027,14 +683,7 @@ FireRgbBtn.MouseButton1Click:Connect(function()
 end)
 
 task.spawn(function()
-	local colors = {
-		Color3.fromRGB(255, 0, 0),
-		Color3.fromRGB(0, 255, 0),
-		Color3.fromRGB(0, 100, 255),
-		Color3.fromRGB(255, 0, 255),
-		Color3.fromRGB(255, 255, 0),
-		Color3.fromRGB(0, 255, 255)
-	}
+	local colors = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 100, 255), Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 255)}
 	local index = 1
 	while true do
 		if autoRgbActive then
@@ -1055,116 +704,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 6. HALO PAGE
-----------------------------------------------------
-local TitleHalo = Instance.new("TextLabel")
-TitleHalo.Parent = HaloPage
-TitleHalo.Size = UDim2.new(1,0,0,30)
-TitleHalo.BackgroundTransparency = 1
-TitleHalo.Text = "👑 HALO & AKSESORIS KEPALA"
-TitleHalo.TextColor3 = Color3.fromRGB(0,170,255)
-TitleHalo.Font = Enum.Font.GothamBold
-TitleHalo.TextSize = 13
-
-local function ApplyHaloToCharacter(haloName)
-	getgenv().CurrentSelectedHalo = haloName
-	pcall(function()
-		local character = LocalPlayer.Character
-		local head = character and character:FindFirstChild("Head")
-		if not head then return end
-		
-		for _, v in ipairs(head:GetChildren()) do
-			if v.Name == "CustomPlayerHalo" then
-				v:Destroy()
-			end
-		end
-		
-		local haloSourceFolder = ReplicatedStorage:FindFirstChild("HaloKenyal")
-		if haloSourceFolder then
-			local targetHaloModel = haloSourceFolder:FindFirstChild(haloName)
-			if targetHaloModel then
-				local cloneModel = targetHaloModel:Clone()
-				cloneModel.Name = "CustomPlayerHalo"
-				
-				local primaryPart = cloneModel:FindFirstChild("Handle") or cloneModel:FindFirstChild("Antenna") or cloneModel:FindFirstChildWhichIsA("BasePart")
-				
-				cloneModel.Parent = head
-				
-				for _, desc in ipairs(cloneModel:GetDescendants()) do
-					if desc:IsA("BasePart") then
-						desc.Anchored = false
-						desc.CanCollide = false
-						desc.Massless = true
-					elseif desc:IsA("Script") or desc:IsA("LocalScript") then
-						desc:Destroy()
-					end
-				end
-				
-				if primaryPart then
-					primaryPart.CFrame = head.CFrame * CFrame.new(0, 1.3, 0)
-					local weld = Instance.new("WeldConstraint")
-					weld.Part0 = head
-					weld.Part1 = primaryPart
-					weld.Parent = primaryPart
-				end
-			end
-		end
-	end)
-end
-
-LocalPlayer.CharacterAdded:Connect(function(char)
-	task.wait(1)
-	if getgenv().CurrentSelectedHalo then
-		ApplyHaloToCharacter(getgenv().CurrentSelectedHalo)
-	end
-end)
-
-pcall(function()
-	local haloSourceFolder = ReplicatedStorage:FindFirstChild("HaloKenyal")
-	if haloSourceFolder then
-		local clearHaloBtn = Instance.new("TextButton")
-		clearHaloBtn.Parent = HaloPage
-		clearHaloBtn.Size = UDim2.new(1,0,0,32)
-		clearHaloBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-		clearHaloBtn.Text = "❌ Lepas Aksesoris Kepala"
-		clearHaloBtn.TextColor3 = Color3.new(1,1,1)
-		clearHaloBtn.Font = Enum.Font.GothamBold
-		clearHaloBtn.TextSize = 12
-		Instance.new("UICorner", clearHaloBtn)
-		
-		clearHaloBtn.MouseButton1Click:Connect(function()
-			getgenv().CurrentSelectedHalo = nil
-			pcall(function()
-				local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-				if head then
-					for _, v in ipairs(head:GetChildren()) do
-						if v.Name == "CustomPlayerHalo" then v:Destroy() end
-					end
-				end
-			end)
-		end)
-		
-		for _, haloItem in ipairs(haloSourceFolder:GetChildren()) do
-			local name = haloItem.Name
-			local haloBtn = Instance.new("TextButton")
-			haloBtn.Parent = HaloPage
-			haloBtn.Size = UDim2.new(1,0,0,32)
-			haloBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
-			haloBtn.Text = "👑 " .. name
-			haloBtn.TextColor3 = Color3.new(1,1,1)
-			haloBtn.Font = Enum.Font.GothamMedium
-			haloBtn.TextSize = 12
-			Instance.new("UICorner", haloBtn)
-			
-			haloBtn.MouseButton1Click:Connect(function()
-				ApplyHaloToCharacter(name)
-			end)
-		end
-	end
-end)
-
-----------------------------------------------------
--- 7. TELEPORT PLAYER PAGE
+-- 4. TELEPORT PLAYER PAGE
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1199,9 +739,7 @@ ListLayout.Padding = UDim.new(0, 5)
 
 local function ScanAndDisplayPlayers()
 	for _, child in ipairs(PlayerListContainer:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
+		if child:IsA("TextButton") then child:Destroy() end
 	end
 	
 	for _, plr in ipairs(Players:GetPlayers()) do
@@ -1222,7 +760,6 @@ local function ScanAndDisplayPlayers()
 					local hrpTarget = char and char:FindFirstChild("HumanoidRootPart")
 					local myChar = LocalPlayer.Character
 					local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-					
 					if hrpTarget and myHrp then
 						myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 3, 0)
 					end
@@ -1232,17 +769,11 @@ local function ScanAndDisplayPlayers()
 	end
 end
 
-RefreshPlayerBtn.MouseButton1Click:Connect(function()
-	ScanAndDisplayPlayers()
-end)
-
-task.spawn(function()
-	task.wait(2)
-	ScanAndDisplayPlayers()
-end)
+RefreshPlayerBtn.MouseButton1Click:Connect(function() ScanAndDisplayPlayers() end)
+task.spawn(function() task.wait(2); ScanAndDisplayPlayers() end)
 
 ----------------------------------------------------
--- 8. PRIVACY & ANTI-ADMIN PAGE
+-- 5. PRIVACY & ANTI-ADMIN PAGE
 ----------------------------------------------------
 local TitlePrv = Instance.new("TextLabel")
 TitlePrv.Parent = PrivacyPage
@@ -1267,7 +798,7 @@ FakeNameBox.FocusLost:Connect(function()
 	getgenv().FakeNameInput = FakeNameBox.Text
 end)
 
-AddToggle(PrivacyPage, "Privacy Mode (Hide Name & Summit)", function(v)
+AddToggle(PrivacyPage, "Privacy Mode (Hide Name)", function(v)
 	getgenv().HideNameRunning = v
 	if v then
 		task.spawn(function()
@@ -1283,8 +814,6 @@ AddToggle(PrivacyPage, "Privacy Mode (Hide Name & Summit)", function(v)
 									local txt = child.Text
 									if string.find(txt, LocalPlayer.Name) or string.find(txt, LocalPlayer.DisplayName) then
 										child.Text = fakeName
-									elseif string.find(string.lower(txt), "summit") or (tonumber(txt) ~= nil and tonumber(txt) > 0) then
-										child.Text = ""
 									end
 								end
 							end
@@ -1300,8 +829,8 @@ end)
 local AntiAdminToggleBtn = Instance.new("TextButton")
 AntiAdminToggleBtn.Parent = PrivacyPage
 AntiAdminToggleBtn.Size = UDim2.new(1,0,0,35)
-AntiAdminToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AntiAdminEnabled and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(30, 30, 40)
-AntiAdminToggleBtn.Text = "  Anti-Admin Protect (MPG Group): " .. (getgenv().UbeyConfig.AntiAdminEnabled and "[ON]" or "[OFF]")
+AntiAdminToggleBtn.BackgroundColor3 = getgenv().AntiAdminEnabled and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(30, 30, 40)
+AntiAdminToggleBtn.Text = "  Anti-Admin Protect (MPG Group): " .. (getgenv().AntiAdminEnabled and "[ON]" or "[OFF]")
 AntiAdminToggleBtn.TextColor3 = Color3.new(1,1,1)
 AntiAdminToggleBtn.Font = Enum.Font.Gotham
 AntiAdminToggleBtn.TextSize = 13
@@ -1309,24 +838,15 @@ AntiAdminToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
 Instance.new("UICorner", AntiAdminToggleBtn)
 
 AntiAdminToggleBtn.MouseButton1Click:Connect(function()
-	getgenv().UbeyConfig.AntiAdminEnabled = not getgenv().UbeyConfig.AntiAdminEnabled
-	local active = getgenv().UbeyConfig.AntiAdminEnabled
+	getgenv().AntiAdminEnabled = not getgenv().AntiAdminEnabled
+	local active = getgenv().AntiAdminEnabled
 	AntiAdminToggleBtn.Text = "  Anti-Admin Protect (MPG Group): " .. (active and "[ON]" or "[OFF]")
 	AntiAdminToggleBtn.BackgroundColor3 = active and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(30, 30, 40)
-	SaveConfig()
 end)
 
 local function CheckPlayerIsAdmin(player)
-	local groupId = getgenv().UbeyConfig.TargetGroupId or 7019573
-	local success, rank = pcall(function()
-		return player:GetRankInGroup(groupId)
-	end)
-	
-	if success and rank then
-		if rank > 1 then
-			return true
-		end
-	end
+	local success, rank = pcall(function() return player:GetRankInGroup(7019573) end)
+	if success and rank and rank > 1 then return true end
 	return false
 end
 
@@ -1334,36 +854,21 @@ Players.PlayerAdded:Connect(function(player)
 	if player ~= LocalPlayer then
 		task.spawn(function()
 			task.wait(1.5)
-			if getgenv().UbeyConfig.AntiAdminEnabled then
-				if CheckPlayerIsAdmin(player) then
-					warn("🚨 [ANTI-ADMIN]: Staff MPG Community terdeteksi join: " .. player.Name)
-					game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-				end
+			if getgenv().AntiAdminEnabled and CheckPlayerIsAdmin(player) then
+				game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
 			end
 		end)
 	end
 end)
 
-task.spawn(function()
-	task.wait(2)
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer and getgenv().UbeyConfig.AntiAdminEnabled then
-			if CheckPlayerIsAdmin(player) then
-				warn("🚨 [ANTI-ADMIN]: Staff MPG Community sudah ada di server: " .. player.Name)
-				game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-			end
-		end
-	end
-end)
-
 ----------------------------------------------------
--- 9. SETTINGS, CONFIG & CREDITS PAGE
+-- 6. SETTINGS & CREDITS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
 TitleSet.Size = UDim2.new(1,0,0,30)
 TitleSet.BackgroundTransparency = 1
-TitleSet.Text = "⚙️ SETTINGS & CONFIGURATION"
+TitleSet.Text = "⚙️ SETTINGS & PERFORMANCE"
 TitleSet.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSet.Font = Enum.Font.GothamBold
 TitleSet.TextSize = 13
@@ -1383,7 +888,6 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
 		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-		
 		for _, v in ipairs(workspace:GetDescendants()) do
 			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
 				v.Enabled = false
@@ -1392,62 +896,9 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 				v.Reflectance = 0
 			end
 		end
-		
 		AntiLagBtn.Text = "⚡ Anti-Lag Aktif (Boosted!)"
 		AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
 	end)
-end)
-
-local AutoExecToggleBtn = Instance.new("TextButton")
-AutoExecToggleBtn.Parent = SettingsPage
-AutoExecToggleBtn.Size = UDim2.new(1,0,0,35)
-AutoExecToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AutoExecuteEnabled and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(30, 30, 40)
-AutoExecToggleBtn.Text = "  Auto Execute (Teleport): " .. (getgenv().UbeyConfig.AutoExecuteEnabled and "[ON]" or "[OFF]")
-AutoExecToggleBtn.TextColor3 = Color3.new(1,1,1)
-AutoExecToggleBtn.Font = Enum.Font.Gotham
-AutoExecToggleBtn.TextSize = 13
-AutoExecToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-Instance.new("UICorner", AutoExecToggleBtn)
-
-AutoExecToggleBtn.MouseButton1Click:Connect(function()
-	getgenv().UbeyConfig.AutoExecuteEnabled = not getgenv().UbeyConfig.AutoExecuteEnabled
-	AutoExecToggleBtn.Text = "  Auto Execute (Teleport): " .. (getgenv().UbeyConfig.AutoExecuteEnabled and "[ON]" or "[OFF]")
-	AutoExecToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AutoExecuteEnabled and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(30, 30, 40)
-	SaveConfig()
-end)
-
-local SaveConfigBtn = Instance.new("TextButton")
-SaveConfigBtn.Parent = SettingsPage
-SaveConfigBtn.Size = UDim2.new(1,0,0,35)
-SaveConfigBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-SaveConfigBtn.Text = "💾 Simpan Konfigurasi (Save Config)"
-SaveConfigBtn.TextColor3 = Color3.new(1,1,1)
-SaveConfigBtn.Font = Enum.Font.GothamBold
-SaveConfigBtn.TextSize = 13
-Instance.new("UICorner", SaveConfigBtn)
-
-SaveConfigBtn.MouseButton1Click:Connect(function()
-	SaveConfig()
-	SaveConfigBtn.Text = "✅ Config Berhasil Disimpan!"
-	task.wait(1.5)
-	SaveConfigBtn.Text = "💾 Simpan Konfigurasi (Save Config)"
-end)
-
-local ResetConfigBtn = Instance.new("TextButton")
-ResetConfigBtn.Parent = SettingsPage
-ResetConfigBtn.Size = UDim2.new(1,0,0,35)
-ResetConfigBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-ResetConfigBtn.Text = "🔄 Reset Konfigurasi (Reset Config)"
-ResetConfigBtn.TextColor3 = Color3.new(1,1,1)
-ResetConfigBtn.Font = Enum.Font.GothamBold
-ResetConfigBtn.TextSize = 13
-Instance.new("UICorner", ResetConfigBtn)
-
-ResetConfigBtn.MouseButton1Click:Connect(function()
-	ResetConfig()
-	ResetConfigBtn.Text = "🔄 Config Direset! (Restart Game)"
-	task.wait(1.5)
-	ResetConfigBtn.Text = "🔄 Reset Konfigurasi (Reset Config)"
 end)
 
 local TheCloseBtn = Instance.new("TextButton")
