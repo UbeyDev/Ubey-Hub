@@ -939,19 +939,19 @@ task.spawn(function()
 					for i = 1, 20 do
 						if not getgenv().AutoSummitRunning then break end
 						if tpCP then tpCP:FireServer(i) end
-						task.wait(0.1)
+						task.wait(0.2)
 					end
 					
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = summitCFrame
 						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						task.wait(2.5) 
+						task.wait(4.5) 
 					end
 					
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = bcCFrame
 						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						task.wait(0.8)
+						task.wait(1)
 					end
 				end
 			end)
