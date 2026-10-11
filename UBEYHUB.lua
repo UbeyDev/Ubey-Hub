@@ -906,7 +906,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE
+-- 4. SUMMIT PAGE (FIXED & ANTI-TEMBUS TANAH)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -917,8 +917,9 @@ TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-local summitCFrame = CFrame.new(-6766.44629, 1317.69983, -10083.8037, -0.993305981, 1.64907146e-08, 0.115513086, 1.58947078e-08, 1, -6.08075279e-09, -0.115513086, -4.20400115e-09, -0.993305981)
-local bcCFrame = CFrame.new(-6834.84912, 1310.24744, -9902.42285, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+-- Sumbu Y dinaikkan sedikit ke 1320.69 agar mendarat aman di atas tanah
+local summitCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037, -0.993305981, 1.64907146e-08, 0.115513086, 1.58947078e-08, 1, -6.08075279e-09, -0.115513086, -4.20400115e-09, -0.993305981)
+local bcCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285, -1, 0, 0, 0, 1, 0, 0, 0, -1)
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v)
 	getgenv().AutoSummitRunning = v
@@ -943,14 +944,22 @@ task.spawn(function()
 					end
 					
 					if getgenv().AutoSummitRunning then
-						hrp.CFrame = summitCFrame
 						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						task.wait(4.5) 
+						hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+						
+						hrp.CFrame = summitCFrame
+						
+						-- Anchor sementara agar map selesai merender dan karakter tidak tembus tanah
+						hrp.Anchored = true
+						task.wait(0.5)
+						hrp.Anchored = false
+						
+						task.wait(2.5) -- Jeda waktu agar summit sukses terhitung oleh server
 					end
 					
 					if getgenv().AutoSummitRunning then
-						hrp.CFrame = bcCFrame
 						hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+						hrp.CFrame = bcCFrame
 						task.wait(1)
 					end
 				end
