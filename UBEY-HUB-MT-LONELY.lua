@@ -1,172 +1,47 @@
--- DANZ HUB | AUTO FISHING (AUTO ROD DETECT + GUI)
-local CoreGui = game:GetService("CoreGui")
+-- UBEY HUB | AUTO FISHING (RAYFIELD UI)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- 1. PEMBERSIHAN GUI LAMA (Jika Re-execute)
-if CoreGui:FindFirstChild("DanzHubFishingUI") then
-	CoreGui.DanzHubFishingUI:Destroy()
-end
-
 getgenv().AutoExactSeq = false
-
--- 2. VARIABEL DELAY DEFAULT
 getgenv().CastDelay = 0.25   -- Delay setelah lempar kail
 getgenv().MiniDelay = 0.30   -- Delay minigame
 getgenv().GiveDelay = 0.20   -- Delay klaim ikan
 
--- 3. MEMBUAT TAMPILAN GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DanzHubFishingUI"
-ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
+-- LOAD RAYFIELD UI LIBRARY
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 230, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -115, 0.3, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
+local Window = Rayfield:CreateWindow({
+   Name = "UBEY HUB - AUTO FISHING",
+   LoadingTitle = "Ubey Hub Loading...",
+   LoadingSubtitle = "by UBEY",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = "UbeyHubFishing",
+      FileName = "Config"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvitelink",
+      RememberJoins = true
+   },
+   KeySystem = false, -- Ubah jadi true jika ingin pakai key system
+   KeySettings = {
+      Title = "Key System",
+      Subtitle = "Linkwarden",
+      Note = "No key needed",
+      FileName = "DanzKey",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {""}
+   }
+})
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Text = "DANZ HUB - AUTO FISHING"
-Title.TextColor3 = Color3.fromRGB(0, 255, 150)
-Title.TextSize = 14
-Title.Font = Enum.Font.SourceSansBold
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-Title.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 10)
-TitleCorner.Parent = Title
+-- MEMBUAT TAB UTAMA
+local MainTab = Window:CreateTab("Auto Farm", 4483362458)
 
 -- DISPLAY ROD STATUS
-local RodLabel = Instance.new("TextLabel")
-RodLabel.Size = UDim2.new(0.85, 0, 0, 20)
-RodLabel.Position = UDim2.new(0.075, 0, 0.16, 0)
-RodLabel.Text = "Rod: Detecting..."
-RodLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-RodLabel.BackgroundTransparency = 1
-RodLabel.Font = Enum.Font.SourceSansItalic
-RodLabel.TextSize = 13
-RodLabel.Parent = MainFrame
-
--- TOMBOL ON / OFF
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0.85, 0, 0, 35)
-ToggleBtn.Position = UDim2.new(0.075, 0, 0.26, 0)
-ToggleBtn.Text = "AUTO FISH: OFF"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 15
-ToggleBtn.Parent = MainFrame
-
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 8)
-BtnCorner.Parent = ToggleBtn
-
--- INPUT DELAY 1 (CAST)
-local CastLabel = Instance.new("TextLabel")
-CastLabel.Size = UDim2.new(0.5, 0, 0, 25)
-CastLabel.Position = UDim2.new(0.075, 0, 0.45, 0)
-CastLabel.Text = "Cast Delay (s):"
-CastLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-CastLabel.TextXAlignment = Enum.TextXAlignment.Left
-CastLabel.BackgroundTransparency = 1
-CastLabel.Font = Enum.Font.SourceSans
-CastLabel.TextSize = 13
-CastLabel.Parent = MainFrame
-
-local CastBox = Instance.new("TextBox")
-CastBox.Size = UDim2.new(0.35, 0, 0, 25)
-CastBox.Position = UDim2.new(0.575, 0, 0.45, 0)
-CastBox.Text = tostring(getgenv().CastDelay)
-CastBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-CastBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-CastBox.Font = Enum.Font.SourceSansBold
-CastBox.TextSize = 13
-CastBox.Parent = MainFrame
-
--- INPUT DELAY 2 (MINIGAME)
-local MiniLabel = Instance.new("TextLabel")
-MiniLabel.Size = UDim2.new(0.5, 0, 0, 25)
-MiniLabel.Position = UDim2.new(0.075, 0, 0.58, 0)
-MiniLabel.Text = "Mini Delay (s):"
-MiniLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-MiniLabel.TextXAlignment = Enum.TextXAlignment.Left
-MiniLabel.BackgroundTransparency = 1
-MiniLabel.Font = Enum.Font.SourceSans
-MiniLabel.TextSize = 13
-MiniLabel.Parent = MainFrame
-
-local MiniBox = Instance.new("TextBox")
-MiniBox.Size = UDim2.new(0.35, 0, 0, 25)
-MiniBox.Position = UDim2.new(0.575, 0, 0.58, 0)
-MiniBox.Text = tostring(getgenv().MiniDelay)
-MiniBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-MiniBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-MiniBox.Font = Enum.Font.SourceSansBold
-MiniBox.TextSize = 13
-MiniBox.Parent = MainFrame
-
--- INPUT DELAY 3 (GIVE)
-local GiveLabel = Instance.new("TextLabel")
-GiveLabel.Size = UDim2.new(0.5, 0, 0, 25)
-GiveLabel.Position = UDim2.new(0.075, 0, 0.71, 0)
-GiveLabel.Text = "Claim Delay (s):"
-GiveLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-GiveLabel.TextXAlignment = Enum.TextXAlignment.Left
-GiveLabel.BackgroundTransparency = 1
-GiveLabel.Font = Enum.Font.SourceSans
-GiveLabel.TextSize = 13
-GiveLabel.Parent = MainFrame
-
-local GiveBox = Instance.new("TextBox")
-GiveBox.Size = UDim2.new(0.35, 0, 0, 25)
-GiveBox.Position = UDim2.new(0.575, 0, 0.71, 0)
-GiveBox.Text = tostring(getgenv().GiveDelay)
-GiveBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-GiveBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-GiveBox.Font = Enum.Font.SourceSansBold
-GiveBox.TextSize = 13
-GiveBox.Parent = MainFrame
-
--- LOGIKA TAMPILAN DAN EVENT
-ToggleBtn.MouseButton1Click:Connect(function()
-	getgenv().AutoExactSeq = not getgenv().AutoExactSeq
-	if getgenv().AutoExactSeq then
-		ToggleBtn.Text = "AUTO FISH: ON"
-		ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-	else
-		ToggleBtn.Text = "AUTO FISH: OFF"
-		ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-	end
-end)
-
-CastBox.FocusLost:Connect(function()
-	local val = tonumber(CastBox.Text)
-	if val then getgenv().CastDelay = val else CastBox.Text = tostring(getgenv().CastDelay) end
-end)
-
-MiniBox.FocusLost:Connect(function()
-	local val = tonumber(MiniBox.Text)
-	if val then getgenv().MiniDelay = val else MiniBox.Text = tostring(getgenv().MiniDelay) end
-end)
-
-GiveBox.FocusLost:Connect(function()
-	local val = tonumber(GiveBox.Text)
-	if val then getgenv().GiveDelay = val else GiveBox.Text = tostring(getgenv().GiveDelay) end
-end)
+local RodLabel = MainTab:CreateLabel("Rod: Detecting...")
 
 -- FUNGSI UNTUK MEMBACA PANCINGAN YANG SEDANG DIPEGANG
 local function GetEquippedRodName()
@@ -177,17 +52,76 @@ local function GetEquippedRodName()
 			return tool.Name
 		end
 	end
-	return "Basic Rod" -- Fallback jika tidak terdeteksi
+	return "Basic Rod"
 end
+
+-- TOMBOL ON / OFF AUTO FISHING
+MainTab:CreateToggle({
+   Name = "Auto Fish",
+   CurrentValue = false,
+   Flag = "AutoFishToggle",
+   Callback = function(Value)
+      getgenv().AutoExactSeq = Value
+   end,
+})
+
+MainTab:CreateDivider()
+
+-- INPUT DELAY 1 (CAST)
+MainTab:CreateInput({
+   Name = "Cast Delay (s)",
+   CurrentValue = tostring(getgenv().CastDelay),
+   PlaceholderText = "0.25",
+   RemoveTextAfterFocusLost = false,
+   Flag = "CastDelayInput",
+   Callback = function(Text)
+      local val = tonumber(Text)
+      if val then
+         getgenv().CastDelay = val
+      end
+   end,
+})
+
+-- INPUT DELAY 2 (MINIGAME)
+MainTab:CreateInput({
+   Name = "Mini Delay (s)",
+   CurrentValue = tostring(getgenv().MiniDelay),
+   PlaceholderText = "0.30",
+   RemoveTextAfterFocusLost = false,
+   Flag = "MiniDelayInput",
+   Callback = function(Text)
+      local val = tonumber(Text)
+      if val then
+         getgenv().MiniDelay = val
+      end
+   end,
+})
+
+-- INPUT DELAY 3 (CLAIM)
+MainTab:CreateInput({
+   Name = "Claim Delay (s)",
+   CurrentValue = tostring(getgenv().GiveDelay),
+   PlaceholderText = "0.20",
+   RemoveTextAfterFocusLost = false,
+   Flag = "ClaimDelayInput",
+   Callback = function(Text)
+      local val = tonumber(Text)
+      if val then
+         getgenv().GiveDelay = val
+      end
+   end,
+})
 
 -- 4. LOGIKA UTAMA AUTO FISHING
 task.spawn(function()
 	while true do
 		task.wait(0.1)
 		
-		-- Update tampilan label pancingan
-		local currentRod = GetEquippedRodName()
-		RodLabel.Text = "Rod: " .. currentRod
+		-- Update tampilan label pancingan secara aman
+		pcall(function()
+			local currentRod = GetEquippedRodName()
+			RodLabel:Set("Rod: " .. currentRod)
+		end)
 		
 		if getgenv().AutoExactSeq then
 			pcall(function()
@@ -202,12 +136,13 @@ task.spawn(function()
 				local mini = FS:FindFirstChild("MinigameStarted")
 				local clean = FS:FindFirstChild("CleanupCast")
 				local give = FS:FindFirstChild("FishGiver")
+				local currentRod = GetEquippedRodName()
 				
 				local pos = hrp.Position + Vector3.new(0, 2, 0)
 				local lookVec = hrp.CFrame.LookVector * 15
 				local hook = pos + lookVec - Vector3.new(0, 5, 0)
 				
-				-- 1. Lempar Kail dengan Rod yang sedang dipegang
+				-- 1. Lempar Kail
 				if cast then
 					cast:FireServer(pos, Vector3.new(-24.72, 5, 3.71), currentRod, 100)
 				end
@@ -215,7 +150,7 @@ task.spawn(function()
 				task.wait(getgenv().CastDelay)
 				if not getgenv().AutoExactSeq then return end
 				
-				-- 2. Memulai Minigame
+				-- 2. Minigame
 				if mini then
 					mini:FireServer({
 						hookPosition = hook,
@@ -233,7 +168,7 @@ task.spawn(function()
 				
 				task.wait(0.05)
 				
-				-- 4. Mengambil Ikan (FishGiver)
+				-- 4. Claim Ikan
 				if give then
 					give:FireServer({
 						hookPosition = hook,
@@ -246,3 +181,5 @@ task.spawn(function()
 		end
 	end
 end)
+
+Rayfield:LoadConfiguration()
