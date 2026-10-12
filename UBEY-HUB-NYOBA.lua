@@ -219,7 +219,7 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA ULTIMATE AUTO FAVORIT & UNFAVORIT (SERVER-DATA DIRECT FETCHING)
+-- LOGIKA AKURAT READ REAL UUID FROM AMBILSEMUA SERVER DATA
 -- ==============================================================================
 local function GetInventoryRemote()
 	local repStorage = game:GetService("ReplicatedStorage")
@@ -239,23 +239,31 @@ local function GetServerFishData()
 		if ambilSemuaRemote then
 			local data = ambilSemuaRemote:InvokeServer()
 			if type(data) == "table" then
-				for k, v in pairs(data) do
-					if type(v) == "table" then
-						local realUUID = v.UUID or v.Id or v.id or k
+				for key, itemData in pairs(data) do
+					local realUUID = nil
+					
+					if type(key) == "string" and (#key >= 30 or string.find(key, "-")) then
+						realUUID = key
+					elseif type(itemData) == "table" then
+						realUUID = itemData.UUID or itemData.Id or itemData.id or itemData.uuid or key
+					end
+					
+					if realUUID and type(realUUID) == "string" then
+						local rarityName = ""
+						local mutationName = ""
+						local isFav = false
+						
+						if type(itemData) == "table" then
+							rarityName = tostring(itemData.Rarity or itemData.Tingkat or itemData.rarity or "")
+							mutationName = tostring(itemData.Mutation or itemData.Mutasi or itemData.mutation or "")
+							isFav = itemData.Favorit or itemData.IsFavorite or itemData.favorit or false
+						end
+						
 						table.insert(fishDataList, {
 							UUID = tostring(realUUID),
-							Name = tostring(v.Name or v.Nama or ""),
-							Rarity = tostring(v.Rarity or v.Tingkat or ""),
-							Mutation = tostring(v.Mutation or v.Mutasi or ""),
-							IsFavorited = v.Favorit or v.IsFavorite or false
-						})
-					elseif type(k) == "string" and #k >= 30 then
-						table.insert(fishDataList, {
-							UUID = k,
-							Name = "",
-							Rarity = "",
-							Mutation = "",
-							IsFavorited = false
+							Rarity = rarityName,
+							Mutation = mutationName,
+							IsFavorited = isFav
 						})
 					end
 				end
@@ -270,66 +278,30 @@ local function ProcessAutoFavorite()
 		local tandaiRemote = GetInventoryRemote()
 		if not tandaiRemote then return end
 
-		-- 1. Ambil Data Langsung Dari Server
 		local serverData = GetServerFishData()
-		
-		if #serverData > 0 then
-			for _, fish in ipairs(serverData) do
-				if not getgenv().AutoFavoriteRunning then break end
-				
-				local shouldFav = false
-				
-				-- Filter Rarity
-				for rName, active in pairs(getgenv().FavRarities) do
-					if active and string.find(string.lower(fish.Rarity), string.lower(rName)) then
-						shouldFav = true
-					end
-				end
-				
-				-- Filter Mutasi
-				for mName, active in pairs(getgenv().FavMutations) do
-					if active and string.find(string.lower(fish.Mutation), string.lower(mName)) then
-						shouldFav = true
-					end
-				end
-				
-				if shouldFav and not fish.IsFavorited then
-					tandaiRemote:FireServer(fish.UUID, true)
-					task.wait(0.1)
+		for _, fish in ipairs(serverData) do
+			if not getgenv().AutoFavoriteRunning then break end
+			
+			local shouldFav = false
+			
+			-- Filter Rarity
+			for rName, active in pairs(getgenv().FavRarities) do
+				if active and string.find(string.lower(fish.Rarity), string.lower(rName)) then
+					shouldFav = true
 				end
 			end
-		else
-			-- 2. Fallback UI Scanning
-			for _, gui in ipairs(PlayerGui:GetChildren()) do
-				if gui:IsA("ScreenGui") then
-					for _, desc in ipairs(gui:GetDescendants()) do
-						if not getgenv().AutoFavoriteRunning then break end
-						if desc:IsA("GuiObject") then
-							local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
-							if uuid and type(uuid) == "string" and (#uuid >= 30 or string.find(uuid, "-")) then
-								local shouldFav = false
-								local isAlreadyFav = false
-								
-								for _, lbl in ipairs(desc:GetDescendants()) do
-									if lbl:IsA("TextLabel") then
-										local txt = string.lower(lbl.Text)
-										for rName, active in pairs(getgenv().FavRarities) do
-											if active and string.find(txt, string.lower(rName)) then shouldFav = true end
-										end
-										for mName, active in pairs(getgenv().FavMutations) do
-											if active and string.find(txt, string.lower(mName)) then shouldFav = true end
-										end
-										if string.find(txt, "⭐") or string.find(txt, "fav") then isAlreadyFav = true end
-									end
-								end
-								
-								if shouldFav and not isAlreadyFav then
-									tandaiRemote:FireServer(uuid, true)
-									task.wait(0.1)
-								end
-							end
-						end
-					end
+			
+			-- Filter Mutasi
+			for mName, active in pairs(getgenv().FavMutations) do
+				if active and string.find(string.lower(fish.Mutation), string.lower(mName)) then
+					shouldFav = true
+				end
+			end
+			
+			if shouldFav or (fish.Rarity == "" and fish.Mutation == "") then
+				if not fish.IsFavorited then
+					tandaiRemote:FireServer(fish.UUID, true)
+					task.wait(0.12)
 				end
 			end
 		end
@@ -341,7 +313,7 @@ task.spawn(function()
 		if getgenv().AutoFavoriteRunning then
 			ProcessAutoFavorite()
 		end
-		task.wait(2)
+		task.wait(2.5)
 	end
 end)
 
@@ -351,28 +323,10 @@ local function UnfavoriteAllFish()
 			local tandaiRemote = GetInventoryRemote()
 			if not tandaiRemote then return end
 
-			-- 1. Ambil daftar UUID langsung dari server
 			local serverData = GetServerFishData()
-			if #serverData > 0 then
-				for _, fish in ipairs(serverData) do
-					tandaiRemote:FireServer(fish.UUID, false)
-					task.wait(0.05)
-				end
-			else
-				-- 2. Fallback scan UI
-				for _, gui in ipairs(PlayerGui:GetChildren()) do
-					if gui:IsA("ScreenGui") then
-						for _, desc in ipairs(gui:GetDescendants()) do
-							if desc:IsA("GuiObject") then
-								local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
-								if uuid and type(uuid) == "string" and (#uuid >= 30 or string.find(uuid, "-")) then
-									tandaiRemote:FireServer(uuid, false)
-									task.wait(0.05)
-								end
-							end
-						end
-					end
-				end
+			for _, fish in ipairs(serverData) do
+				tandaiRemote:FireServer(fish.UUID, false)
+				task.wait(0.08)
 			end
 		end)
 	end)
