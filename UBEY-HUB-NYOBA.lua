@@ -804,7 +804,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE (FIXED ANTI-STUCK TIMEOUT)
+-- 1. FISHING & SELL PAGE (FIXED ANTI-STUCK & ANTI-DOUBLE CAST)
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -848,6 +848,73 @@ ChangeSpotBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 end)
 
+-- LOGIKA SMART AUTO FISHING DENGAN ANTI-DOUBLE CAST GUARD (ISCASTING)
+local isCasting = false
+
+local function DoSmartFishing()
+	if isCasting then return end
+	isCasting = true
+	
+	pcall(function()
+		local character = LocalPlayer.Character
+		local rod = character and character:FindFirstChild("Withering Rod")
+		if not rod or not rod:FindFirstChild("Mechanics") then 
+			isCasting = false
+			return 
+		end
+		
+		local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
+		if not remoteFolder then 
+			isCasting = false
+			return 
+		end
+		
+		OptimizeRodSettings()
+		local hrp = character:FindFirstChild("HumanoidRootPart")
+		if not hrp then 
+			isCasting = false
+			return 
+		end
+		
+		-- 1. Lempar Umpan
+		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
+		
+		-- 2. Tunggu Sinyal Ikan Gigit (Bite / Hooked)
+		local hooked = false
+		local conn
+		conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+			if actionType == "Bite" or actionType == "Hooked" then
+				hooked = true
+			end
+		end)
+		
+		-- Timed-out safety: Maksimal tunggu hingga 4 detik agar tidak stuck
+		local startTime = tick()
+		while not hooked and getgenv().AutoFishingEventRunning do
+			if tick() - startTime > 4 then
+				break
+			end
+			task.wait(0.05)
+		end
+		
+		if conn then conn:Disconnect() end
+		
+		-- 3. Tarik Ikan Jika Berhasil Gigit / Timeout
+		if getgenv().AutoFishingEventRunning then
+			local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
+			task.wait(currentDelay)
+			
+			if remoteFolder:FindFirstChild("MiniGame") then
+				remoteFolder.MiniGame:FireServer(true)
+			end
+			
+			task.wait(0.5)
+		end
+	end)
+	
+	isCasting = false
+end
+
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
@@ -863,51 +930,13 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
-				pcall(function()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
-					if rod and rod:FindFirstChild("Mechanics") then
-						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-						if remoteFolder then
-							OptimizeRodSettings()
-							local hrp = LocalPlayer.Character.HumanoidRootPart
-							
-							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
-							
-							local hooked = false
-							local conn
-							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" or actionType == "Hooked" then
-									hooked = true
-									if conn then conn:Disconnect() end
-								end
-							end)
-							
-							local startTime = tick()
-							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - startTime > 3 then 
-									hooked = true 
-									break 
-								end
-								task.wait(0.05)
-							end
-							if conn then conn:Disconnect() end
-							
-							if getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
-								task.wait(currentDelay)
-								if remoteFolder:FindFirstChild("MiniGame") then
-									remoteFolder.MiniGame:FireServer(true)
-								end
-								task.wait(0.3)
-							end
-						end
-					else
-						task.wait(1)
-					end
-				end)
-				task.wait(0.2)
+				DoSmartFishing()
+				task.wait(0.3)
 			end
+			isCasting = false
 		end)
+	else
+		isCasting = false
 	end
 end)
 
@@ -917,51 +946,13 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
-				pcall(function()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
-					if rod and rod:FindFirstChild("Mechanics") then
-						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-						if remoteFolder then
-							OptimizeRodSettings()
-							local hrp = LocalPlayer.Character.HumanoidRootPart
-							
-							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
-							
-							local hooked = false
-							local conn
-							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" or actionType == "Hooked" then
-									hooked = true
-									if conn then conn:Disconnect() end
-								end
-							end)
-							
-							local startTime = tick()
-							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - startTime > 3 then 
-									hooked = true 
-									break 
-								end
-								task.wait(0.05)
-							end
-							if conn then conn:Disconnect() end
-							
-							if getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
-								task.wait(currentDelay)
-								if remoteFolder:FindFirstChild("MiniGame") then
-									remoteFolder.MiniGame:FireServer(true)
-								end
-								task.wait(0.3)
-							end
-						end
-					else
-						task.wait(1)
-					end
-				end)
-				task.wait(0.2)
+				DoSmartFishing()
+				task.wait(0.3)
 			end
+			isCasting = false
 		end)
+	else
+		isCasting = false
 	end
 end)
 
