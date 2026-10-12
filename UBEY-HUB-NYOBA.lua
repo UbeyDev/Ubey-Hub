@@ -219,7 +219,7 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED SCAN VIA TAS INVENTARIS PLAYERGUI)
+-- LOGIKA AUTO FAVORIT (MENYESUAIKAN UI INVENTARIS ASLI GAME)
 -- ==============================================================================
 local function ProcessAutoFavorite()
 	pcall(function()
@@ -230,47 +230,47 @@ local function ProcessAutoFavorite()
 		
 		if not tandaiRemote then return end
 
-		-- Memindai UI Tas Inventaris milik Player
-		local searchFolder = PlayerGui:FindFirstChild("MainGui") or PlayerGui:FindFirstChild("InventoryGui") or PlayerGui
-		
-		for _, desc in ipairs(searchFolder:GetDescendants()) do
-			if not getgenv().AutoFavoriteRunning then break end
-			
-			-- Mengambil ID UUID Ikan dari atribut atau nama Frame item
-			local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
-			
-			if uuid and type(uuid) == "string" and #uuid >= 10 then
-				local shouldFav = false
-				local isAlreadyFavorited = false
-				
-				for _, textLabel in ipairs(desc:GetDescendants()) do
-					if textLabel:IsA("TextLabel") then
-						local txtLower = string.lower(textLabel.Text)
+		for _, gui in ipairs(PlayerGui:GetChildren()) do
+			if gui:IsA("ScreenGui") then
+				for _, desc in ipairs(gui:GetDescendants()) do
+					if not getgenv().AutoFavoriteRunning then break end
+					
+					local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID")
+					if not uuid and desc:IsA("GuiObject") and #desc.Name > 15 then
+						uuid = desc.Name
+					end
+					
+					if uuid and type(uuid) == "string" and #uuid >= 10 then
+						local shouldFav = false
+						local isAlreadyFavorited = false
 						
-						-- Cek Rarity
-						for rarityName, isEnabled in pairs(getgenv().FavRarities) do
-							if isEnabled and string.find(txtLower, string.lower(rarityName)) then
-								shouldFav = true
+						for _, textLabel in ipairs(desc:GetDescendants()) do
+							if textLabel:IsA("TextLabel") then
+								local txtLower = string.lower(textLabel.Text)
+								
+								for rarityName, isEnabled in pairs(getgenv().FavRarities) do
+									if isEnabled and string.find(txtLower, string.lower(rarityName)) then
+										shouldFav = true
+									end
+								end
+								
+								for mutName, isEnabled in pairs(getgenv().FavMutations) do
+									if isEnabled and string.find(txtLower, string.lower(mutName)) then
+										shouldFav = true
+									end
+								end
+								
+								if string.find(txtLower, "⭐") or string.find(txtLower, "fav") or string.find(txtLower, "lock") then
+									isAlreadyFavorited = true
+								end
 							end
 						end
 						
-						-- Cek Mutasi
-						for mutName, isEnabled in pairs(getgenv().FavMutations) do
-							if isEnabled and string.find(txtLower, string.lower(mutName)) then
-								shouldFav = true
-							end
-						end
-						
-						-- Cek Tanda Favorit Existing
-						if string.find(txtLower, "favorit") or string.find(txtLower, "favorite") or string.find(txtLower, "⭐") or string.find(txtLower, "🔒") then
-							isAlreadyFavorited = true
+						if shouldFav and not isAlreadyFavorited then
+							tandaiRemote:FireServer(uuid, true)
+							task.wait(0.15)
 						end
 					end
-				end
-				
-				if shouldFav and not isAlreadyFavorited then
-					tandaiRemote:FireServer(uuid, true)
-					task.wait(0.15)
 				end
 			end
 		end
@@ -282,7 +282,7 @@ task.spawn(function()
 		if getgenv().AutoFavoriteRunning then
 			ProcessAutoFavorite()
 		end
-		task.wait(2.5)
+		task.wait(2)
 	end
 end)
 
