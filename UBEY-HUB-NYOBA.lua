@@ -23,7 +23,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "1.2",
+	BiteDelay = "0.5",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AutoExecuteEnabled = true,
@@ -60,7 +60,7 @@ end
 local function ResetConfig()
 	pcall(function()
 		getgenv().UbeyConfig = {
-			BiteDelay = "1.2",
+			BiteDelay = "0.5",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
 			AutoExecuteEnabled = true,
@@ -141,36 +141,6 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 
--- AUTO FAVORITE STATES
-getgenv().AutoFavoriteRunning = false
-
-getgenv().FavRarities = {
-	["Common"] = false,
-	["UnCommon"] = false,
-	["Rare"] = false,
-	["Epic"] = false,
-	["Legendary"] = true,
-	["Mythical"] = true,
-	["Secret"] = true
-}
-
-getgenv().FavMutations = {
-	["Galaxy"] = false,
-	["Corrupt"] = false,
-	["Gemstone"] = false,
-	["Ghost"] = false,
-	["Lightning"] = false,
-	["Fairy Dust"] = true,
-	["Gold"] = false,
-	["Midnight"] = false,
-	["Radioactive"] = false,
-	["Stone"] = false,
-	["Holographic"] = false,
-	["Albino"] = false,
-	["Sandy"] = false,
-	["Cosmic"] = false
-}
-
 -- DATA KOORDINAT SPOT & SHOP
 local FishingSpots = {
 	["Spot Mancing Jembatan"] = CFrame.new(-6783.74756, 1322.81006, -9757.34473, 0.0899723172, -9.34088291e-08, 0.995944262, 1.76120434e-08, 1, 9.21981638e-08, -0.995944262, 9.24533072e-09, 0.0899723172),
@@ -179,6 +149,22 @@ local FishingSpots = {
 }
 
 local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
+
+local function OptimizeRodSettings()
+	pcall(function()
+		local character = LocalPlayer.Character
+		local rod = character and character:FindFirstChild("Withering Rod")
+		if rod then
+			local settingsFolder = rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+			if settingsFolder then
+				local timeSetting = settingsFolder:FindFirstChild("Time_before_getfish")
+				if timeSetting then timeSetting.Value = 0.05 end
+				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
+				if enableMiniGame then enableMiniGame.Value = false end
+			end
+		end
+	end)
+end
 
 local function TriggerSellToNpc()
 	pcall(function()
@@ -199,90 +185,6 @@ local function TriggerSellToNpc()
 		
 		if getgenv().AutoFishingEventRunning then
 			hrp.CFrame = currentSpotCFrame
-		end
-	end)
-end
-
--- LOGIKA AUTO FAVORIT & UNFAVORIT
-local function ProcessAutoFavorite()
-	pcall(function()
-		local repStorage = game:GetService("ReplicatedStorage")
-		local detailFolder = repStorage:FindFirstChild("DetailIkanKenyal")
-		local tandaiRemote = repStorage:FindFirstChild("Remote") 
-			and repStorage.Remote:FindFirstChild("Mancing") 
-			and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
-		
-		if not detailFolder or not tandaiRemote then return end
-		
-		for _, frameCard in ipairs(detailFolder:GetChildren()) do
-			if not getgenv().AutoFavoriteRunning then break end
-			
-			local uuid = frameCard.Name
-			
-			if #uuid > 15 then
-				local shouldFav = false
-				local isAlreadyFavorited = false
-				
-				for _, desc in ipairs(frameCard:GetDescendants()) do
-					if desc:IsA("TextLabel") then
-						local txt = desc.Text
-						local txtLower = string.lower(txt)
-						
-						-- Match Selected Rarities
-						for rarityName, isEnabled in pairs(getgenv().FavRarities) do
-							if isEnabled and string.find(txtLower, string.lower(rarityName)) then
-								shouldFav = true
-							end
-						end
-						
-						-- Match Selected Mutations
-						for mutName, isEnabled in pairs(getgenv().FavMutations) do
-							if isEnabled and string.find(txtLower, string.lower(mutName)) then
-								shouldFav = true
-							end
-						end
-						
-						-- Cek jika sudah favorit
-						if string.find(txtLower, "favorit") or string.find(txtLower, "favorite") or string.find(txtLower, "⭐") or string.find(txtLower, "🔒") then
-							isAlreadyFavorited = true
-						end
-					end
-				end
-				
-				if shouldFav and not isAlreadyFavorited then
-					tandaiRemote:FireServer(uuid, true)
-					task.wait(0.2)
-				end
-			end
-		end
-	end)
-end
-
-task.spawn(function()
-	while true do
-		if getgenv().AutoFavoriteRunning then
-			ProcessAutoFavorite()
-		end
-		task.wait(2.5)
-	end
-end)
-
-local function UnfavoriteAllFish()
-	pcall(function()
-		local repStorage = game:GetService("ReplicatedStorage")
-		local detailFolder = repStorage:FindFirstChild("DetailIkanKenyal")
-		local tandaiRemote = repStorage:FindFirstChild("Remote") 
-			and repStorage.Remote:FindFirstChild("Mancing") 
-			and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
-		
-		if not detailFolder or not tandaiRemote then return end
-		
-		for _, frameCard in ipairs(detailFolder:GetChildren()) do
-			local uuid = frameCard.Name
-			if #uuid > 15 then
-				tandaiRemote:FireServer(uuid, false)
-				task.wait(0.1)
-			end
 		end
 	end)
 end
@@ -417,7 +319,7 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Parent = Main
 Sidebar.Size = UDim2.new(0,140,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15,15,20)
-Sidebar.CanvasSize = UDim2.new(0,0,2.6,0)
+Sidebar.CanvasSize = UDim2.new(0,0,2.3,0)
 Sidebar.ScrollBarThickness = 2
 
 local SideCorner = Instance.new("UICorner")
@@ -452,57 +354,52 @@ HomeBtn.TextColor3 = Color3.new(1,1,1)
 HomeBtn.Font = Enum.Font.GothamMedium
 HomeBtn.TextSize = 12
 
-local FavoriteBtn = HomeBtn:Clone()
-FavoriteBtn.Parent = Sidebar
-FavoriteBtn.Position = UDim2.new(0,10,0,95)
-FavoriteBtn.Text = "⭐ Favorite"
-
 local GalatamaBtn = HomeBtn:Clone()
 GalatamaBtn.Parent = Sidebar
-GalatamaBtn.Position = UDim2.new(0,10,0,130)
+GalatamaBtn.Position = UDim2.new(0,10,0,95)
 GalatamaBtn.Text = "Galatama"
 
 local TeleportShopBtn = HomeBtn:Clone()
 TeleportShopBtn.Parent = Sidebar
-TeleportShopBtn.Position = UDim2.new(0,10,0,165)
+TeleportShopBtn.Position = UDim2.new(0,10,0,130)
 TeleportShopBtn.Text = "Teleport Shop"
 
 local SummitBtn = HomeBtn:Clone()
 SummitBtn.Parent = Sidebar
-SummitBtn.Position = UDim2.new(0,10,0,200)
+SummitBtn.Position = UDim2.new(0,10,0,165)
 SummitBtn.Text = "Summit"
 
 local PlayerMenuBtn = HomeBtn:Clone()
 PlayerMenuBtn.Parent = Sidebar
-PlayerMenuBtn.Position = UDim2.new(0,10,0,235)
+PlayerMenuBtn.Position = UDim2.new(0,10,0,200)
 PlayerMenuBtn.Text = "Player"
 
 local HaloMenuBtn = HomeBtn:Clone()
 HaloMenuBtn.Parent = Sidebar
-HaloMenuBtn.Position = UDim2.new(0,10,0,270)
+HaloMenuBtn.Position = UDim2.new(0,10,0,235)
 HaloMenuBtn.Text = "Halo Kepala"
 
 local PlayerTpBtn = HomeBtn:Clone()
 PlayerTpBtn.Parent = Sidebar
-PlayerTpBtn.Position = UDim2.new(0,10,0,305)
+PlayerTpBtn.Position = UDim2.new(0,10,0,270)
 PlayerTpBtn.Text = "Teleport Player"
 
 local PrivacyBtn = HomeBtn:Clone()
 PrivacyBtn.Parent = Sidebar
-PrivacyBtn.Position = UDim2.new(0,10,0,340)
+PrivacyBtn.Position = UDim2.new(0,10,0,305)
 PrivacyBtn.Text = "Privacy"
 
 local SettingsBtn = HomeBtn:Clone()
 SettingsBtn.Parent = Sidebar
-SettingsBtn.Position = UDim2.new(0,10,0,375)
+SettingsBtn.Position = UDim2.new(0,10,0,340)
 SettingsBtn.Text = "Settings"
 
 local CreditsBtn = HomeBtn:Clone()
 CreditsBtn.Parent = Sidebar
-CreditsBtn.Position = UDim2.new(0,10,0,410)
+CreditsBtn.Position = UDim2.new(0,10,0,375)
 CreditsBtn.Text = "Credits"
 
-for _,v in ipairs({HomeBtn, FavoriteBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PlayerTpBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
+for _,v in ipairs({HomeBtn, GalatamaBtn, TeleportShopBtn, SummitBtn, PlayerMenuBtn, HaloMenuBtn, PlayerTpBtn, PrivacyBtn, SettingsBtn, CreditsBtn}) do
 	v.BackgroundColor3 = Color3.fromRGB(35,35,45)
 	local c = Instance.new("UICorner")
 	c.Parent = v
@@ -535,7 +432,6 @@ local function MakePage()
 end
 
 local FishingPage = MakePage() FishingPage.Visible = true
-local FavoritePage = MakePage()
 local GalatamaPage = MakePage()
 local TeleportShopPage = MakePage()
 local SummitPage = MakePage()
@@ -548,7 +444,6 @@ local CreditsPage = MakePage()
 
 local function HideAll()
 	FishingPage.Visible = false
-	FavoritePage.Visible = false
 	GalatamaPage.Visible = false
 	TeleportShopPage.Visible = false
 	SummitPage.Visible = false
@@ -561,7 +456,6 @@ local function HideAll()
 end
 
 HomeBtn.MouseButton1Click:Connect(function() HideAll(); FishingPage.Visible = true end)
-FavoriteBtn.MouseButton1Click:Connect(function() HideAll(); FavoritePage.Visible = true end)
 GalatamaBtn.MouseButton1Click:Connect(function() HideAll(); GalatamaPage.Visible = true end)
 TeleportShopBtn.MouseButton1Click:Connect(function() HideAll(); TeleportShopPage.Visible = true end)
 SummitBtn.MouseButton1Click:Connect(function() HideAll(); SummitPage.Visible = true end)
@@ -761,7 +655,6 @@ ChangeSpotBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 end)
 
--- SMART AUTO FISHING + TELEPORT (BYPASS MINIGAME & ALWAYS CATCH)
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
@@ -774,6 +667,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 			end
 		end)
 		
+		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
@@ -781,34 +675,48 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
+							OptimizeRodSettings()
 							local hrp = LocalPlayer.Character.HumanoidRootPart
-							
-							-- 1. Lempar Pancing
 							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 							
-							-- 2. Jeda Waktu Tunggu Umpan (Berdasarkan BiteDelay)
-							local currentDelay = tonumber(getgenv().BiteDelayInput) or 1.2
-							task.wait(currentDelay)
+							task.wait(0.05)
+							local hooked = false
+							local conn
+							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+								if actionType == "Bite" then
+									hooked = true
+									if conn then conn:Disconnect() end
+								end
+							end)
 							
-							-- 3. Langsung Tarik Ikan (Bypass Minigame)
-							if remoteFolder:FindFirstChild("MiniGame") then
+							local start = tick()
+							while not hooked and getgenv().AutoFishingEventRunning do
+								if tick() - start > 10 then break end
+								task.wait(0.05)
+							end
+							if conn then conn:Disconnect() end
+							
+							if hooked and getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
+								task.wait(0.3)
 							end
 						end
 					else
 						task.wait(1)
 					end
 				end)
-				task.wait(0.4)
+				task.wait(0.1)
 			end
 		end)
 	end
 end)
 
--- SMART AUTO FISHING (DI TEMPAT SAJA)
 AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
+		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
@@ -816,22 +724,39 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
+							OptimizeRodSettings()
 							local hrp = LocalPlayer.Character.HumanoidRootPart
-							
 							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 							
-							local currentDelay = tonumber(getgenv().BiteDelayInput) or 1.2
-							task.wait(currentDelay)
+							task.wait(0.05)
+							local hooked = false
+							local conn
+							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+								if actionType == "Bite" then
+									hooked = true
+									if conn then conn:Disconnect() end
+								end
+							end)
 							
-							if remoteFolder:FindFirstChild("MiniGame") then
+							local start = tick()
+							while not hooked and getgenv().AutoFishingEventRunning do
+								if tick() - start > 0.1 then break end
+								task.wait(0.05)
+							end
+							if conn then conn:Disconnect() end
+							
+							if hooked and getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
+								task.wait(0.3)
 							end
 						end
 					else
 						task.wait(1)
 					end
 				end)
-				task.wait(0.4)
+				task.wait(0.1)
 			end
 		end)
 	end
@@ -841,7 +766,7 @@ local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
 BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 1.2)"
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
 BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
@@ -888,136 +813,7 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- 2. FAVORITE PAGE (MULTI-SELECT FILTER & UNFAVORITE)
-----------------------------------------------------
-local TitleFav = Instance.new("TextLabel")
-TitleFav.Parent = FavoritePage
-TitleFav.Size = UDim2.new(1,0,0,30)
-TitleFav.BackgroundTransparency = 1
-TitleFav.Text = "⭐ AUTO FAVORITE FISH"
-TitleFav.TextColor3 = Color3.fromRGB(0,170,255)
-TitleFav.Font = Enum.Font.GothamBold
-TitleFav.TextSize = 13
-
-AddToggle(FavoritePage, "AUTO FAVORITE", function(v)
-	getgenv().AutoFavoriteRunning = v
-end)
-
-local function CreateMultiSelectDropdown(parent, titleText, optionsTable, targetStateTable)
-	local container = Instance.new("Frame")
-	container.Parent = parent
-	container.Size = UDim2.new(1,0,0,40)
-	container.BackgroundColor3 = Color3.fromRGB(30,30,40)
-	container.ClipsDescendants = true
-	Instance.new("UICorner", container)
-
-	local header = Instance.new("TextButton")
-	header.Parent = container
-	header.Size = UDim2.new(1,0,0,40)
-	header.BackgroundTransparency = 1
-	header.Text = "  " .. titleText
-	header.TextColor3 = Color3.new(1,1,1)
-	header.Font = Enum.Font.GothamMedium
-	header.TextSize = 12
-	header.TextXAlignment = Enum.TextXAlignment.Left
-
-	local countLabel = Instance.new("TextLabel")
-	countLabel.Parent = header
-	countLabel.Size = UDim2.new(0,120,1,0)
-	countLabel.Position = UDim2.new(1,-130,0,0)
-	countLabel.BackgroundTransparency = 1
-	countLabel.TextColor3 = Color3.fromRGB(0,170,255)
-	countLabel.Font = Enum.Font.GothamBold
-	countLabel.TextSize = 11
-	countLabel.TextXAlignment = Enum.TextXAlignment.Right
-
-	local function UpdateSummary()
-		local selected = {}
-		for item, active in pairs(targetStateTable) do
-			if active then table.insert(selected, item) end
-		end
-		if #selected == 0 then
-			countLabel.Text = "None 🔽"
-		else
-			countLabel.Text = table.concat(selected, ", "):sub(1, 15) .. " 🔽"
-		end
-	end
-	UpdateSummary()
-
-	local optionsHolder = Instance.new("Frame")
-	optionsHolder.Parent = container
-	optionsHolder.Position = UDim2.new(0,5,0,40)
-	optionsHolder.Size = UDim2.new(1,-10,0,0)
-	optionsHolder.BackgroundTransparency = 1
-
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.Parent = optionsHolder
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Padding = UDim.new(0, 4)
-
-	local isOpen = false
-	header.MouseButton1Click:Connect(function()
-		isOpen = not isOpen
-		local totalHeight = 45 + (#optionsTable * 32)
-		container:TweenSize(
-			isOpen and UDim2.new(1,0,0,totalHeight) or UDim2.new(1,0,0,40),
-			Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true
-		)
-	end)
-
-	for _, optName in ipairs(optionsTable) do
-		local optBtn = Instance.new("TextButton")
-		optBtn.Parent = optionsHolder
-		optBtn.Size = UDim2.new(1,0,0,28)
-		optBtn.BackgroundColor3 = targetStateTable[optName] and Color3.fromRGB(0,120,200) or Color3.fromRGB(40,40,50)
-		optBtn.Text = "  " .. optName .. (targetStateTable[optName] and "  [✓]" or "  [ ]")
-		optBtn.TextColor3 = Color3.new(1,1,1)
-		optBtn.Font = Enum.Font.Gotham
-		optBtn.TextSize = 11
-		optBtn.TextXAlignment = Enum.TextXAlignment.Left
-		Instance.new("UICorner", optBtn)
-
-		optBtn.MouseButton1Click:Connect(function()
-			targetStateTable[optName] = not targetStateTable[optName]
-			optBtn.BackgroundColor3 = targetStateTable[optName] and Color3.fromRGB(0,120,200) or Color3.fromRGB(40,40,50)
-			optBtn.Text = "  " .. optName .. (targetStateTable[optName] and "  [✓]" or "  [ ]")
-			UpdateSummary()
-		end)
-	end
-end
-
--- 1. Filter Dropdown Rarity
-local rarityList = {"Common", "UnCommon", "Rare", "Epic", "Legendary", "Mythical", "Secret"}
-CreateMultiSelectDropdown(FavoritePage, "Filter Rarity", rarityList, getgenv().FavRarities)
-
--- 2. Filter Dropdown Mutasi (14 Mutasi Resmi)
-local mutationList = {
-	"Galaxy", "Corrupt", "Gemstone", "Ghost", "Lightning", "Fairy Dust", 
-	"Gold", "Midnight", "Radioactive", "Stone", "Holographic", "Albino", "Sandy", "Cosmic"
-}
-CreateMultiSelectDropdown(FavoritePage, "Filter Mutasi", mutationList, getgenv().FavMutations)
-
--- 3. Tombol Merah Unfavorite All Fish
-local UnfavBtn = Instance.new("TextButton")
-UnfavBtn.Parent = FavoritePage
-UnfavBtn.Size = UDim2.new(1,0,0,40)
-UnfavBtn.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
-UnfavBtn.Text = "🗑️ UNFAVORITE ALL FISH"
-UnfavBtn.TextColor3 = Color3.new(1,1,1)
-UnfavBtn.Font = Enum.Font.GothamBold
-UnfavBtn.TextSize = 13
-Instance.new("UICorner", UnfavBtn)
-
-UnfavBtn.MouseButton1Click:Connect(function()
-	UnfavBtn.Text = "⌛ Process Unfavoriting..."
-	UnfavoriteAllFish()
-	UnfavBtn.Text = "✅ Berhasil Unfavorite Semua!"
-	task.wait(1.5)
-	UnfavBtn.Text = "🗑️ UNFAVORITE ALL FISH"
-end)
-
-----------------------------------------------------
--- 3. GALATAMA PAGE
+-- 2. GALATAMA PAGE
 ----------------------------------------------------
 local TitleGal = Instance.new("TextLabel")
 TitleGal.Parent = GalatamaPage
@@ -1067,7 +863,7 @@ AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 end)
 
 ----------------------------------------------------
--- 4. TELEPORT SHOP PAGE
+-- 3. TELEPORT SHOP PAGE
 ----------------------------------------------------
 local TitleShop = Instance.new("TextLabel")
 TitleShop.Parent = TeleportShopPage
@@ -1108,7 +904,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE
+-- 4. SUMMIT PAGE (FIXED & ANTI-TEMBUS TANAH)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1172,7 +968,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 6. PLAYER PAGE
+-- 5. PLAYER PAGE
 ----------------------------------------------------
 local TitlePly = Instance.new("TextLabel")
 TitlePly.Parent = PlayerPage
@@ -1299,7 +1095,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 7. HALO PAGE
+-- 6. HALO PAGE
 ----------------------------------------------------
 local TitleHalo = Instance.new("TextLabel")
 TitleHalo.Parent = HaloPage
@@ -1408,7 +1204,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 8. TELEPORT PLAYER PAGE
+-- 7. TELEPORT PLAYER PAGE
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1486,7 +1282,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 9. PRIVACY & ANTI-ADMIN PAGE
+-- 8. PRIVACY & ANTI-ADMIN PAGE
 ----------------------------------------------------
 local TitlePrv = Instance.new("TextLabel")
 TitlePrv.Parent = PrivacyPage
@@ -1601,7 +1397,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS, CONFIG & CREDITS PAGE
+-- 9. SETTINGS, CONFIG & CREDITS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
