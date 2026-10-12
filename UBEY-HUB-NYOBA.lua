@@ -23,7 +23,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "0.5",
+	BiteDelay = "0.8",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AutoExecuteEnabled = true,
@@ -60,7 +60,7 @@ end
 local function ResetConfig()
 	pcall(function()
 		getgenv().UbeyConfig = {
-			BiteDelay = "0.5",
+			BiteDelay = "0.8",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
 			AutoExecuteEnabled = true,
@@ -218,42 +218,50 @@ local function TriggerSellToNpc()
 	end)
 end
 
--- LOGIKA AUTO FAVORIT & UNFAVORIT
+-- ==============================================================================
+-- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED SCAN VIA TAS INVENTARIS PLAYERGUI)
+-- ==============================================================================
 local function ProcessAutoFavorite()
 	pcall(function()
 		local repStorage = game:GetService("ReplicatedStorage")
-		local detailFolder = repStorage:FindFirstChild("DetailIkanKenyal")
 		local tandaiRemote = repStorage:FindFirstChild("Remote") 
 			and repStorage.Remote:FindFirstChild("Mancing") 
 			and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
 		
-		if not detailFolder or not tandaiRemote then return end
+		if not tandaiRemote then return end
+
+		-- Memindai UI Tas Inventaris milik Player
+		local searchFolder = PlayerGui:FindFirstChild("MainGui") or PlayerGui:FindFirstChild("InventoryGui") or PlayerGui
 		
-		for _, frameCard in ipairs(detailFolder:GetChildren()) do
+		for _, desc in ipairs(searchFolder:GetDescendants()) do
 			if not getgenv().AutoFavoriteRunning then break end
-			local uuid = frameCard.Name
 			
-			if #uuid > 15 then
+			-- Mengambil ID UUID Ikan dari atribut atau nama Frame item
+			local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
+			
+			if uuid and type(uuid) == "string" and #uuid >= 10 then
 				local shouldFav = false
 				local isAlreadyFavorited = false
 				
-				for _, desc in ipairs(frameCard:GetDescendants()) do
-					if desc:IsA("TextLabel") then
-						local txt = desc.Text
-						local txtLower = string.lower(txt)
+				for _, textLabel in ipairs(desc:GetDescendants()) do
+					if textLabel:IsA("TextLabel") then
+						local txtLower = string.lower(textLabel.Text)
 						
+						-- Cek Rarity
 						for rarityName, isEnabled in pairs(getgenv().FavRarities) do
 							if isEnabled and string.find(txtLower, string.lower(rarityName)) then
 								shouldFav = true
 							end
 						end
 						
+						-- Cek Mutasi
 						for mutName, isEnabled in pairs(getgenv().FavMutations) do
 							if isEnabled and string.find(txtLower, string.lower(mutName)) then
 								shouldFav = true
 							end
 						end
 						
+						-- Cek Tanda Favorit Existing
 						if string.find(txtLower, "favorit") or string.find(txtLower, "favorite") or string.find(txtLower, "⭐") or string.find(txtLower, "🔒") then
 							isAlreadyFavorited = true
 						end
@@ -262,7 +270,7 @@ local function ProcessAutoFavorite()
 				
 				if shouldFav and not isAlreadyFavorited then
 					tandaiRemote:FireServer(uuid, true)
-					task.wait(0.2)
+					task.wait(0.15)
 				end
 			end
 		end
@@ -281,18 +289,18 @@ end)
 local function UnfavoriteAllFish()
 	pcall(function()
 		local repStorage = game:GetService("ReplicatedStorage")
-		local detailFolder = repStorage:FindFirstChild("DetailIkanKenyal")
 		local tandaiRemote = repStorage:FindFirstChild("Remote") 
 			and repStorage.Remote:FindFirstChild("Mancing") 
 			and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
 		
-		if not detailFolder or not tandaiRemote then return end
-		
-		for _, frameCard in ipairs(detailFolder:GetChildren()) do
-			local uuid = frameCard.Name
-			if #uuid > 15 then
+		if not tandaiRemote then return end
+
+		local searchFolder = PlayerGui:FindFirstChild("MainGui") or PlayerGui:FindFirstChild("InventoryGui") or PlayerGui
+		for _, desc in ipairs(searchFolder:GetDescendants()) do
+			local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
+			if uuid and type(uuid) == "string" and #uuid >= 10 then
 				tandaiRemote:FireServer(uuid, false)
-				task.wait(0.1)
+				task.wait(0.08)
 			end
 		end
 	end)
@@ -728,7 +736,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE
+-- 1. FISHING & SELL PAGE (FIXED ANTI-STUCK TIMEOUT)
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -794,29 +802,34 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 						if remoteFolder then
 							OptimizeRodSettings()
 							local hrp = LocalPlayer.Character.HumanoidRootPart
+							
 							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 							
-							task.wait(0.05)
 							local hooked = false
 							local conn
 							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then
+								if actionType == "Bite" or actionType == "Hooked" then
 									hooked = true
 									if conn then conn:Disconnect() end
 								end
 							end)
 							
-							local start = tick()
+							local startTime = tick()
 							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
+								if tick() - startTime > 3 then 
+									hooked = true 
+									break 
+								end
 								task.wait(0.05)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+							if getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
 								task.wait(currentDelay)
-								remoteFolder.MiniGame:FireServer(true)
+								if remoteFolder:FindFirstChild("MiniGame") then
+									remoteFolder.MiniGame:FireServer(true)
+								end
 								task.wait(0.3)
 							end
 						end
@@ -824,7 +837,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 						task.wait(1)
 					end
 				end)
-				task.wait(0.1)
+				task.wait(0.2)
 			end
 		end)
 	end
@@ -843,29 +856,34 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 						if remoteFolder then
 							OptimizeRodSettings()
 							local hrp = LocalPlayer.Character.HumanoidRootPart
+							
 							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 							
-							task.wait(0.05)
 							local hooked = false
 							local conn
 							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then
+								if actionType == "Bite" or actionType == "Hooked" then
 									hooked = true
 									if conn then conn:Disconnect() end
 								end
 							end)
 							
-							local start = tick()
+							local startTime = tick()
 							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
+								if tick() - startTime > 3 then 
+									hooked = true 
+									break 
+								end
 								task.wait(0.05)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+							if getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
 								task.wait(currentDelay)
-								remoteFolder.MiniGame:FireServer(true)
+								if remoteFolder:FindFirstChild("MiniGame") then
+									remoteFolder.MiniGame:FireServer(true)
+								end
 								task.wait(0.3)
 							end
 						end
@@ -873,7 +891,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 						task.wait(1)
 					end
 				end)
-				task.wait(0.1)
+				task.wait(0.2)
 			end
 		end)
 	end
@@ -883,7 +901,7 @@ local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
 BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.8)"
 BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
