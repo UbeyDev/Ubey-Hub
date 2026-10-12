@@ -742,7 +742,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 							
 							local start = tick()
 							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 5 then break end
+								if tick() - start > 0.1 then break end
 								task.wait(0.05)
 							end
 							if conn then conn:Disconnect() end
