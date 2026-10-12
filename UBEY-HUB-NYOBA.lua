@@ -144,31 +144,32 @@ getgenv().KeyVerified = false
 -- AUTO FAVORITE STATES
 getgenv().AutoFavoriteRunning = false
 getgenv().FavRarities = {
-	["Common"] = false,
-	["UnCommon"] = false,
-	["Rare"] = false,
-	["Epic"] = false,
-	["Legendary"] = true,
-	["Mythical"] = true,
-	["Secret"] = true
+	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
+	["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
 }
 
 getgenv().FavMutations = {
-	["Galaxy"] = false,
-	["Corrupt"] = false,
-	["Gemstone"] = false,
-	["Ghost"] = false,
-	["Lightning"] = false,
-	["Fairy Dust"] = true,
-	["Gold"] = false,
-	["Midnight"] = false,
-	["Radioactive"] = false,
-	["Stone"] = false,
-	["Holographic"] = false,
-	["Albino"] = false,
-	["Sandy"] = false,
-	["Cosmic"] = false,
-	["Normal"] = false
+	["Galaxy"] = false, ["Corrupt"] = false, ["Gemstone"] = false, ["Ghost"] = false,
+	["Lightning"] = false, ["Fairy Dust"] = true, ["Gold"] = false, ["Midnight"] = false,
+	["Radioactive"] = false, ["Stone"] = false, ["Holographic"] = false, ["Albino"] = false,
+	["Sandy"] = false, ["Cosmic"] = false, ["Normal"] = false, ["Elemental"] = false,
+	["Festive"] = false, ["8-Bit"] = false, ["Bloodmoon"] = false, ["Abyssal"] = false,
+	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
+}
+
+-- AUTO UNFAVORITE FILTER STATES
+getgenv().UnfavRarities = {
+	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
+	["Legendary"] = false, ["Mythical"] = false, ["Secret"] = false, ["Forgotten"] = false
+}
+
+getgenv().UnfavMutations = {
+	["Galaxy"] = false, ["Corrupt"] = false, ["Gemstone"] = false, ["Ghost"] = false,
+	["Lightning"] = false, ["Fairy Dust"] = false, ["Gold"] = false, ["Midnight"] = false,
+	["Radioactive"] = false, ["Stone"] = false, ["Holographic"] = false, ["Albino"] = false,
+	["Sandy"] = false, ["Cosmic"] = false, ["Normal"] = false, ["Elemental"] = false,
+	["Festive"] = false, ["8-Bit"] = false, ["Bloodmoon"] = false, ["Abyssal"] = false,
+	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
 
 -- DATA KOORDINAT SPOT & SHOP
@@ -220,7 +221,7 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA AKURAT PARSER AMBILSEMUA SERVER DATA (FIXED STRUCTURE)
+-- LOGIKA PARSER AMBILSEMUA SERVER DATA
 -- ==============================================================================
 local function GetInventoryRemote()
 	local repStorage = game:GetService("ReplicatedStorage")
@@ -287,17 +288,19 @@ local function ProcessAutoFavorite()
 			if not getgenv().AutoFavoriteRunning then break end
 			
 			local shouldFav = false
+			local fishRarityLower = string.lower(fish.Rarity)
+			local fishMutationLower = string.lower(fish.Mutation)
 			
 			-- Filter Rarity
 			for rName, active in pairs(getgenv().FavRarities) do
-				if active and string.find(string.lower(fish.Rarity), string.lower(rName)) then
+				if active and string.find(fishRarityLower, string.lower(rName)) then
 					shouldFav = true
 				end
 			end
 			
 			-- Filter Mutasi
 			for mName, active in pairs(getgenv().FavMutations) do
-				if active and string.find(string.lower(fish.Mutation), string.lower(mName)) then
+				if active and string.find(fishMutationLower, string.lower(mName)) then
 					shouldFav = true
 				end
 			end
@@ -319,6 +322,7 @@ task.spawn(function()
 	end
 end)
 
+-- UNFAVORITE ALL
 local function UnfavoriteAllFish()
 	task.spawn(function()
 		pcall(function()
@@ -329,6 +333,42 @@ local function UnfavoriteAllFish()
 			for _, fish in ipairs(serverData) do
 				tandaiRemote:FireServer(fish.UUID, false)
 				task.wait(0.08)
+			end
+		end)
+	end)
+end
+
+-- UNFAVORITE BY SPECIFIC UNFAV FILTER
+local function UnfavoriteByFilter()
+	task.spawn(function()
+		pcall(function()
+			local tandaiRemote = GetInventoryRemote()
+			if not tandaiRemote then return end
+
+			local serverData = GetServerFishData()
+			for _, fish in ipairs(serverData) do
+				local shouldUnfav = false
+				local fishRarityLower = string.lower(fish.Rarity)
+				local fishMutationLower = string.lower(fish.Mutation)
+				
+				-- Cek jika cocok dengan filter Unfav Rarity
+				for rName, active in pairs(getgenv().UnfavRarities) do
+					if active and string.find(fishRarityLower, string.lower(rName)) then
+						shouldUnfav = true
+					end
+				end
+				
+				-- Cek jika cocok dengan filter Unfav Mutasi
+				for mName, active in pairs(getgenv().UnfavMutations) do
+					if active and string.find(fishMutationLower, string.lower(mName)) then
+						shouldUnfav = true
+					end
+				end
+				
+				if shouldUnfav and fish.IsFavorited then
+					tandaiRemote:FireServer(fish.UUID, false)
+					task.wait(0.08)
+				end
 			end
 		end)
 	end)
@@ -980,9 +1020,9 @@ end)
 ----------------------------------------------------
 local TitleFav = Instance.new("TextLabel")
 TitleFav.Parent = FavoritePage
-TitleFav.Size = UDim2.new(1,0,0,30)
+TitleFav.Size = UDim2.new(1,0,0,25)
 TitleFav.BackgroundTransparency = 1
-TitleFav.Text = "⭐ AUTO FAVORITE FISH"
+TitleFav.Text = "⭐ AUTO FAVORITE FILTER"
 TitleFav.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFav.Font = Enum.Font.GothamBold
 TitleFav.TextSize = 13
@@ -991,6 +1031,7 @@ AddToggle(FavoritePage, "AUTO FAVORITE", function(v)
 	getgenv().AutoFavoriteRunning = v
 end)
 
+-- MULTI SELECT DROPDOWN REUSABLE COMPONENT
 local function CreateMultiSelectDropdown(parent, titleText, optionsTable, targetStateTable)
 	local container = Instance.new("Frame")
 	container.Parent = parent
@@ -1019,19 +1060,6 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 	countLabel.TextSize = 11
 	countLabel.TextXAlignment = Enum.TextXAlignment.Right
 
-	local function UpdateSummary()
-		local selected = {}
-		for item, active in pairs(targetStateTable) do
-			if active then table.insert(selected, item) end
-		end
-		if #selected == 0 then
-			countLabel.Text = "None 🔽"
-		else
-			countLabel.Text = table.concat(selected, ", "):sub(1, 15) .. " 🔽"
-		end
-	end
-	UpdateSummary()
-
 	local optionsHolder = Instance.new("Frame")
 	optionsHolder.Parent = container
 	optionsHolder.Position = UDim2.new(0,5,0,40)
@@ -1043,14 +1071,45 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	listLayout.Padding = UDim.new(0, 4)
 
-	local isOpen = false
-	header.MouseButton1Click:Connect(function()
-		isOpen = not isOpen
-		local totalHeight = 45 + (#optionsTable * 32)
-		container:TweenSize(
-			isOpen and UDim2.new(1,0,0,totalHeight) or UDim2.new(1,0,0,40),
-			Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true
-		)
+	local itemButtons = {}
+
+	local function UpdateSummary()
+		local selectedCount = 0
+		for _, active in pairs(targetStateTable) do
+			if active then selectedCount = selectedCount + 1 end
+		end
+		if selectedCount == 0 then
+			countLabel.Text = "None 🔽"
+		elseif selectedCount == #optionsTable then
+			countLabel.Text = "All (" .. selectedCount .. ") 🔽"
+		else
+			countLabel.Text = selectedCount .. " Selected 🔽"
+		end
+	end
+
+	-- Tombol Select All / Deselect All Paling Atas
+	local selectAllBtn = Instance.new("TextButton")
+	selectAllBtn.Parent = optionsHolder
+	selectAllBtn.Size = UDim2.new(1,0,0,28)
+	selectAllBtn.BackgroundColor3 = Color3.fromRGB(0,150,120)
+	selectAllBtn.Text = "  ⚡ SELECT ALL / UNSELECT ALL"
+	selectAllBtn.TextColor3 = Color3.new(1,1,1)
+	selectAllBtn.Font = Enum.Font.GothamBold
+	selectAllBtn.TextSize = 11
+	selectAllBtn.TextXAlignment = Enum.TextXAlignment.Left
+	Instance.new("UICorner", selectAllBtn)
+
+	local allState = false
+	selectAllBtn.MouseButton1Click:Connect(function()
+		allState = not allState
+		for _, optName in ipairs(optionsTable) do
+			targetStateTable[optName] = allState
+		end
+		for optName, btn in pairs(itemButtons) do
+			btn.BackgroundColor3 = allState and Color3.fromRGB(0,120,200) or Color3.fromRGB(40,40,50)
+			btn.Text = "  " .. optName .. (allState and "  [✓]" or "  [ ]")
+		end
+		UpdateSummary()
 	end)
 
 	for _, optName in ipairs(optionsTable) do
@@ -1065,6 +1124,8 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 		optBtn.TextXAlignment = Enum.TextXAlignment.Left
 		Instance.new("UICorner", optBtn)
 
+		itemButtons[optName] = optBtn
+
 		optBtn.MouseButton1Click:Connect(function()
 			targetStateTable[optName] = not targetStateTable[optName]
 			optBtn.BackgroundColor3 = targetStateTable[optName] and Color3.fromRGB(0,120,200) or Color3.fromRGB(40,40,50)
@@ -1072,32 +1133,83 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 			UpdateSummary()
 		end)
 	end
+
+	UpdateSummary()
+
+	local isOpen = false
+	header.MouseButton1Click:Connect(function()
+		isOpen = not isOpen
+		local totalHeight = 45 + ((#optionsTable + 1) * 32)
+		container:TweenSize(
+			isOpen and UDim2.new(1,0,0,totalHeight) or UDim2.new(1,0,0,40),
+			Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true
+		)
+	end)
 end
 
-local rarityList = {"Common", "UnCommon", "Rare", "Epic", "Legendary", "Mythical", "Secret"}
-CreateMultiSelectDropdown(FavoritePage, "Filter Rarity", rarityList, getgenv().FavRarities)
-
+local rarityList = {"Common", "UnCommon", "Rare", "Epic", "Legendary", "Mythical", "Secret", "Forgotten"}
 local mutationList = {
 	"Galaxy", "Corrupt", "Gemstone", "Ghost", "Lightning", "Fairy Dust", 
-	"Gold", "Midnight", "Radioactive", "Stone", "Holographic", "Albino", "Sandy", "Cosmic"
+	"Gold", "Midnight", "Radioactive", "Stone", "Holographic", "Albino", "Sandy", "Cosmic",
+	"Elemental", "Festive", "8-Bit", "Bloodmoon", "Abyssal", "Strawberry", "Void", "Cupid"
 }
-CreateMultiSelectDropdown(FavoritePage, "Filter Mutasi", mutationList, getgenv().FavMutations)
 
+-- 1. DROPDOWN FAVORITE
+CreateMultiSelectDropdown(FavoritePage, "Fav Filter Rarity", rarityList, getgenv().FavRarities)
+CreateMultiSelectDropdown(FavoritePage, "Fav Filter Mutasi", mutationList, getgenv().FavMutations)
+
+local DividerFav = Instance.new("Frame")
+DividerFav.Parent = FavoritePage
+DividerFav.Size = UDim2.new(1,0,0,2)
+DividerFav.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleUnfav = Instance.new("TextLabel")
+TitleUnfav.Parent = FavoritePage
+TitleUnfav.Size = UDim2.new(1,0,0,25)
+TitleUnfav.BackgroundTransparency = 1
+TitleUnfav.Text = "🗑️ UNFAVORITE FILTER SETTINGS"
+TitleUnfav.TextColor3 = Color3.fromRGB(255,100,100)
+TitleUnfav.Font = Enum.Font.GothamBold
+TitleUnfav.TextSize = 13
+
+-- 2. DROPDOWN UNFAVORITE
+CreateMultiSelectDropdown(FavoritePage, "Unfav Filter Rarity", rarityList, getgenv().UnfavRarities)
+CreateMultiSelectDropdown(FavoritePage, "Unfav Filter Mutasi", mutationList, getgenv().UnfavMutations)
+
+-- TOMBOL UNFAVORITE BY FILTER
+local UnfavFilterBtn = Instance.new("TextButton")
+UnfavFilterBtn.Parent = FavoritePage
+UnfavFilterBtn.Size = UDim2.new(1,0,0,38)
+UnfavFilterBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 30)
+UnfavFilterBtn.Text = "🎯 UNFAVORITE BY FILTER (Rarity/Mutasi Diatas)"
+UnfavFilterBtn.TextColor3 = Color3.new(1,1,1)
+UnfavFilterBtn.Font = Enum.Font.GothamBold
+UnfavFilterBtn.TextSize = 12
+Instance.new("UICorner", UnfavFilterBtn)
+
+UnfavFilterBtn.MouseButton1Click:Connect(function()
+	UnfavFilterBtn.Text = "⌛ Processing Unfav Filter..."
+	UnfavoriteByFilter()
+	task.wait(1.5)
+	UnfavFilterBtn.Text = "🎯 UNFAVORITE BY FILTER (Rarity/Mutasi Diatas)"
+end)
+
+-- TOMBOL UNFAVORITE ALL FISH
 local UnfavBtn = Instance.new("TextButton")
 UnfavBtn.Parent = FavoritePage
-UnfavBtn.Size = UDim2.new(1,0,0,40)
+UnfavBtn.Size = UDim2.new(1,0,0,38)
 UnfavBtn.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
-UnfavBtn.Text = "🗑️ UNFAVORITE ALL FISH"
+UnfavBtn.Text = "🚨 UNFAVORITE ALL FISH (Semua Ikan)"
 UnfavBtn.TextColor3 = Color3.new(1,1,1)
 UnfavBtn.Font = Enum.Font.GothamBold
-UnfavBtn.TextSize = 13
+UnfavBtn.TextSize = 12
 Instance.new("UICorner", UnfavBtn)
 
 UnfavBtn.MouseButton1Click:Connect(function()
-	UnfavBtn.Text = "⌛ Process Unfavoriting..."
+	UnfavBtn.Text = "⌛ Process Unfavoriting All..."
 	UnfavoriteAllFish()
 	task.wait(1.5)
-	UnfavBtn.Text = "🗑️ UNFAVORITE ALL FISH"
+	UnfavBtn.Text = "🚨 UNFAVORITE ALL FISH (Semua Ikan)"
 end)
 
 ----------------------------------------------------
@@ -1799,7 +1911,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG (SECURE LOGIC)
+-- FLOATING BUTTON HP & DRAG
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
