@@ -114,7 +114,7 @@ pcall(function()
 	if queue_on_teleport and getgenv().UbeyConfig.AutoExecuteEnabled then
 		queue_on_teleport([[
 			task.wait(3)
-			loadstring(game:HttpGet("LINK_GITHUB_ATAU_KODE_KAMU"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/UbeyDev/Ubey-Hub/refs/heads/main/UBEY-HUB-NYOBA.lua"))()
 		]])
 	end
 end)
@@ -439,7 +439,6 @@ Sidebar.ScrollBarThickness = 2
 local SideCorner = Instance.new("UICorner")
 SideCorner.Parent = Sidebar
 
--- JUDUL UTAMA (UBEY HUB)
 local HubTitle = Instance.new("TextLabel")
 HubTitle.Parent = Sidebar
 HubTitle.BackgroundTransparency = 1
@@ -450,7 +449,6 @@ HubTitle.Font = Enum.Font.GothamBold
 HubTitle.TextColor3 = Color3.fromRGB(0, 170, 255)
 HubTitle.TextSize = 17
 
--- SUBTITLE (👑 Premium)
 local HubSubTitle = Instance.new("TextLabel")
 HubSubTitle.Parent = Sidebar
 HubSubTitle.BackgroundTransparency = 1
@@ -820,7 +818,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning do
+							if hooked and getgenv().AutoFishingEventRunning then
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
@@ -869,7 +867,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning do
+							if hooked and getgenv().AutoFishingEventRunning then
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
