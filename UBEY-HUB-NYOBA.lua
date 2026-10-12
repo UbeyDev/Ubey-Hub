@@ -219,7 +219,7 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED TARGET INVENTORY UI)
+-- LOGIKA ULTIMATE AUTO FAVORIT & UNFAVORIT (HIGHLY ACCURATE SCANNER)
 -- ==============================================================================
 local function GetInventoryRemote()
 	local repStorage = game:GetService("ReplicatedStorage")
@@ -230,29 +230,48 @@ end
 
 local function GetRealFishCards()
 	local cards = {}
+	local scannedUUIDs = {}
+	
 	pcall(function()
-		local inventoryGui = PlayerGui:FindFirstChild("Inventory", true) or PlayerGui:FindFirstChild("MainGui", true)
-		if inventoryGui then
-			for _, desc in ipairs(inventoryGui:GetDescendants()) do
-				if desc:IsA("GuiObject") then
-					local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc:GetAttribute("Id")
-					if not uuid and (#desc.Name == 36 or string.find(desc.Name, "-")) then
-						uuid = desc.Name
-					end
-					
-					if uuid and type(uuid) == "string" and #uuid >= 10 then
-						local hasFishText = false
-						for _, child in ipairs(desc:GetDescendants()) do
-							if child:IsA("TextLabel") and (string.find(string.lower(child.Text), "kg") or string.find(string.lower(child.Text), "solar")) then
-								hasFishText = true
-								break
+		for _, gui in ipairs(PlayerGui:GetChildren()) do
+			if gui:IsA("ScreenGui") then
+				for _, desc in ipairs(gui:GetDescendants()) do
+					pcall(function()
+						if desc:IsA("GuiObject") then
+							-- 1. Ekstraksi UUID
+							local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc:GetAttribute("Id") or desc:GetAttribute("UUID_Item")
+							
+							if not uuid and (#desc.Name >= 30 or string.find(desc.Name, "-")) then
+								uuid = desc.Name
+							end
+
+							if not uuid then
+								local valObj = desc:FindFirstChild("UUID") or desc:FindFirstChild("FishID")
+								if valObj and valObj:IsA("StringValue") then
+									uuid = valObj.Value
+								end
+							end
+
+							-- 2. Validasi Kartu Ikan
+							if uuid and type(uuid) == "string" and #uuid >= 10 and not scannedUUIDs[uuid] then
+								local isFishCard = false
+								for _, child in ipairs(desc:GetDescendants()) do
+									if child:IsA("TextLabel") then
+										local txt = string.lower(child.Text)
+										if string.find(txt, "kg") or string.find(txt, "lb") or string.find(txt, "koi") or string.find(txt, "tuna") or string.find(txt, "shark") then
+											isFishCard = true
+											break
+										end
+									end
+								end
+
+								if isFishCard or desc:GetAttribute("UUID") then
+									scannedUUIDs[uuid] = true
+									table.insert(cards, {Card = desc, UUID = uuid})
+								end
 							end
 						end
-						
-						if hasFishText or desc:GetAttribute("UUID") then
-							table.insert(cards, {Card = desc, UUID = uuid})
-						end
-					end
+					end)
 				end
 			end
 		end
@@ -298,7 +317,7 @@ local function ProcessAutoFavorite()
 			
 			if shouldFav and not isAlreadyFav then
 				tandaiRemote:FireServer(uuid, true)
-				task.wait(0.15)
+				task.wait(0.12)
 			end
 		end
 	end)
@@ -309,7 +328,7 @@ task.spawn(function()
 		if getgenv().AutoFavoriteRunning then
 			ProcessAutoFavorite()
 		end
-		task.wait(2.5)
+		task.wait(2)
 	end
 end)
 
@@ -324,7 +343,7 @@ local function UnfavoriteAllFish()
 				local uuid = fish.UUID
 				if uuid then
 					tandaiRemote:FireServer(uuid, false)
-					task.wait(0.08)
+					task.wait(0.06)
 				end
 			end
 		end)
