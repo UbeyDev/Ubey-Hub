@@ -167,7 +167,8 @@ getgenv().FavMutations = {
 	["Holographic"] = false,
 	["Albino"] = false,
 	["Sandy"] = false,
-	["Cosmic"] = false
+	["Cosmic"] = false,
+	["Normal"] = false
 }
 
 -- DATA KOORDINAT SPOT & SHOP
@@ -219,7 +220,7 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA AKURAT READ REAL UUID FROM AMBILSEMUA SERVER DATA
+-- LOGIKA AKURAT PARSER AMBILSEMUA SERVER DATA (FIXED STRUCTURE)
 -- ==============================================================================
 local function GetInventoryRemote()
 	local repStorage = game:GetService("ReplicatedStorage")
@@ -237,34 +238,37 @@ local function GetServerFishData()
 			and repStorage.Remote.Inventaris:FindFirstChild("AmbilSemua")
 		
 		if ambilSemuaRemote then
-			local data = ambilSemuaRemote:InvokeServer()
+			local result = {ambilSemuaRemote:InvokeServer()}
+			local data = result[1]
+			
 			if type(data) == "table" then
-				for key, itemData in pairs(data) do
-					local realUUID = nil
-					
-					if type(key) == "string" and (#key >= 30 or string.find(key, "-")) then
-						realUUID = key
-					elseif type(itemData) == "table" then
-						realUUID = itemData.UUID or itemData.Id or itemData.id or itemData.uuid or key
-					end
-					
-					if realUUID and type(realUUID) == "string" then
-						local rarityName = ""
-						local mutationName = ""
-						local isFav = false
-						
-						if type(itemData) == "table" then
-							rarityName = tostring(itemData.Rarity or itemData.Tingkat or itemData.rarity or "")
-							mutationName = tostring(itemData.Mutation or itemData.Mutasi or itemData.mutation or "")
-							isFav = itemData.Favorit or itemData.IsFavorite or itemData.favorit or false
+				if #data == 0 then
+					for _, outer in pairs(data) do
+						if type(outer) == "table" then
+							for _, fish in pairs(outer) do
+								if type(fish) == "table" and (fish.uid or fish.UUID) then
+									table.insert(fishDataList, {
+										UUID = tostring(fish.uid or fish.UUID),
+										Name = tostring(fish.nama or fish.Name or ""),
+										Rarity = tostring(fish.rarity or fish.Rarity or ""),
+										Mutation = tostring(fish.mutasi or fish.Mutation or ""),
+										IsFavorited = fish.favorit or fish.IsFavorit or fish.IsFavorite or false
+									})
+								end
+							end
 						end
-						
-						table.insert(fishDataList, {
-							UUID = tostring(realUUID),
-							Rarity = rarityName,
-							Mutation = mutationName,
-							IsFavorited = isFav
-						})
+					end
+				else
+					for _, fish in ipairs(data) do
+						if type(fish) == "table" and (fish.uid or fish.UUID) then
+							table.insert(fishDataList, {
+								UUID = tostring(fish.uid or fish.UUID),
+								Name = tostring(fish.nama or fish.Name or ""),
+								Rarity = tostring(fish.rarity or fish.Rarity or ""),
+								Mutation = tostring(fish.mutasi or fish.Mutation or ""),
+								IsFavorited = fish.favorit or fish.IsFavorit or fish.IsFavorite or false
+							})
+						end
 					end
 				end
 			end
@@ -298,11 +302,9 @@ local function ProcessAutoFavorite()
 				end
 			end
 			
-			if shouldFav or (fish.Rarity == "" and fish.Mutation == "") then
-				if not fish.IsFavorited then
-					tandaiRemote:FireServer(fish.UUID, true)
-					task.wait(0.12)
-				end
+			if shouldFav and not fish.IsFavorited then
+				tandaiRemote:FireServer(fish.UUID, true)
+				task.wait(0.12)
 			end
 		end
 	end)
