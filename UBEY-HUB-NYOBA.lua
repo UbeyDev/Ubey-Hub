@@ -219,72 +219,84 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED DENGAN UUID COBALT)
+-- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED TARGET INVENTORY UI)
 -- ==============================================================================
-local function GetInventoryFishCards()
-	local fishList = {}
+local function GetInventoryRemote()
+	local repStorage = game:GetService("ReplicatedStorage")
+	return repStorage:FindFirstChild("Remote") 
+		and repStorage.Remote:FindFirstChild("Mancing") 
+		and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
+end
+
+local function GetRealFishCards()
+	local cards = {}
 	pcall(function()
-		for _, gui in ipairs(PlayerGui:GetChildren()) do
-			if gui:IsA("ScreenGui") then
-				for _, desc in ipairs(gui:GetDescendants()) do
-					if desc:IsA("GuiObject") then
-						local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc:GetAttribute("ID")
-						if not uuid and #desc.Name == 36 and string.find(desc.Name, "-") then
-							uuid = desc.Name
+		local inventoryGui = PlayerGui:FindFirstChild("Inventory", true) or PlayerGui:FindFirstChild("MainGui", true)
+		if inventoryGui then
+			for _, desc in ipairs(inventoryGui:GetDescendants()) do
+				if desc:IsA("GuiObject") then
+					local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc:GetAttribute("Id")
+					if not uuid and (#desc.Name == 36 or string.find(desc.Name, "-")) then
+						uuid = desc.Name
+					end
+					
+					if uuid and type(uuid) == "string" and #uuid >= 10 then
+						local hasFishText = false
+						for _, child in ipairs(desc:GetDescendants()) do
+							if child:IsA("TextLabel") and (string.find(string.lower(child.Text), "kg") or string.find(string.lower(child.Text), "solar")) then
+								hasFishText = true
+								break
+							end
 						end
 						
-						if uuid and type(uuid) == "string" and #uuid >= 10 then
-							table.insert(fishList, {Card = desc, UUID = uuid})
+						if hasFishText or desc:GetAttribute("UUID") then
+							table.insert(cards, {Card = desc, UUID = uuid})
 						end
 					end
 				end
 			end
 		end
 	end)
-	return fishList
+	return cards
 end
 
 local function ProcessAutoFavorite()
 	pcall(function()
-		local repStorage = game:GetService("ReplicatedStorage")
-		local tandaiRemote = repStorage:FindFirstChild("Remote") 
-			and repStorage.Remote:FindFirstChild("Mancing") 
-			and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
-		
+		local tandaiRemote = GetInventoryRemote()
 		if not tandaiRemote then return end
 
-		local inventoryFish = GetInventoryFishCards()
-		for _, fishData in ipairs(inventoryFish) do
+		local fishList = GetRealFishCards()
+		for _, fish in ipairs(fishList) do
 			if not getgenv().AutoFavoriteRunning then break end
 			
-			local card = fishData.Card
-			local uuid = fishData.UUID
+			local card = fish.Card
+			local uuid = fish.UUID
 			local shouldFav = false
-			local isAlreadyFavorited = false
+			local isAlreadyFav = false
 			
-			for _, textLabel in ipairs(card:GetDescendants()) do
-				if textLabel:IsA("TextLabel") then
-					local txtLower = string.lower(textLabel.Text)
+			for _, lbl in ipairs(card:GetDescendants()) do
+				if lbl:IsA("TextLabel") then
+					local txt = string.lower(lbl.Text)
 					
-					for rarityName, isEnabled in pairs(getgenv().FavRarities) do
-						if isEnabled and string.find(txtLower, string.lower(rarityName)) then
+					for rName, active in pairs(getgenv().FavRarities) do
+						if active and string.find(txt, string.lower(rName)) then
 							shouldFav = true
 						end
 					end
 					
-					for mutName, isEnabled in pairs(getgenv().FavMutations) do
-						if isEnabled and string.find(txtLower, string.lower(mutName)) then
+					for mName, active in pairs(getgenv().FavMutations) do
+						if active and string.find(txt, string.lower(mName)) then
 							shouldFav = true
 						end
 					end
 					
-					if string.find(txtLower, "⭐") or string.find(txtLower, "fav") or string.find(txtLower, "lock") then
-						isAlreadyFavorited = true
+					if string.find(txt, "⭐") or string.find(txt, "fav") or string.find(txt, "lock") then
+						isAlreadyFav = true
 					end
 				end
 			end
 			
-			if shouldFav and not isAlreadyFavorited then
+			if shouldFav and not isAlreadyFav then
 				tandaiRemote:FireServer(uuid, true)
 				task.wait(0.15)
 			end
@@ -304,16 +316,12 @@ end)
 local function UnfavoriteAllFish()
 	task.spawn(function()
 		pcall(function()
-			local repStorage = game:GetService("ReplicatedStorage")
-			local tandaiRemote = repStorage:FindFirstChild("Remote") 
-				and repStorage.Remote:FindFirstChild("Mancing") 
-				and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
-			
+			local tandaiRemote = GetInventoryRemote()
 			if not tandaiRemote then return end
 
-			local inventoryFish = GetInventoryFishCards()
-			for _, fishData in ipairs(inventoryFish) do
-				local uuid = fishData.UUID
+			local fishList = GetRealFishCards()
+			for _, fish in ipairs(fishList) do
+				local uuid = fish.UUID
 				if uuid then
 					tandaiRemote:FireServer(uuid, false)
 					task.wait(0.08)
@@ -1446,7 +1454,7 @@ pcall(function()
 		clearHaloBtn.Text = "❌ Lepas Aksesoris Kepala"
 		clearHaloBtn.TextColor3 = Color3.new(1,1,1)
 		clearHaloBtn.Font = Enum.Font.GothamBold
-TestSize = 12
+		clearHaloBtn.TextSize = 12
 		Instance.new("UICorner", clearHaloBtn)
 		
 		clearHaloBtn.MouseButton1Click:Connect(function()
