@@ -219,7 +219,7 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA ULTIMATE AUTO FAVORIT & UNFAVORIT (HIGHLY ACCURATE SCANNER)
+-- LOGIKA ULTIMATE AUTO FAVORIT & UNFAVORIT (SERVER-DATA DIRECT FETCHING)
 -- ==============================================================================
 local function GetInventoryRemote()
 	local repStorage = game:GetService("ReplicatedStorage")
@@ -228,55 +228,41 @@ local function GetInventoryRemote()
 		and repStorage.Remote.Mancing:FindFirstChild("TandaiFavorit")
 end
 
-local function GetRealFishCards()
-	local cards = {}
-	local scannedUUIDs = {}
-	
+local function GetServerFishData()
+	local fishDataList = {}
 	pcall(function()
-		for _, gui in ipairs(PlayerGui:GetChildren()) do
-			if gui:IsA("ScreenGui") then
-				for _, desc in ipairs(gui:GetDescendants()) do
-					pcall(function()
-						if desc:IsA("GuiObject") then
-							-- 1. Ekstraksi UUID
-							local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc:GetAttribute("Id") or desc:GetAttribute("UUID_Item")
-							
-							if not uuid and (#desc.Name >= 30 or string.find(desc.Name, "-")) then
-								uuid = desc.Name
-							end
-
-							if not uuid then
-								local valObj = desc:FindFirstChild("UUID") or desc:FindFirstChild("FishID")
-								if valObj and valObj:IsA("StringValue") then
-									uuid = valObj.Value
-								end
-							end
-
-							-- 2. Validasi Kartu Ikan
-							if uuid and type(uuid) == "string" and #uuid >= 10 and not scannedUUIDs[uuid] then
-								local isFishCard = false
-								for _, child in ipairs(desc:GetDescendants()) do
-									if child:IsA("TextLabel") then
-										local txt = string.lower(child.Text)
-										if string.find(txt, "kg") or string.find(txt, "lb") or string.find(txt, "koi") or string.find(txt, "tuna") or string.find(txt, "shark") then
-											isFishCard = true
-											break
-										end
-									end
-								end
-
-								if isFishCard or desc:GetAttribute("UUID") then
-									scannedUUIDs[uuid] = true
-									table.insert(cards, {Card = desc, UUID = uuid})
-								end
-							end
-						end
-					end)
+		local repStorage = game:GetService("ReplicatedStorage")
+		local ambilSemuaRemote = repStorage:FindFirstChild("Remote") 
+			and repStorage.Remote:FindFirstChild("Inventaris") 
+			and repStorage.Remote.Inventaris:FindFirstChild("AmbilSemua")
+		
+		if ambilSemuaRemote then
+			local data = ambilSemuaRemote:InvokeServer()
+			if type(data) == "table" then
+				for k, v in pairs(data) do
+					if type(v) == "table" then
+						local realUUID = v.UUID or v.Id or v.id or k
+						table.insert(fishDataList, {
+							UUID = tostring(realUUID),
+							Name = tostring(v.Name or v.Nama or ""),
+							Rarity = tostring(v.Rarity or v.Tingkat or ""),
+							Mutation = tostring(v.Mutation or v.Mutasi or ""),
+							IsFavorited = v.Favorit or v.IsFavorite or false
+						})
+					elseif type(k) == "string" and #k >= 30 then
+						table.insert(fishDataList, {
+							UUID = k,
+							Name = "",
+							Rarity = "",
+							Mutation = "",
+							IsFavorited = false
+						})
+					end
 				end
 			end
 		end
 	end)
-	return cards
+	return fishDataList
 end
 
 local function ProcessAutoFavorite()
@@ -284,40 +270,67 @@ local function ProcessAutoFavorite()
 		local tandaiRemote = GetInventoryRemote()
 		if not tandaiRemote then return end
 
-		local fishList = GetRealFishCards()
-		for _, fish in ipairs(fishList) do
-			if not getgenv().AutoFavoriteRunning then break end
-			
-			local card = fish.Card
-			local uuid = fish.UUID
-			local shouldFav = false
-			local isAlreadyFav = false
-			
-			for _, lbl in ipairs(card:GetDescendants()) do
-				if lbl:IsA("TextLabel") then
-					local txt = string.lower(lbl.Text)
-					
-					for rName, active in pairs(getgenv().FavRarities) do
-						if active and string.find(txt, string.lower(rName)) then
-							shouldFav = true
-						end
-					end
-					
-					for mName, active in pairs(getgenv().FavMutations) do
-						if active and string.find(txt, string.lower(mName)) then
-							shouldFav = true
-						end
-					end
-					
-					if string.find(txt, "⭐") or string.find(txt, "fav") or string.find(txt, "lock") then
-						isAlreadyFav = true
+		-- 1. Ambil Data Langsung Dari Server
+		local serverData = GetServerFishData()
+		
+		if #serverData > 0 then
+			for _, fish in ipairs(serverData) do
+				if not getgenv().AutoFavoriteRunning then break end
+				
+				local shouldFav = false
+				
+				-- Filter Rarity
+				for rName, active in pairs(getgenv().FavRarities) do
+					if active and string.find(string.lower(fish.Rarity), string.lower(rName)) then
+						shouldFav = true
 					end
 				end
+				
+				-- Filter Mutasi
+				for mName, active in pairs(getgenv().FavMutations) do
+					if active and string.find(string.lower(fish.Mutation), string.lower(mName)) then
+						shouldFav = true
+					end
+				end
+				
+				if shouldFav and not fish.IsFavorited then
+					tandaiRemote:FireServer(fish.UUID, true)
+					task.wait(0.1)
+				end
 			end
-			
-			if shouldFav and not isAlreadyFav then
-				tandaiRemote:FireServer(uuid, true)
-				task.wait(0.12)
+		else
+			-- 2. Fallback UI Scanning
+			for _, gui in ipairs(PlayerGui:GetChildren()) do
+				if gui:IsA("ScreenGui") then
+					for _, desc in ipairs(gui:GetDescendants()) do
+						if not getgenv().AutoFavoriteRunning then break end
+						if desc:IsA("GuiObject") then
+							local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
+							if uuid and type(uuid) == "string" and (#uuid >= 30 or string.find(uuid, "-")) then
+								local shouldFav = false
+								local isAlreadyFav = false
+								
+								for _, lbl in ipairs(desc:GetDescendants()) do
+									if lbl:IsA("TextLabel") then
+										local txt = string.lower(lbl.Text)
+										for rName, active in pairs(getgenv().FavRarities) do
+											if active and string.find(txt, string.lower(rName)) then shouldFav = true end
+										end
+										for mName, active in pairs(getgenv().FavMutations) do
+											if active and string.find(txt, string.lower(mName)) then shouldFav = true end
+										end
+										if string.find(txt, "⭐") or string.find(txt, "fav") then isAlreadyFav = true end
+									end
+								end
+								
+								if shouldFav and not isAlreadyFav then
+									tandaiRemote:FireServer(uuid, true)
+									task.wait(0.1)
+								end
+							end
+						end
+					end
+				end
 			end
 		end
 	end)
@@ -338,12 +351,27 @@ local function UnfavoriteAllFish()
 			local tandaiRemote = GetInventoryRemote()
 			if not tandaiRemote then return end
 
-			local fishList = GetRealFishCards()
-			for _, fish in ipairs(fishList) do
-				local uuid = fish.UUID
-				if uuid then
-					tandaiRemote:FireServer(uuid, false)
-					task.wait(0.06)
+			-- 1. Ambil daftar UUID langsung dari server
+			local serverData = GetServerFishData()
+			if #serverData > 0 then
+				for _, fish in ipairs(serverData) do
+					tandaiRemote:FireServer(fish.UUID, false)
+					task.wait(0.05)
+				end
+			else
+				-- 2. Fallback scan UI
+				for _, gui in ipairs(PlayerGui:GetChildren()) do
+					if gui:IsA("ScreenGui") then
+						for _, desc in ipairs(gui:GetDescendants()) do
+							if desc:IsA("GuiObject") then
+								local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc.Name
+								if uuid and type(uuid) == "string" and (#uuid >= 30 or string.find(uuid, "-")) then
+									tandaiRemote:FireServer(uuid, false)
+									task.wait(0.05)
+								end
+							end
+						end
+					end
 				end
 			end
 		end)
