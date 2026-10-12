@@ -23,7 +23,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "0.5",
+	BiteDelay = "0.8",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AutoExecuteEnabled = true,
@@ -60,7 +60,7 @@ end
 local function ResetConfig()
 	pcall(function()
 		getgenv().UbeyConfig = {
-			BiteDelay = "0.5",
+			BiteDelay = "0.8",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
 			AutoExecuteEnabled = true,
@@ -611,7 +611,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE
+-- 1. FISHING & SELL PAGE (ANTI-STUCK AUTO FISHING)
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -655,6 +655,7 @@ ChangeSpotBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 end)
 
+-- SMART AUTO FISHING + TELEPORT (FIX STUCK & TIMEOUT SAFE)
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
@@ -677,29 +678,38 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 						if remoteFolder then
 							OptimizeRodSettings()
 							local hrp = LocalPlayer.Character.HumanoidRootPart
+							
+							-- 1. Lempar Pancing
 							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 							
-							task.wait(0.05)
 							local hooked = false
 							local conn
 							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then
+								if actionType == "Bite" or actionType == "Hooked" then
 									hooked = true
 									if conn then conn:Disconnect() end
 								end
 							end)
 							
-							local start = tick()
+							-- 2. Timer penunggu bite (Maksimal 3 detik, jika tidak ada respon dari server langsung tarik)
+							local startTime = tick()
 							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
+								if tick() - startTime > 3 then 
+									hooked = true 
+									break 
+								end
 								task.wait(0.05)
 							end
+							
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+							-- 3. Eksekusi Tarik Ikan
+							if getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
 								task.wait(currentDelay)
-								remoteFolder.MiniGame:FireServer(true)
+								if remoteFolder:FindFirstChild("MiniGame") then
+									remoteFolder.MiniGame:FireServer(true)
+								end
 								task.wait(0.3)
 							end
 						end
@@ -707,12 +717,13 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 						task.wait(1)
 					end
 				end)
-				task.wait(0.1)
+				task.wait(0.2)
 			end
 		end)
 	end
 end)
 
+-- SMART AUTO FISHING (DI TEMPAT SAJA)
 AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
@@ -726,29 +737,35 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 						if remoteFolder then
 							OptimizeRodSettings()
 							local hrp = LocalPlayer.Character.HumanoidRootPart
+							
 							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 							
-							task.wait(0.05)
 							local hooked = false
 							local conn
 							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then
+								if actionType == "Bite" or actionType == "Hooked" then
 									hooked = true
 									if conn then conn:Disconnect() end
 								end
 							end)
 							
-							local start = tick()
+							local startTime = tick()
 							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 0.1 then break end
+								if tick() - startTime > 3 then 
+									hooked = true 
+									break 
+								end
 								task.wait(0.05)
 							end
+							
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
-								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+							if getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
 								task.wait(currentDelay)
-								remoteFolder.MiniGame:FireServer(true)
+								if remoteFolder:FindFirstChild("MiniGame") then
+									remoteFolder.MiniGame:FireServer(true)
+								end
 								task.wait(0.3)
 							end
 						end
@@ -756,7 +773,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 						task.wait(1)
 					end
 				end)
-				task.wait(0.1)
+				task.wait(0.2)
 			end
 		end)
 	end
@@ -766,7 +783,7 @@ local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
 BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.8)"
 BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
@@ -904,7 +921,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113, -0.98894012, 4.00152409e-08, -0.148315206, 5.70598111e-08, 1, -1.10666292e-07, 0.148315206, -1.17905181e-07, -0.98894012))
 
 ----------------------------------------------------
--- 4. SUMMIT PAGE (FIXED & ANTI-TEMBUS TANAH)
+-- 4. SUMMIT PAGE
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
