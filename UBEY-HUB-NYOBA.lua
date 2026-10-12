@@ -219,25 +219,29 @@ local function TriggerSellToNpc()
 end
 
 -- ==============================================================================
--- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED SCAN INVENTARIS & ANTI-STUCK)
+-- LOGIKA AUTO FAVORIT & UNFAVORIT (FIXED DENGAN UUID COBALT)
 -- ==============================================================================
-local function GetInventoryFrames()
-	local frames = {}
+local function GetInventoryFishCards()
+	local fishList = {}
 	pcall(function()
 		for _, gui in ipairs(PlayerGui:GetChildren()) do
 			if gui:IsA("ScreenGui") then
 				for _, desc in ipairs(gui:GetDescendants()) do
 					if desc:IsA("GuiObject") then
-						local name = desc.Name
-						if desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or #name > 15 then
-							table.insert(frames, desc)
+						local uuid = desc:GetAttribute("UUID") or desc:GetAttribute("FishID") or desc:GetAttribute("ID")
+						if not uuid and #desc.Name == 36 and string.find(desc.Name, "-") then
+							uuid = desc.Name
+						end
+						
+						if uuid and type(uuid) == "string" and #uuid >= 10 then
+							table.insert(fishList, {Card = desc, UUID = uuid})
 						end
 					end
 				end
 			end
 		end
 	end)
-	return frames
+	return fishList
 end
 
 local function ProcessAutoFavorite()
@@ -249,41 +253,40 @@ local function ProcessAutoFavorite()
 		
 		if not tandaiRemote then return end
 
-		local fishCards = GetInventoryFrames()
-		for _, card in ipairs(fishCards) do
+		local inventoryFish = GetInventoryFishCards()
+		for _, fishData in ipairs(inventoryFish) do
 			if not getgenv().AutoFavoriteRunning then break end
 			
-			local uuid = card:GetAttribute("UUID") or card:GetAttribute("FishID") or card.Name
-			if uuid and type(uuid) == "string" and #uuid >= 10 then
-				local shouldFav = false
-				local isAlreadyFavorited = false
-				
-				for _, textLabel in ipairs(card:GetDescendants()) do
-					if textLabel:IsA("TextLabel") then
-						local txtLower = string.lower(textLabel.Text)
-						
-						for rarityName, isEnabled in pairs(getgenv().FavRarities) do
-							if isEnabled and string.find(txtLower, string.lower(rarityName)) then
-								shouldFav = true
-							end
-						end
-						
-						for mutName, isEnabled in pairs(getgenv().FavMutations) do
-							if isEnabled and string.find(txtLower, string.lower(mutName)) then
-								shouldFav = true
-							end
-						end
-						
-						if string.find(txtLower, "⭐") or string.find(txtLower, "fav") or string.find(txtLower, "lock") then
-							isAlreadyFavorited = true
+			local card = fishData.Card
+			local uuid = fishData.UUID
+			local shouldFav = false
+			local isAlreadyFavorited = false
+			
+			for _, textLabel in ipairs(card:GetDescendants()) do
+				if textLabel:IsA("TextLabel") then
+					local txtLower = string.lower(textLabel.Text)
+					
+					for rarityName, isEnabled in pairs(getgenv().FavRarities) do
+						if isEnabled and string.find(txtLower, string.lower(rarityName)) then
+							shouldFav = true
 						end
 					end
+					
+					for mutName, isEnabled in pairs(getgenv().FavMutations) do
+						if isEnabled and string.find(txtLower, string.lower(mutName)) then
+							shouldFav = true
+						end
+					end
+					
+					if string.find(txtLower, "⭐") or string.find(txtLower, "fav") or string.find(txtLower, "lock") then
+						isAlreadyFavorited = true
+					end
 				end
-				
-				if shouldFav and not isAlreadyFavorited then
-					tandaiRemote:FireServer(uuid, true)
-					task.wait(0.1)
-				end
+			end
+			
+			if shouldFav and not isAlreadyFavorited then
+				tandaiRemote:FireServer(uuid, true)
+				task.wait(0.15)
 			end
 		end
 	end)
@@ -308,12 +311,12 @@ local function UnfavoriteAllFish()
 			
 			if not tandaiRemote then return end
 
-			local fishCards = GetInventoryFrames()
-			for _, card in ipairs(fishCards) do
-				local uuid = card:GetAttribute("UUID") or card:GetAttribute("FishID") or card.Name
-				if uuid and type(uuid) == "string" and #uuid >= 10 then
+			local inventoryFish = GetInventoryFishCards()
+			for _, fishData in ipairs(inventoryFish) do
+				local uuid = fishData.UUID
+				if uuid then
 					tandaiRemote:FireServer(uuid, false)
-					task.wait(0.05)
+					task.wait(0.08)
 				end
 			end
 		end)
@@ -1443,7 +1446,7 @@ pcall(function()
 		clearHaloBtn.Text = "❌ Lepas Aksesoris Kepala"
 		clearHaloBtn.TextColor3 = Color3.new(1,1,1)
 		clearHaloBtn.Font = Enum.Font.GothamBold
-		clearHaloBtn.TextSize = 12
+TestSize = 12
 		Instance.new("UICorner", clearHaloBtn)
 		
 		clearHaloBtn.MouseButton1Click:Connect(function()
