@@ -23,7 +23,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "0.8",
+	BiteDelay = "0.5",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AutoExecuteEnabled = true,
@@ -60,7 +60,7 @@ end
 local function ResetConfig()
 	pcall(function()
 		getgenv().UbeyConfig = {
-			BiteDelay = "0.8",
+			BiteDelay = "0.5",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
 			AutoExecuteEnabled = true,
@@ -141,8 +141,10 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 
--- AUTO FAVORITE STATES
-getgenv().AutoFavoriteRunning = false
+-- AUTO FAVORITE STATES (TERPISAH)
+getgenv().AutoFavoriteRunning = false      -- Toggle Rarity & Mutasi Biasa
+getgenv().AutoFavAnomalyRunning = false   -- Toggle Khusus Ikan Anomali
+
 getgenv().FavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
 	["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
@@ -155,6 +157,23 @@ getgenv().FavMutations = {
 	["Sandy"] = false, ["Cosmic"] = false, ["Normal"] = false, ["Elemental"] = false,
 	["Festive"] = false, ["8-Bit"] = false, ["Bloodmoon"] = false, ["Abyssal"] = false,
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
+}
+
+-- DAFTAR IKAN ANOMALI LENGKAP (12+ Slot)
+getgenv().FavAnomalyFish = {
+	["Ashen Kingfish"] = true,
+	["Mr Money Bags"] = true,
+	["Pyrocoil"] = true,
+	["Stormshell Brute"] = true,
+	["Jellybeam"] = true,
+	["GigaByte"] = true,
+	["Nebula Core"] = true,
+	["Cosmic Ray"] = true,
+	["Iridesca"] = true,
+	["Aether Finch"] = true,
+	["Soreya Zenith"] = true,
+	["Glacier Golem"] = true,
+	["Abyssal Monarch"] = true
 }
 
 -- AUTO UNFAVORITE FILTER STATES
@@ -278,7 +297,8 @@ local function GetServerFishData()
 	return fishDataList
 end
 
-local function ProcessAutoFavorite()
+-- PROSES AUTO FAVORITE BIASA (RARITY & MUTASI)
+local function ProcessAutoFavoriteRarity()
 	pcall(function()
 		local tandaiRemote = GetInventoryRemote()
 		if not tandaiRemote then return end
@@ -291,16 +311,41 @@ local function ProcessAutoFavorite()
 			local fishRarityLower = string.lower(fish.Rarity)
 			local fishMutationLower = string.lower(fish.Mutation)
 			
-			-- Filter Rarity
 			for rName, active in pairs(getgenv().FavRarities) do
 				if active and string.find(fishRarityLower, string.lower(rName)) then
 					shouldFav = true
 				end
 			end
 			
-			-- Filter Mutasi
 			for mName, active in pairs(getgenv().FavMutations) do
 				if active and string.find(fishMutationLower, string.lower(mName)) then
+					shouldFav = true
+				end
+			end
+
+			if shouldFav and not fish.IsFavorited then
+				tandaiRemote:FireServer(fish.UUID, true)
+				task.wait(0.12)
+			end
+		end
+	end)
+end
+
+-- PROSES AUTO FAVORITE KHUSUS IKAN ANOMALI (TERPISAH)
+local function ProcessAutoFavoriteAnomaly()
+	pcall(function()
+		local tandaiRemote = GetInventoryRemote()
+		if not tandaiRemote then return end
+
+		local serverData = GetServerFishData()
+		for _, fish in ipairs(serverData) do
+			if not getgenv().AutoFavAnomalyRunning then break end
+			
+			local shouldFav = false
+			local fishNameLower = string.lower(fish.Name)
+
+			for anomalyName, active in pairs(getgenv().FavAnomalyFish) do
+				if active and string.find(fishNameLower, string.lower(anomalyName)) then
 					shouldFav = true
 				end
 			end
@@ -313,10 +358,14 @@ local function ProcessAutoFavorite()
 	end)
 end
 
+-- LOOPING BACKGROUND TERPISAH
 task.spawn(function()
 	while true do
 		if getgenv().AutoFavoriteRunning then
-			ProcessAutoFavorite()
+			ProcessAutoFavoriteRarity()
+		end
+		if getgenv().AutoFavAnomalyRunning then
+			ProcessAutoFavoriteAnomaly()
 		end
 		task.wait(2.5)
 	end
@@ -351,14 +400,12 @@ local function UnfavoriteByFilter()
 				local fishRarityLower = string.lower(fish.Rarity)
 				local fishMutationLower = string.lower(fish.Mutation)
 				
-				-- Cek jika cocok dengan filter Unfav Rarity
 				for rName, active in pairs(getgenv().UnfavRarities) do
 					if active and string.find(fishRarityLower, string.lower(rName)) then
 						shouldUnfav = true
 					end
 				end
 				
-				-- Cek jika cocok dengan filter Unfav Mutasi
 				for mName, active in pairs(getgenv().UnfavMutations) do
 					if active and string.find(fishMutationLower, string.lower(mName)) then
 						shouldUnfav = true
@@ -607,7 +654,7 @@ local function MakePage()
 	f.Size = UDim2.new(1,0,1,0)
 	f.BackgroundTransparency = 1
 	f.Visible = false
-	f.CanvasSize = UDim2.new(0,0,6,0)
+	f.CanvasSize = UDim2.new(0,0,7,0) -- Diperpanjang sedikit untuk menampung menu anomali terpisah
 	f.ScrollBarThickness = 4
 	
 	local pad = Instance.new("UIPadding")
@@ -804,7 +851,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE (FIXED ANTI-STUCK & ANTI-DOUBLE CAST)
+-- 1. FISHING & SELL PAGE
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -848,73 +895,6 @@ ChangeSpotBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 end)
 
--- LOGIKA SMART AUTO FISHING DENGAN ANTI-DOUBLE CAST GUARD (ISCASTING)
-local isCasting = false
-
-local function DoSmartFishing()
-	if isCasting then return end
-	isCasting = true
-	
-	pcall(function()
-		local character = LocalPlayer.Character
-		local rod = character and character:FindFirstChild("Withering Rod")
-		if not rod or not rod:FindFirstChild("Mechanics") then 
-			isCasting = false
-			return 
-		end
-		
-		local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-		if not remoteFolder then 
-			isCasting = false
-			return 
-		end
-		
-		OptimizeRodSettings()
-		local hrp = character:FindFirstChild("HumanoidRootPart")
-		if not hrp then 
-			isCasting = false
-			return 
-		end
-		
-		-- 1. Lempar Umpan
-		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
-		
-		-- 2. Tunggu Sinyal Ikan Gigit (Bite / Hooked)
-		local hooked = false
-		local conn
-		conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-			if actionType == "Bite" or actionType == "Hooked" then
-				hooked = true
-			end
-		end)
-		
-		-- Timed-out safety: Maksimal tunggu hingga 4 detik agar tidak stuck
-		local startTime = tick()
-		while not hooked and getgenv().AutoFishingEventRunning do
-			if tick() - startTime > 4 then
-				break
-			end
-			task.wait(0.05)
-		end
-		
-		if conn then conn:Disconnect() end
-		
-		-- 3. Tarik Ikan Jika Berhasil Gigit / Timeout
-		if getgenv().AutoFishingEventRunning then
-			local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.8
-			task.wait(currentDelay)
-			
-			if remoteFolder:FindFirstChild("MiniGame") then
-				remoteFolder.MiniGame:FireServer(true)
-			end
-			
-			task.wait(0.5)
-		end
-	end)
-	
-	isCasting = false
-end
-
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
@@ -930,13 +910,46 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
-				DoSmartFishing()
-				task.wait(0.3)
+				pcall(function()
+					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
+					if rod and rod:FindFirstChild("Mechanics") then
+						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
+						if remoteFolder then
+							OptimizeRodSettings()
+							local hrp = LocalPlayer.Character.HumanoidRootPart
+							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
+							
+							task.wait(0.05)
+							local hooked = false
+							local conn
+							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+								if actionType == "Bite" then
+									hooked = true
+									if conn then conn:Disconnect() end
+								end
+							end)
+							
+							local start = tick()
+							while not hooked and getgenv().AutoFishingEventRunning do
+								if tick() - start > 10 then break end
+								task.wait(0.05)
+							end
+							if conn then conn:Disconnect() end
+							
+							if hooked and getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+								task.wait(currentDelay)
+								remoteFolder.MiniGame:FireServer(true)
+								task.wait(0.3)
+							end
+						end
+					else
+						task.wait(1)
+					end
+				end)
+				task.wait(0.1)
 			end
-			isCasting = false
 		end)
-	else
-		isCasting = false
 	end
 end)
 
@@ -946,13 +959,46 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
-				DoSmartFishing()
-				task.wait(0.3)
+				pcall(function()
+					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
+					if rod and rod:FindFirstChild("Mechanics") then
+						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
+						if remoteFolder then
+							OptimizeRodSettings()
+							local hrp = LocalPlayer.Character.HumanoidRootPart
+							remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
+							
+							task.wait(0.05)
+							local hooked = false
+							local conn
+							conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+								if actionType == "Bite" then
+									hooked = true
+									if conn then conn:Disconnect() end
+								end
+							end)
+							
+							local start = tick()
+							while not hooked and getgenv().AutoFishingEventRunning do
+								if tick() - start > 10 then break end
+								task.wait(0.05)
+							end
+							if conn then conn:Disconnect() end
+							
+							if hooked and getgenv().AutoFishingEventRunning then
+								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
+								task.wait(currentDelay)
+								remoteFolder.MiniGame:FireServer(true)
+								task.wait(0.3)
+							end
+						end
+					else
+						task.wait(1)
+					end
+				end)
+				task.wait(0.1)
 			end
-			isCasting = false
 		end)
-	else
-		isCasting = false
 	end
 end)
 
@@ -960,7 +1006,7 @@ local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
 BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.8)"
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
 BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
@@ -1007,22 +1053,21 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- 2. FAVORITE PAGE (AUTO FAVORITE & UNFAVORITE)
+-- 2. FAVORITE PAGE (TERPISAH SEKSINYA)
 ----------------------------------------------------
 local TitleFav = Instance.new("TextLabel")
 TitleFav.Parent = FavoritePage
 TitleFav.Size = UDim2.new(1,0,0,25)
 TitleFav.BackgroundTransparency = 1
-TitleFav.Text = "⭐ AUTO FAVORITE FILTER"
+TitleFav.Text = "⭐ AUTO FAVORITE (RARITY & MUTASI)"
 TitleFav.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFav.Font = Enum.Font.GothamBold
 TitleFav.TextSize = 13
 
-AddToggle(FavoritePage, "AUTO FAVORITE", function(v)
+AddToggle(FavoritePage, "AUTO FAVORITE (Rarity & Mutasi)", function(v)
 	getgenv().AutoFavoriteRunning = v
 end)
 
--- MULTI SELECT DROPDOWN REUSABLE COMPONENT
 local function CreateMultiSelectDropdown(parent, titleText, optionsTable, targetStateTable)
 	local container = Instance.new("Frame")
 	container.Parent = parent
@@ -1078,7 +1123,6 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 		end
 	end
 
-	-- Tombol Select All / Deselect All Paling Atas
 	local selectAllBtn = Instance.new("TextButton")
 	selectAllBtn.Parent = optionsHolder
 	selectAllBtn.Size = UDim2.new(1,0,0,28)
@@ -1144,15 +1188,41 @@ local mutationList = {
 	"Gold", "Midnight", "Radioactive", "Stone", "Holographic", "Albino", "Sandy", "Cosmic",
 	"Elemental", "Festive", "8-Bit", "Bloodmoon", "Abyssal", "Strawberry", "Void", "Cupid"
 }
+local anomalyFishList = {
+	"Ashen Kingfish", "Mr Money Bags", "Pyrocoil", "Stormshell Brute", 
+	"Jellybeam", "GigaByte", "Nebula Core", "Cosmic Ray",
+	"Iridesca", "Aether Finch", "Soreya Zenith", "Glacier Golem", "Abyssal Monarch"
+}
 
--- 1. DROPDOWN FAVORITE
 CreateMultiSelectDropdown(FavoritePage, "Fav Filter Rarity", rarityList, getgenv().FavRarities)
 CreateMultiSelectDropdown(FavoritePage, "Fav Filter Mutasi", mutationList, getgenv().FavMutations)
 
+-- PEMBATAS SEKSI ANOMALI
 local DividerFav = Instance.new("Frame")
 DividerFav.Parent = FavoritePage
 DividerFav.Size = UDim2.new(1,0,0,2)
-DividerFav.BackgroundColor3 = Color3.fromRGB(50,50,65)
+DividerFav.BackgroundColor3 = Color3.fromRGB(255, 64, 214)
+
+local TitleAnomaly = Instance.new("TextLabel")
+TitleAnomaly.Parent = FavoritePage
+TitleAnomaly.Size = UDim2.new(1,0,0,25)
+TitleAnomaly.BackgroundTransparency = 1
+TitleAnomaly.Text = "👾 AUTO FAVORITE KHUSUS IKAN ANOMALI"
+TitleAnomaly.TextColor3 = Color3.fromRGB(255, 64, 214)
+TitleAnomaly.Font = Enum.Font.GothamBold
+TitleAnomaly.TextSize = 13
+
+AddToggle(FavoritePage, "AUTO FAVORITE IKAN ANOMALI", function(v)
+	getgenv().AutoFavAnomalyRunning = v
+end)
+
+CreateMultiSelectDropdown(FavoritePage, "👾 Checklist Ikan Anomali", anomalyFishList, getgenv().FavAnomalyFish)
+
+-- PEMBATAS SEKSI UNFAVORITE
+local DividerUnfav = Instance.new("Frame")
+DividerUnfav.Parent = FavoritePage
+DividerUnfav.Size = UDim2.new(1,0,0,2)
+DividerUnfav.BackgroundColor3 = Color3.fromRGB(50,50,65)
 
 local TitleUnfav = Instance.new("TextLabel")
 TitleUnfav.Parent = FavoritePage
@@ -1163,11 +1233,9 @@ TitleUnfav.TextColor3 = Color3.fromRGB(255,100,100)
 TitleUnfav.Font = Enum.Font.GothamBold
 TitleUnfav.TextSize = 13
 
--- 2. DROPDOWN UNFAVORITE
 CreateMultiSelectDropdown(FavoritePage, "Unfav Filter Rarity", rarityList, getgenv().UnfavRarities)
 CreateMultiSelectDropdown(FavoritePage, "Unfav Filter Mutasi", mutationList, getgenv().UnfavMutations)
 
--- TOMBOL UNFAVORITE BY FILTER
 local UnfavFilterBtn = Instance.new("TextButton")
 UnfavFilterBtn.Parent = FavoritePage
 UnfavFilterBtn.Size = UDim2.new(1,0,0,38)
@@ -1185,7 +1253,6 @@ UnfavFilterBtn.MouseButton1Click:Connect(function()
 	UnfavFilterBtn.Text = "🎯 UNFAVORITE BY FILTER (Rarity/Mutasi Diatas)"
 end)
 
--- TOMBOL UNFAVORITE ALL FISH
 local UnfavBtn = Instance.new("TextButton")
 UnfavBtn.Parent = FavoritePage
 UnfavBtn.Size = UDim2.new(1,0,0,38)
@@ -1917,11 +1984,11 @@ FloatCorner.Parent = Float
 
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
-		KeyFrame.Visible = not KeyFrame.Visible
-		Main.Visible = false
+        KeyFrame.Visible = not KeyFrame.Visible
+        Main.Visible = false
 	else
-		Main.Visible = not Main.Visible
-		KeyFrame.Visible = false
+        Main.Visible = not Main.Visible
+        KeyFrame.Visible = false
 	end
 end)
 
