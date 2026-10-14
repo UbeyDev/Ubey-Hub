@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | Cleaned Version (Timeout 15s)
+-- UBEY HUB V3 | Cleaned & Fixed Version (Timeout 15s)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -199,8 +199,14 @@ SubmitKeyBtn.MouseButton1Click:Connect(function()
 							year = tonumber(year), month = tonumber(month), day = tonumber(day),
 							hour = tonumber(hour), min = tonumber(min), sec = tonumber(sec)
 						})
-						local currentTime = os.time()
+						
+						-- DIPERBAIKI: Menggunakan UTC time (os.date("!*t")) agar tidak konflik zona waktu device user
+						local currentTime = os.time(os.date("!*t"))
 						local hoursPassed = os.difftime(currentTime, createdTime) / 3600
+						
+						if hoursPassed < 0 then
+							hoursPassed = 0
+						end
 						
 						if hoursPassed > 24 then
 							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50)
@@ -430,7 +436,6 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
--- Logika Auto Fishing (Di Tempat Saja) dengan timeout 15 detik
 local function RunAutoFishingLogic()
 	task.spawn(function()
 		while getgenv().AutoFishingEventRunning do
@@ -453,7 +458,6 @@ local function RunAutoFishingLogic()
 							end
 						end)
 						
-						-- Waktu tunggu (timeout) diset 15 detik
 						local start = tick()
 						while not hooked and getgenv().AutoFishingEventRunning do
 							if tick() - start > 15 then break end
@@ -462,9 +466,9 @@ local function RunAutoFishingLogic()
 						if conn then conn:Disconnect() end
 						
 						if hooked and getgenv().AutoFishingEventRunning then
-							task.wait(1.3) -- Jeda waktu sebelum menarik ikan
+							task.wait(1.3)
 							remoteFolder.MiniGame:FireServer(true)
-							task.wait(0.9) -- Jeda waktu sebelum melempar pancingan berikutnya
+							task.wait(0.9)
 						end
 					end
 				else
