@@ -48,12 +48,12 @@
         if (userToken === SECRET_TOKEN) {
             container.innerHTML = `
                 <h1>Ubey Hub V3 - Key Generator</h1>
-                <p style="font-size: 13px; color: #8b949e;">Klik tombol di bawah untuk membuat dan mendaftarkan Key unik kamu.</p>
-                <button class="btn" id="gen-btn" onclick="generateAndSaveKey()">Ambil & Simpan Key Unik</button>
+                <p style="font-size: 13px; color: #8b949e;">Klik tombol di bawah untuk membuat Key baru yang berlaku selama 24 jam.</p>
+                <button class="btn" id="gen-btn" onclick="generateAndSaveKey()">Generate Key Baru</button>
                 <p id="status-msg"></p>
             `;
             
-            // Cek apakah browser ini sudah pernah mengambil key
+            // Cek apakah ada key aktif yang tersimpan
             checkExistingKey();
         } else {
             container.innerHTML = `
@@ -62,21 +62,35 @@
             `;
         }
 
-        // Fungsi mengecek apakah key sudah ada di memori browser
+        // Fungsi mengecek status key di browser
         function checkExistingKey() {
             const savedKey = localStorage.getItem('ubey_user_key');
-            if (savedKey) {
-                const btn = document.getElementById('gen-btn');
-                const statusMsg = document.getElementById('status-msg');
+            const savedTime = localStorage.getItem('ubey_key_time');
+            
+            if (savedKey && savedTime) {
+                const now = new Date().getTime();
+                const hoursPassed = (now - parseInt(savedTime)) / (1000 * 60 * 60);
                 
-                btn.disabled = true;
-                btn.innerText = "Key Sudah Diambil!";
-                statusMsg.style.color = "#3fb950";
-                statusMsg.innerHTML = "✅ Key Anda: <br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + savedKey + "</b>";
+                // Jika key belum lewat dari 24 jam, tampilkan key lama yang masih aktif
+                if (hoursPassed < 24) {
+                    const btn = document.getElementById('gen-btn');
+                    const statusMsg = document.getElementById('status-msg');
+                    
+                    if (btn) btn.style.display = "none";
+                    if (statusMsg) {
+                        statusMsg.style.color = "#3fb950";
+                        statusMsg.innerHTML = "✅ Key Anda Masih Aktif:<br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + savedKey + "</b><br><span style='font-size:11px; color:#8b949e;'>Key ini berlaku selama 24 jam sejak pertama diambil.</span>";
+                    }
+                    return;
+                }
             }
+            
+            // Jika sudah lewat 24 jam atau belum ada, hapus data lama agar siap buat baru
+            localStorage.removeItem('ubey_user_key');
+            localStorage.removeItem('ubey_key_time');
         }
 
-        // Fungsi Pembuat Karakter Acak Unik (Cth: UBEY-V3-A9X2K7L1P)
+        // Fungsi Pembuat Karakter Acak Unik
         function generateRandomString(length) {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let result = '';
@@ -89,18 +103,11 @@
         async function generateAndSaveKey() {
             const btn = document.getElementById('gen-btn');
             const statusMsg = document.getElementById('status-msg');
-            
-            // Mencegah klik ganda jika sudah ada key
-            if (localStorage.getItem('ubey_user_key')) {
-                checkExistingKey();
-                return;
-            }
 
             btn.disabled = true;
             statusMsg.style.color = "#e3b341";
-            statusMsg.innerText = "⏳ Sedang mendaftarkan key unik ke database...";
+            statusMsg.innerText = "⏳ Sedang mendaftarkan key baru ke database...";
 
-            // Hasilkan Key Acak Unik Setiap Klik
             const randomCode = generateRandomString(10);
             const generatedKey = "UBEY-V3-" + randomCode;
 
@@ -111,8 +118,7 @@
                     .insert([
                         { 
                             key_value: generatedKey, 
-                            status: "active",
-                            created_at: new Date().toISOString() 
+                            status: "active"
                         }
                     ]);
 
@@ -120,18 +126,18 @@
                     console.error("Supabase Error:", error);
                     statusMsg.style.color = "#f85149";
                     statusMsg.innerText = "⚠️ Gagal Simpan DB: " + error.message;
-                    btn.disabled = false; // Buka tombol lagi jika gagal
+                    btn.disabled = false;
                 } else {
-                    // Simpan ke memori browser agar tidak bisa spam
+                    // Simpan key dan waktu saat ini di memori browser (berlaku 24 jam)
                     localStorage.setItem('ubey_user_key', generatedKey);
+                    localStorage.setItem('ubey_key_time', new Date().getTime().toString());
 
-                    btn.innerText = "Key Sudah Diambil!";
+                    btn.style.display = "none";
                     statusMsg.style.color = "#3fb950";
-                    statusMsg.innerHTML = "✅ Key Unik Berhasil Dibuat!<br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + generatedKey + "</b>";
+                    statusMsg.innerHTML = "✅ Key Baru Berhasil Dibuat!<br><b style='font-size: 17px; margin-top:8px; display:inline-block; color:#58a6ff;'>" + generatedKey + "</b>";
                     
                     if (navigator.clipboard) {
                         navigator.clipboard.writeText(generatedKey);
-                        alert("Key unik berhasil dibuat dan disalin:\n" + generatedKey);
                     }
                 }
 
