@@ -1585,7 +1585,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 8. TELEPORT PLAYER PAGE (PERBAIKAN STREAMING & SPOT)
+-- 8. TELEPORT PLAYER PAGE (SINGLE CLICK / INSTANT TP)
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1618,6 +1618,23 @@ ListLayout.Parent = PlayerListContainer
 ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ListLayout.Padding = UDim.new(0, 5)
 
+local function GetPlayerTargetCFrame(targetPlr)
+	if targetPlr.Character then
+		local hrp = targetPlr.Character:FindFirstChild("HumanoidRootPart") or targetPlr.Character:FindFirstChild("Head")
+		if hrp then return hrp.CFrame end
+		if targetPlr.Character.PrimaryPart then return targetPlr.Character.PrimaryPart.CFrame end
+	end
+	
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") and (obj.Name == targetPlr.Name or obj.Name == targetPlr.DisplayName) then
+			local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj.PrimaryPart
+			if hrp then return hrp.CFrame end
+		end
+	end
+	
+	return nil
+end
+
 local function ScanAndDisplayPlayers()
 	for _, child in ipairs(PlayerListContainer:GetChildren()) do
 		if child:IsA("TextButton") then
@@ -1640,42 +1657,39 @@ local function ScanAndDisplayPlayers()
 			pBtn.MouseButton1Click:Connect(function()
 				task.spawn(function()
 					pcall(function()
-						local targetChar = plr.Character
 						local myChar = LocalPlayer.Character
 						local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+						if not myHrp then return end
 						
-						if myHrp and targetChar then
-							-- Cari koordinat target (baik dari HRP atau Pivot)
-							local targetCFrame = nil
-							local targetHrp = targetChar:FindFirstChild("HumanoidRootPart") or targetChar:FindFirstChild("Head")
-							
-							if targetHrp then
-								targetCFrame = targetHrp.CFrame
-							elseif targetChar.GetPivot then
-								targetCFrame = targetChar:GetPivot()
+						pBtn.Text = "⏳ TP ke " .. plr.Name .. "..."
+						
+						local targetCF = GetPlayerTargetCFrame(plr)
+						
+						if targetCF then
+							if LocalPlayer.RequestStreamAroundAsync then
+								pcall(function()
+									LocalPlayer:RequestStreamAroundAsync(targetCF.Position)
+								end)
 							end
 							
-							if targetCFrame then
-								-- Paksa client memuat/load chunk tempat teman berada
-								if LocalPlayer.RequestStreamAroundAsync then
-									pcall(function()
-										LocalPlayer:RequestStreamAroundAsync(targetCFrame.Position)
-									end)
-								end
-								
-								-- Hentikan pergerakan karakter agar tidak jatuh saat teleportasi jauh
-								myHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-								myHrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-								myHrp.Anchored = true
-								
-								-- Pindahkan ke posisi target
-								myHrp.CFrame = targetCFrame + Vector3.new(0, 3, 0)
-								
-								-- Tahan posisi sebentar lalu unanchor agar tempat baru sempat dirender
-								task.wait(0.3)
-								myHrp.Anchored = false
+							myHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+							myHrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+							myHrp.CFrame = targetCF + Vector3.new(0, 3, 0)
+							myHrp.Anchored = true
+							task.wait(0.2)
+							
+							local finalCF = GetPlayerTargetCFrame(plr)
+							if finalCF then
+								myHrp.CFrame = finalCF + Vector3.new(0, 3, 0)
 							end
+							
+							myHrp.Anchored = false
+						else
+							pBtn.Text = "❌ Teman tidak ditemukan di map!"
+							task.wait(1)
 						end
+						
+						pBtn.Text = "👤 " .. plr.Name .. " (" .. plr.DisplayName .. ")"
 					end)
 				end)
 			end)
@@ -1831,7 +1845,6 @@ Instance.new("UICorner", AntiLagBtn)
 
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function()
-		-- Pengaturan Lighting Ekstrem
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
 		Lighting.Brightness = 1
@@ -1845,7 +1858,6 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end
 		end)
 
-		-- Pembersihan Workspace & Material Objek
 		for _, v in ipairs(Workspace:GetDescendants()) do
 			pcall(function()
 				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Explosion") then
@@ -1860,7 +1872,6 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end)
 		end
 
-		-- Matikan Dekorasi Terrain / Rumput & Air
 		pcall(function()
 			local terrain = Workspace:FindFirstChildOfClass("Terrain")
 			if terrain then
@@ -1874,7 +1885,6 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end
 		end)
 
-		-- Pantau objek baru agar otomatis dibersihkan saat AFK lama
 		Workspace.DescendantAdded:Connect(function(v)
 			pcall(function()
 				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
@@ -1889,13 +1899,11 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end)
 		end)
 
-		-- Task berkala untuk membersihkan memori (Garbage Collector)
 		task.spawn(function()
 			while true do
 				pcall(function()
 					game:GetService("ContentProvider"):PreloadAsync({})
 					if gcinfo then
-						-- Membantu stabilitas memori HP saat AFK berjam-jam
 					end
 				end)
 				task.wait(60)
