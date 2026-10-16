@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + WEBHOOK FILTER
+-- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + WEBHOOK & FILTER
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
