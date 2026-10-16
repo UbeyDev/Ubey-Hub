@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + WEBHOOK & FILTER
+-- UBEY HUB V3 | FINAL FULL FEATURES + WEBHOOK RARITY & MUTATION DROPDOWN
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -32,7 +32,18 @@ getgenv().UbeyConfig = {
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
 	WebhookUrl = "",
-	WebhookMinRarity = "Legendary"
+	WebhookRarities = {
+		["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
+		["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
+	},
+	WebhookMutations = {
+		["Galaxy"] = true, ["Corrupt"] = true, ["Gemstone"] = true, ["Ghost"] = true,
+		["Lightning"] = true, ["Fairy Dust"] = true, ["Gold"] = true, ["Midnight"] = true,
+		["Radioactive"] = true, ["Stone"] = true, ["Holographic"] = true, ["Albino"] = true,
+		["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = false, ["Elemental"] = true,
+		["Festive"] = true, ["8-Bit"] = true, ["Bloodmoon"] = true, ["Abyssal"] = true,
+		["Strawberry"] = true, ["Void"] = true, ["Cupid"] = true
+	}
 }
 
 local function SaveConfig()
@@ -58,7 +69,8 @@ local function LoadConfig()
 				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
 				if data.WebhookEnabled ~= nil then getgenv().UbeyConfig.WebhookEnabled = data.WebhookEnabled end
 				if data.WebhookUrl then getgenv().UbeyConfig.WebhookUrl = data.WebhookUrl end
-				if data.WebhookMinRarity then getgenv().UbeyConfig.WebhookMinRarity = data.WebhookMinRarity end
+				if data.WebhookRarities then getgenv().UbeyConfig.WebhookRarities = data.WebhookRarities end
+				if data.WebhookMutations then getgenv().UbeyConfig.WebhookMutations = data.WebhookMutations end
 			end
 		end
 	end)
@@ -75,7 +87,18 @@ local function ResetConfig()
 			TargetGroupId = 7019573,
 			WebhookEnabled = false,
 			WebhookUrl = "",
-			WebhookMinRarity = "Legendary"
+			WebhookRarities = {
+				["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
+				["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
+			},
+			WebhookMutations = {
+				["Galaxy"] = true, ["Corrupt"] = true, ["Gemstone"] = true, ["Ghost"] = true,
+				["Lightning"] = true, ["Fairy Dust"] = true, ["Gold"] = true, ["Midnight"] = true,
+				["Radioactive"] = true, ["Stone"] = true, ["Holographic"] = true, ["Albino"] = true,
+				["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = false, ["Elemental"] = true,
+				["Festive"] = true, ["8-Bit"] = true, ["Bloodmoon"] = true, ["Abyssal"] = true,
+				["Strawberry"] = true, ["Void"] = true, ["Cupid"] = true
+			}
 		}
 		if delfile and isfile then
 			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
@@ -107,7 +130,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM
+-- DISCORD FILTERED WEBHOOK SYSTEM (DENGAN FILTER RARITY & MUTASI)
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 	pcall(function()
@@ -115,23 +138,24 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 		local url = getgenv().UbeyConfig.WebhookUrl
 		if not url or url == "" then return end
 		
-		local rarityRank = {
-			["Common"] = 1,
-			["UnCommon"] = 2,
-			["Rare"] = 3,
-			["Epic"] = 4,
-			["Legendary"] = 5,
-			["Mythical"] = 6,
-			["Secret"] = 7,
-			["Forgotten"] = 8
-		}
+		local matchRarity = false
+		local matchMutation = false
 		
-		local minRaritySetting = getgenv().UbeyConfig.WebhookMinRarity or "Legendary"
-		local currentRank = rarityRank[fishRarity] or 1
-		local minRank = rarityRank[minRaritySetting] or 5
+		for rName, active in pairs(getgenv().UbeyConfig.WebhookRarities) do
+			if active and string.find(string.lower(fishRarity), string.lower(rName)) then
+				matchRarity = true
+				break
+			end
+		end
 		
-		local hasMutation = (fishMutation ~= "" and string.lower(fishMutation) ~= "normal")
-		if currentRank >= minRank or hasMutation then
+		for mName, active in pairs(getgenv().UbeyConfig.WebhookMutations) do
+			if active and string.find(string.lower(fishMutation), string.lower(mName)) then
+				matchMutation = true
+				break
+			end
+		end
+		
+		if matchRarity or matchMutation then
 			local requestFunc = syn and syn.request or http and http.request or request
 			if not requestFunc then return end
 			
@@ -145,7 +169,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 						["fields"] = {
 							{ ["name"] = "Nama Ikan", ["value"] = fishName, ["inline"] = true },
 							{ ["name"] = "Rarity", ["value"] = fishRarity, ["inline"] = true },
-							{ ["name"] = "Mutasi", ["value"] = hasMutation and fishMutation or "Normal", ["inline"] = true }
+							{ ["name"] = "Mutasi", ["value"] = (fishMutation ~= "" and fishMutation or "Normal"), ["inline"] = true }
 						},
 						["footer"] = { ["text"] = "Ubey Hub V3 Auto Tracker" },
 						["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -164,7 +188,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE (WITH ANTI-CACHE)
+-- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
 ------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
@@ -208,10 +232,8 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 
--- AUTO DETECT CORE EVENT STATE
 getgenv().AutoDetectCoreEvent = false
 
--- LOOP SPOT TIMER STATES
 getgenv().LoopSpotEnabled = false
 getgenv().SpotLoopConfig = {
 	["Spot Mancing Jembatan"] = { Enabled = false, Timer = "10" },
@@ -219,7 +241,6 @@ getgenv().SpotLoopConfig = {
 	["Spot Mancing Ikan Anomali"] = { Enabled = false, Timer = "10" }
 }
 
--- AUTO FAVORITE STATES
 getgenv().AutoFavoriteRunning = false
 getgenv().FavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
@@ -235,7 +256,6 @@ getgenv().FavMutations = {
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
 
--- AUTO UNFAVORITE FILTER STATES
 getgenv().UnfavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
 	["Legendary"] = false, ["Mythical"] = false, ["Secret"] = false, ["Forgotten"] = false
@@ -250,7 +270,6 @@ getgenv().UnfavMutations = {
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
 
--- DATA KOORDINAT SPOT & SHOP
 local FishingSpots = {
 	["Spot Mancing Jembatan"] = CFrame.new(-6783.74756, 1322.81006, -9757.34473, 0.0899723172, -9.34088291e-08, 0.995944262, 1.76120434e-08, 1, 9.21981638e-08, -0.995944262, 9.24533072e-09, 0.0899723172),
 	["Spot Mancing Core"] = CFrame.new(-9069.33887, 1250.32092, -6510.3374, 0.99812746, -7.96398965e-08, -0.0611686334, 8.05492206e-08, 1, 1.24000188e-08, 0.0611686334, -1.73038845e-08, 0.99812746),
@@ -1355,21 +1374,8 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 2. FAVORITE PAGE
+-- DROPDOWN BUILDER (UNIVERSAL MULTI-SELECT)
 ----------------------------------------------------
-local TitleFav = Instance.new("TextLabel")
-TitleFav.Parent = FavoritePage
-TitleFav.Size = UDim2.new(1,0,0,25)
-TitleFav.BackgroundTransparency = 1
-TitleFav.Text = "⭐ AUTO FAVORITE FILTER"
-TitleFav.TextColor3 = Color3.fromRGB(0,170,255)
-TitleFav.Font = Enum.Font.GothamBold
-TitleFav.TextSize = 13
-
-AddToggle(FavoritePage, "AUTO FAVORITE", function(v)
-	getgenv().AutoFavoriteRunning = v
-end)
-
 local function CreateMultiSelectDropdown(parent, titleText, optionsTable, targetStateTable)
 	local container = Instance.new("Frame")
 	container.Parent = parent
@@ -1447,6 +1453,7 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 			btn.Text = "  " .. optName .. (allState and "  [✓]" or "  [ ]")
 		end
 		UpdateSummary()
+		SaveConfig()
 	end)
 
 	for _, optName in ipairs(optionsTable) do
@@ -1468,6 +1475,7 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 			optBtn.BackgroundColor3 = targetStateTable[optName] and Color3.fromRGB(0,120,200) or Color3.fromRGB(40,40,50)
 			optBtn.Text = "  " .. optName .. (targetStateTable[optName] and "  [✓]" or "  [ ]")
 			UpdateSummary()
+			SaveConfig()
 		end)
 	end
 
@@ -1483,6 +1491,22 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 		)
 	end)
 end
+
+----------------------------------------------------
+-- 2. FAVORITE PAGE
+----------------------------------------------------
+local TitleFav = Instance.new("TextLabel")
+TitleFav.Parent = FavoritePage
+TitleFav.Size = UDim2.new(1,0,0,25)
+TitleFav.BackgroundTransparency = 1
+TitleFav.Text = "⭐ AUTO FAVORITE FILTER"
+TitleFav.TextColor3 = Color3.fromRGB(0,170,255)
+TitleFav.Font = Enum.Font.GothamBold
+TitleFav.TextSize = 13
+
+AddToggle(FavoritePage, "AUTO FAVORITE", function(v)
+	getgenv().AutoFavoriteRunning = v
+end)
 
 local rarityList = {"Common", "UnCommon", "Rare", "Epic", "Legendary", "Mythical", "Secret", "Forgotten"}
 local mutationList = {
@@ -2202,6 +2226,10 @@ WebhookBox.FocusLost:Connect(function()
 	getgenv().UbeyConfig.WebhookUrl = WebhookBox.Text
 	SaveConfig()
 end)
+
+-- Pasang Dropdown Pengaturan Filter Rarity & Mutasi Webhook di Menu Settings
+CreateMultiSelectDropdown(SettingsPage, "⚙️ Webhook Filter Rarity", rarityList, getgenv().UbeyConfig.WebhookRarities)
+CreateMultiSelectDropdown(SettingsPage, "⚙️ Webhook Filter Mutasi", mutationList, getgenv().UbeyConfig.WebhookMutations)
 
 local AutoExecToggleBtn = Instance.new("TextButton")
 AutoExecToggleBtn.Parent = SettingsPage
