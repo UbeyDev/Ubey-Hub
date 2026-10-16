@@ -1585,7 +1585,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 8. TELEPORT PLAYER PAGE (SINGLE CLICK / INSTANT TP)
+-- 8. TELEPORT PLAYER PAGE (FIXED STREAMING DISTANCE)
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1622,14 +1622,12 @@ local function GetPlayerTargetCFrame(targetPlr)
 	if targetPlr.Character then
 		local hrp = targetPlr.Character:FindFirstChild("HumanoidRootPart") or targetPlr.Character:FindFirstChild("Head")
 		if hrp then return hrp.CFrame end
-		if targetPlr.Character.PrimaryPart then return targetPlr.Character.PrimaryPart.CFrame end
 	end
 	
-	for _, obj in ipairs(Workspace:GetDescendants()) do
-		if obj:IsA("Model") and (obj.Name == targetPlr.Name or obj.Name == targetPlr.DisplayName) then
-			local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj.PrimaryPart
-			if hrp then return hrp.CFrame end
-		end
+	local foundModel = Workspace:FindFirstChild(targetPlr.Name)
+	if foundModel then
+		local hrp = foundModel:FindFirstChild("HumanoidRootPart") or foundModel:FindFirstChild("Head")
+		if hrp then return hrp.CFrame end
 	end
 	
 	return nil
@@ -1665,6 +1663,10 @@ local function ScanAndDisplayPlayers()
 						
 						local targetCF = GetPlayerTargetCFrame(plr)
 						
+						if not targetCF and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+							targetCF = plr.Character.HumanoidRootPart.CFrame
+						end
+						
 						if targetCF then
 							if LocalPlayer.RequestStreamAroundAsync then
 								pcall(function()
@@ -1676,7 +1678,7 @@ local function ScanAndDisplayPlayers()
 							myHrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 							myHrp.CFrame = targetCF + Vector3.new(0, 3, 0)
 							myHrp.Anchored = true
-							task.wait(0.2)
+							task.wait(0.3)
 							
 							local finalCF = GetPlayerTargetCFrame(plr)
 							if finalCF then
@@ -1684,9 +1686,11 @@ local function ScanAndDisplayPlayers()
 							end
 							
 							myHrp.Anchored = false
+							pBtn.Text = "✅ Berhasil TP ke " .. plr.Name
+							task.wait(1.5)
 						else
-							pBtn.Text = "❌ Teman tidak ditemukan di map!"
-							task.wait(1)
+							pBtn.Text = "❌ Gagal: Teman sedang Loading/Reset!"
+							task.wait(1.5)
 						end
 						
 						pBtn.Text = "👤 " .. plr.Name .. " (" .. plr.DisplayName .. ")"
