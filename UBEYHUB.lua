@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM (PREMIUM EDITION)
+-- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + AUTO EVENT CORE & RETURN
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -12,6 +12,7 @@ local TeleportService = game:GetService("TeleportService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -97,7 +98,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
+-- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE (WITH ANTI-CACHE)
 ------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
@@ -114,7 +115,7 @@ pcall(function()
 	if queue_on_teleport and getgenv().UbeyConfig.AutoExecuteEnabled then
 		queue_on_teleport([[
 			task.wait(3)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/UbeyDev/Ubey-Hub/refs/heads/main/UBEY-HUB-NYOBA.lua"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/UbeyDev/Ubey-Hub/refs/heads/main/UBEY-HUB-NYOBA.lua?v=" .. math.random(1, 100000)))()
 		]])
 	end
 end)
@@ -140,6 +141,17 @@ getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
+
+-- AUTO DETECT CORE EVENT STATE
+getgenv().AutoDetectCoreEvent = false
+
+-- LOOP SPOT TIMER STATES
+getgenv().LoopSpotEnabled = false
+getgenv().SpotLoopConfig = {
+	["Spot Mancing Jembatan"] = { Enabled = false, Timer = "10" },
+	["Spot Mancing Core"] = { Enabled = false, Timer = "10" },
+	["Spot Mancing Ikan Anomali"] = { Enabled = false, Timer = "10" }
+}
 
 -- AUTO FAVORITE STATES
 getgenv().AutoFavoriteRunning = false
@@ -379,6 +391,43 @@ Gui.Name = "UbeyHub"
 Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
+-- FUNGSI DRAGGABLE UNIVERSAL (MOBILE & PC)
+local function MakeDraggable(guiObject, handleObject)
+	handleObject = handleObject or guiObject
+	local dragging, dragInput, dragStart, startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	handleObject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = guiObject.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	handleObject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
 ----------------------------------------------------
 -- KEY SYSTEM UI
 ----------------------------------------------------
@@ -388,6 +437,8 @@ KeyFrame.Size = UDim2.new(0,380,0,185)
 KeyFrame.Position = UDim2.new(0.5,-190,0.5,-92)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 KeyFrame.Visible = false
+
+MakeDraggable(KeyFrame)
 
 local KeyCorner = Instance.new("UICorner")
 KeyCorner.CornerRadius = UDim.new(0,15)
@@ -459,6 +510,9 @@ Main.Visible = false
 Main.Size = UDim2.new(0,550,0,320)
 Main.Position = UDim2.new(0.5,-275,0.5,-160)
 Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
+Main.ClipsDescendants = true
+
+MakeDraggable(Main)
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0,18)
@@ -468,10 +522,47 @@ local MainStroke = Instance.new("UIStroke")
 MainStroke.Parent = Main
 MainStroke.Color = Color3.fromRGB(0,170,255)
 
+-- CONTROLS (MINIMIZE & CLOSE)
+local ControlsFrame = Instance.new("Frame")
+ControlsFrame.Parent = Main
+ControlsFrame.Size = UDim2.new(0, 65, 0, 30)
+ControlsFrame.Position = UDim2.new(1, -70, 0, 5)
+ControlsFrame.BackgroundTransparency = 1
+ControlsFrame.ZIndex = 10
+
+local ControlLayout = Instance.new("UIListLayout")
+ControlLayout.Parent = ControlsFrame
+ControlLayout.FillDirection = Enum.FillDirection.Horizontal
+ControlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+ControlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+ControlLayout.Padding = UDim.new(0, 5)
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Parent = ControlsFrame
+MinimizeBtn.Size = UDim2.new(0, 26, 0, 26)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 18
+MinimizeBtn.ZIndex = 11
+Instance.new("UICorner", MinimizeBtn).CornerRadius = UDim.new(0, 6)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = ControlsFrame
+CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.ZIndex = 11
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
 local PingLabel = Instance.new("TextLabel")
 PingLabel.Parent = Main
-PingLabel.Size = UDim2.new(0,200,0,25)
-PingLabel.Position = UDim2.new(1,-210,0,5)
+PingLabel.Size = UDim2.new(0,150,0,25)
+PingLabel.Position = UDim2.new(1,-225,0,7)
 PingLabel.BackgroundTransparency = 1
 PingLabel.Text = "Ping: Menghitung..."
 PingLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
@@ -525,6 +616,34 @@ HubSubTitle.Text = "👑 Premium"
 HubSubTitle.Font = Enum.Font.GothamBold
 HubSubTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
 HubSubTitle.TextSize = 12
+
+local Content = Instance.new("Frame")
+Content.Parent = Main
+Content.Position = UDim2.new(0,150,0,30)
+Content.Size = UDim2.new(1,-160,1,-40)
+Content.BackgroundTransparency = 1
+
+local isMinimized = false
+local normalSize = UDim2.new(0,550,0,320)
+local minimizedSize = UDim2.new(0,550,0,38)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	MinimizeBtn.Text = isMinimized and "+" or "-"
+	
+	Main:TweenSize(
+		isMinimized and minimizedSize or normalSize,
+		Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true
+	)
+	
+	Sidebar.Visible = not isMinimized
+	Content.Visible = not isMinimized
+	PingLabel.Visible = not isMinimized
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+	Main.Visible = false
+end)
 
 local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
@@ -590,12 +709,6 @@ for _,v in ipairs({HomeBtn, FavoriteBtn, GalatamaBtn, TeleportShopBtn, SummitBtn
 	local c = Instance.new("UICorner")
 	c.Parent = v
 end
-
-local Content = Instance.new("Frame")
-Content.Parent = Main
-Content.Position = UDim2.new(0,150,0,30)
-Content.Size = UDim2.new(1,-160,1,-40)
-Content.BackgroundTransparency = 1
 
 local function MakePage()
 	local f = Instance.new("ScrollingFrame")
@@ -800,7 +913,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE (SISTEM AUTO FISHING BARU)
+-- 1. FISHING & SELL PAGE
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -815,7 +928,7 @@ local SpotLabel = Instance.new("TextLabel")
 SpotLabel.Parent = FishingPage
 SpotLabel.Size = UDim2.new(1,0,0,25)
 SpotLabel.BackgroundTransparency = 1
-SpotLabel.Text = "Pilih Lokasi: " .. getgenv().SelectedFishingSpot
+SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
 SpotLabel.TextColor3 = Color3.new(1,1,1)
 SpotLabel.Font = Enum.Font.Gotham
 SpotLabel.TextSize = 12
@@ -824,7 +937,7 @@ local ChangeSpotBtn = Instance.new("TextButton")
 ChangeSpotBtn.Parent = FishingPage
 ChangeSpotBtn.Size = UDim2.new(1,0,0,32)
 ChangeSpotBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
-ChangeSpotBtn.Text = "Ganti Spot (Jembatan -> Core -> Anomali)"
+ChangeSpotBtn.Text = "Ganti Spot Manual (Jembatan -> Core -> Anomali)"
 ChangeSpotBtn.TextColor3 = Color3.new(1,1,1)
 ChangeSpotBtn.Font = Enum.Font.GothamMedium
 ChangeSpotBtn.TextSize = 12
@@ -839,7 +952,7 @@ end
 ChangeSpotBtn.MouseButton1Click:Connect(function()
 	spotIndex = spotIndex % #spotList + 1
 	getgenv().SelectedFishingSpot = spotList[spotIndex]
-	SpotLabel.Text = "Pilih Lokasi: " .. getgenv().SelectedFishingSpot
+	SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
 	getgenv().UbeyConfig.SelectedSpot = getgenv().SelectedFishingSpot
 	SaveConfig()
 end)
@@ -1002,7 +1115,191 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- 2. FAVORITE PAGE (AUTO FAVORITE & UNFAVORITE)
+-- SYSTEM AUTO DETEKSI EVENT CORE + AUTO RETURN
+----------------------------------------------------
+local DividerCore = Instance.new("Frame")
+DividerCore.Parent = FishingPage
+DividerCore.Size = UDim2.new(1,0,0,2)
+DividerCore.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleCoreEvent = Instance.new("TextLabel")
+TitleCoreEvent.Parent = FishingPage
+TitleCoreEvent.Size = UDim2.new(1,0,0,25)
+TitleCoreEvent.BackgroundTransparency = 1
+TitleCoreEvent.Text = "💎 AUTO DETECT WITHERING CORE EVENT"
+TitleCoreEvent.TextColor3 = Color3.fromRGB(255,200,0)
+TitleCoreEvent.Font = Enum.Font.GothamBold
+TitleCoreEvent.TextSize = 13
+
+AddToggle(FishingPage, "Auto Teleport Saat Event Core Berlangsung", function(v)
+	getgenv().AutoDetectCoreEvent = v
+end)
+
+-- LOGIKA SCANNER EVENT CORE & OTOMATIS KEMBALI KE SPOT AWAL
+local SavedPreviousSpot = nil
+local IsAtCoreEvent = false
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoDetectCoreEvent then
+			pcall(function()
+				local eventCoreObj = Workspace:FindFirstChild("EventCore")
+				if eventCoreObj then
+					local timerLabel = eventCoreObj:FindFirstChild("Timer", true) or eventCoreObj:FindFirstChild("Countdown", true)
+					if timerLabel and timerLabel:IsA("TextLabel") then
+						local textContent = string.lower(timerLabel.Text)
+						
+						-- JIKA EVENT SEDANG BERLANGSUNG
+						if string.find(textContent, "sedang berlangsung") or string.find(textContent, "berlangsung") then
+							if not IsAtCoreEvent then
+								SavedPreviousSpot = getgenv().SelectedFishingSpot
+								IsAtCoreEvent = true
+							end
+							
+							getgenv().SelectedFishingSpot = "Spot Mancing Core"
+							if SpotLabel then
+								SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ EVENT AKTIFF!)"
+							end
+							
+							local character = LocalPlayer.Character
+							local hrp = character and character:FindFirstChild("HumanoidRootPart")
+							local targetCFrame = FishingSpots["Spot Mancing Core"]
+							
+							if hrp and targetCFrame then
+								if (hrp.Position - targetCFrame.Position).Magnitude > 20 then
+									hrp.CFrame = targetCFrame
+								end
+							end
+							
+						-- JIKA EVENT CORE SELESAI
+						else
+							if IsAtCoreEvent then
+								IsAtCoreEvent = false
+								
+								if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
+									getgenv().SelectedFishingSpot = SavedPreviousSpot
+									if SpotLabel then
+										SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Return)"
+									end
+									
+									local character = LocalPlayer.Character
+									local hrp = character and character:FindFirstChild("HumanoidRootPart")
+									local prevCFrame = FishingSpots[SavedPreviousSpot]
+									
+									if hrp and prevCFrame then
+										hrp.CFrame = prevCFrame
+									end
+								end
+							end
+						end
+					end
+				end
+			end)
+		end
+		task.wait(2)
+	end
+end)
+
+----------------------------------------------------
+-- SYSTEM AUTO ROTASI / LOOP SPOT MANCING BERDASARKAN WAKTU
+----------------------------------------------------
+local DividerLoop = Instance.new("Frame")
+DividerLoop.Parent = FishingPage
+DividerLoop.Size = UDim2.new(1,0,0,2)
+DividerLoop.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleLoop = Instance.new("TextLabel")
+TitleLoop.Parent = FishingPage
+TitleLoop.Size = UDim2.new(1,0,0,25)
+TitleLoop.BackgroundTransparency = 1
+TitleLoop.Text = "⏳ ROTASI AUTO SPOT MANCING (TIMER)"
+TitleLoop.TextColor3 = Color3.fromRGB(0,255,170)
+TitleLoop.Font = Enum.Font.GothamBold
+TitleLoop.TextSize = 13
+
+AddToggle(FishingPage, "Aktifkan Loop Spot Mancing (Timer)", function(v)
+	getgenv().LoopSpotEnabled = v
+end)
+
+local function CreateSpotTimerSetting(parent, spotName)
+	local frame = Instance.new("Frame")
+	frame.Parent = parent
+	frame.Size = UDim2.new(1,0,0,35)
+	frame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	Instance.new("UICorner", frame)
+
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Parent = frame
+	toggleBtn.Size = UDim2.new(0.65,0,1,0)
+	toggleBtn.BackgroundTransparency = 1
+	toggleBtn.Text = "  " .. spotName .. " [OFF]"
+	toggleBtn.TextColor3 = Color3.new(1,1,1)
+	toggleBtn.Font = Enum.Font.Gotham
+	toggleBtn.TextSize = 11
+	toggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+	local timeBox = Instance.new("TextBox")
+	timeBox.Parent = frame
+	timeBox.Size = UDim2.new(0.3, -5, 0, 25)
+	timeBox.Position = UDim2.new(0.7, 0, 0, 5)
+	timeBox.BackgroundColor3 = Color3.fromRGB(45,45,55)
+	timeBox.Text = getgenv().SpotLoopConfig[spotName].Timer
+	timeBox.PlaceholderText = "Menit"
+	timeBox.TextColor3 = Color3.fromRGB(0,170,255)
+	timeBox.Font = Enum.Font.GothamBold
+	timeBox.TextSize = 11
+	Instance.new("UICorner", timeBox)
+
+	toggleBtn.MouseButton1Click:Connect(function()
+		local cur = not getgenv().SpotLoopConfig[spotName].Enabled
+		getgenv().SpotLoopConfig[spotName].Enabled = cur
+		toggleBtn.Text = "  " .. spotName .. (cur and " [ON]" or " [OFF]")
+		toggleBtn.TextColor3 = cur and Color3.fromRGB(0,255,150) or Color3.new(1,1,1)
+	end)
+
+	timeBox.FocusLost:Connect(function()
+		getgenv().SpotLoopConfig[spotName].Timer = timeBox.Text
+	end)
+end
+
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Jembatan")
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Core")
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Ikan Anomali")
+
+task.spawn(function()
+	local spotOrder = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+	while true do
+		if getgenv().LoopSpotEnabled and not getgenv().AutoDetectCoreEvent then
+			for _, name in ipairs(spotOrder) do
+				local cfg = getgenv().SpotLoopConfig[name]
+				if getgenv().LoopSpotEnabled and cfg and cfg.Enabled then
+					getgenv().SelectedFishingSpot = name
+					SpotLabel.Text = "Lokasi Saat Ini: " .. name
+					
+					pcall(function()
+						local character = LocalPlayer.Character
+						local hrp = character and character:FindFirstChild("HumanoidRootPart")
+						local targetCFrame = FishingSpots[name]
+						if hrp and targetCFrame then
+							hrp.CFrame = targetCFrame
+						end
+					end)
+					
+					local duration = (tonumber(cfg.Timer) or 10) * 60
+					local timerStart = tick()
+					
+					while getgenv().LoopSpotEnabled and cfg.Enabled and (tick() - timerStart < duration) do
+						task.wait(1)
+					end
+				end
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+----------------------------------------------------
+-- 2. FAVORITE PAGE
 ----------------------------------------------------
 local TitleFav = Instance.new("TextLabel")
 TitleFav.Parent = FavoritePage
@@ -1777,7 +2074,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS, CONFIG & CREDITS PAGE
+-- 10. SETTINGS & CREDITS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -1891,7 +2188,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG
+-- FLOATING BUTTON (DAPAT DIGESER DENGAN MULUS DI HP & PC)
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
@@ -1904,32 +2201,14 @@ local FloatCorner = Instance.new("UICorner")
 FloatCorner.CornerRadius = UDim.new(1,0)
 FloatCorner.Parent = Float
 
+MakeDraggable(Float)
+
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
-        KeyFrame.Visible = not KeyFrame.Visible
-        Main.Visible = false
+		KeyFrame.Visible = not KeyFrame.Visible
+		Main.Visible = false
 	else
-        Main.Visible = not Main.Visible
-        KeyFrame.Visible = false
+		Main.Visible = not Main.Visible
+		KeyFrame.Visible = false
 	end
-end)
-
-local dragging = false
-local dragStart, startPos
-
-Float.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch then
-		dragging, dragStart, startPos = true, input.Position, Float.Position
-	end
-end)
-
-UIS.TouchMoved:Connect(function(input)
-	if dragging then
-		local delta = input.Position - dragStart
-		Float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
-UIS.TouchEnded:Connect(function()
-	dragging = false
 end)
