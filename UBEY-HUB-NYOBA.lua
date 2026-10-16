@@ -12,6 +12,7 @@ local TeleportService = game:GetService("TeleportService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -141,10 +142,8 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 
--- AUTO FAVORITE STATES (TERPISAH)
-getgenv().AutoFavoriteRunning = false      -- Toggle Rarity & Mutasi Biasa
-getgenv().AutoFavAnomalyRunning = false   -- Toggle Khusus Ikan Anomali
-
+-- AUTO FAVORITE STATES
+getgenv().AutoFavoriteRunning = false
 getgenv().FavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
 	["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
@@ -157,23 +156,6 @@ getgenv().FavMutations = {
 	["Sandy"] = false, ["Cosmic"] = false, ["Normal"] = false, ["Elemental"] = false,
 	["Festive"] = false, ["8-Bit"] = false, ["Bloodmoon"] = false, ["Abyssal"] = false,
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
-}
-
--- DAFTAR IKAN ANOMALI LENGKAP (12+ Slot)
-getgenv().FavAnomalyFish = {
-	["Ashen Kingfish"] = true,
-	["Mr Money Bags"] = true,
-	["Pyrocoil"] = true,
-	["Stormshell Brute"] = true,
-	["Jellybeam"] = true,
-	["GigaByte"] = true,
-	["Nebula Core"] = true,
-	["Cosmic Ray"] = true,
-	["Iridesca"] = true,
-	["Aether Finch"] = true,
-	["Soreya Zenith"] = true,
-	["Glacier Golem"] = true,
-	["Abyssal Monarch"] = true
 }
 
 -- AUTO UNFAVORITE FILTER STATES
@@ -297,8 +279,7 @@ local function GetServerFishData()
 	return fishDataList
 end
 
--- PROSES AUTO FAVORITE BIASA (RARITY & MUTASI)
-local function ProcessAutoFavoriteRarity()
+local function ProcessAutoFavorite()
 	pcall(function()
 		local tandaiRemote = GetInventoryRemote()
 		if not tandaiRemote then return end
@@ -322,33 +303,6 @@ local function ProcessAutoFavoriteRarity()
 					shouldFav = true
 				end
 			end
-
-			if shouldFav and not fish.IsFavorited then
-				tandaiRemote:FireServer(fish.UUID, true)
-				task.wait(0.12)
-			end
-		end
-	end)
-end
-
--- PROSES AUTO FAVORITE KHUSUS IKAN ANOMALI (TERPISAH)
-local function ProcessAutoFavoriteAnomaly()
-	pcall(function()
-		local tandaiRemote = GetInventoryRemote()
-		if not tandaiRemote then return end
-
-		local serverData = GetServerFishData()
-		for _, fish in ipairs(serverData) do
-			if not getgenv().AutoFavAnomalyRunning then break end
-			
-			local shouldFav = false
-			local fishNameLower = string.lower(fish.Name)
-
-			for anomalyName, active in pairs(getgenv().FavAnomalyFish) do
-				if active and string.find(fishNameLower, string.lower(anomalyName)) then
-					shouldFav = true
-				end
-			end
 			
 			if shouldFav and not fish.IsFavorited then
 				tandaiRemote:FireServer(fish.UUID, true)
@@ -358,14 +312,10 @@ local function ProcessAutoFavoriteAnomaly()
 	end)
 end
 
--- LOOPING BACKGROUND TERPISAH
 task.spawn(function()
 	while true do
 		if getgenv().AutoFavoriteRunning then
-			ProcessAutoFavoriteRarity()
-		end
-		if getgenv().AutoFavAnomalyRunning then
-			ProcessAutoFavoriteAnomaly()
+			ProcessAutoFavorite()
 		end
 		task.wait(2.5)
 	end
@@ -654,7 +604,7 @@ local function MakePage()
 	f.Size = UDim2.new(1,0,1,0)
 	f.BackgroundTransparency = 1
 	f.Visible = false
-	f.CanvasSize = UDim2.new(0,0,7,0) -- Diperpanjang sedikit untuk menampung menu anomali terpisah
+	f.CanvasSize = UDim2.new(0,0,6,0)
 	f.ScrollBarThickness = 4
 	
 	local pad = Instance.new("UIPadding")
@@ -851,7 +801,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE
+-- 1. FISHING & SELL PAGE (SISTEM AUTO FISHING BARU)
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -1053,18 +1003,18 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- 2. FAVORITE PAGE (TERPISAH SEKSINYA)
+-- 2. FAVORITE PAGE (AUTO FAVORITE & UNFAVORITE)
 ----------------------------------------------------
 local TitleFav = Instance.new("TextLabel")
 TitleFav.Parent = FavoritePage
 TitleFav.Size = UDim2.new(1,0,0,25)
 TitleFav.BackgroundTransparency = 1
-TitleFav.Text = "⭐ AUTO FAVORITE (RARITY & MUTASI)"
+TitleFav.Text = "⭐ AUTO FAVORITE FILTER"
 TitleFav.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFav.Font = Enum.Font.GothamBold
 TitleFav.TextSize = 13
 
-AddToggle(FavoritePage, "AUTO FAVORITE (Rarity & Mutasi)", function(v)
+AddToggle(FavoritePage, "AUTO FAVORITE", function(v)
 	getgenv().AutoFavoriteRunning = v
 end)
 
@@ -1188,41 +1138,14 @@ local mutationList = {
 	"Gold", "Midnight", "Radioactive", "Stone", "Holographic", "Albino", "Sandy", "Cosmic",
 	"Elemental", "Festive", "8-Bit", "Bloodmoon", "Abyssal", "Strawberry", "Void", "Cupid"
 }
-local anomalyFishList = {
-	"Ashen Kingfish", "Mr Money Bags", "Pyrocoil", "Stormshell Brute", 
-	"Jellybeam", "GigaByte", "Nebula Core", "Cosmic Ray",
-	"Iridesca", "Aether Finch", "Soreya Zenith", "Glacier Golem", "Abyssal Monarch"
-}
 
 CreateMultiSelectDropdown(FavoritePage, "Fav Filter Rarity", rarityList, getgenv().FavRarities)
 CreateMultiSelectDropdown(FavoritePage, "Fav Filter Mutasi", mutationList, getgenv().FavMutations)
 
--- PEMBATAS SEKSI ANOMALI
 local DividerFav = Instance.new("Frame")
 DividerFav.Parent = FavoritePage
 DividerFav.Size = UDim2.new(1,0,0,2)
-DividerFav.BackgroundColor3 = Color3.fromRGB(255, 64, 214)
-
-local TitleAnomaly = Instance.new("TextLabel")
-TitleAnomaly.Parent = FavoritePage
-TitleAnomaly.Size = UDim2.new(1,0,0,25)
-TitleAnomaly.BackgroundTransparency = 1
-TitleAnomaly.Text = "👾 AUTO FAVORITE KHUSUS IKAN ANOMALI"
-TitleAnomaly.TextColor3 = Color3.fromRGB(255, 64, 214)
-TitleAnomaly.Font = Enum.Font.GothamBold
-TitleAnomaly.TextSize = 13
-
-AddToggle(FavoritePage, "AUTO FAVORITE IKAN ANOMALI", function(v)
-	getgenv().AutoFavAnomalyRunning = v
-end)
-
-CreateMultiSelectDropdown(FavoritePage, "👾 Checklist Ikan Anomali", anomalyFishList, getgenv().FavAnomalyFish)
-
--- PEMBATAS SEKSI UNFAVORITE
-local DividerUnfav = Instance.new("Frame")
-DividerUnfav.Parent = FavoritePage
-DividerUnfav.Size = UDim2.new(1,0,0,2)
-DividerUnfav.BackgroundColor3 = Color3.fromRGB(50,50,65)
+DividerFav.BackgroundColor3 = Color3.fromRGB(50,50,65)
 
 local TitleUnfav = Instance.new("TextLabel")
 TitleUnfav.Parent = FavoritePage
@@ -1870,28 +1793,86 @@ local AntiLagBtn = Instance.new("TextButton")
 AntiLagBtn.Parent = SettingsPage
 AntiLagBtn.Size = UDim2.new(1,0,0,35)
 AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
-AntiLagBtn.Text = "⚡ Aktifkan Anti-Lag (Boost FPS)"
+AntiLagBtn.Text = "⚡ Aktifkan Extreme Anti-Lag (AFK Mode)"
 AntiLagBtn.TextColor3 = Color3.new(1,1,1)
 AntiLagBtn.Font = Enum.Font.GothamBold
-AntiLagBtn.TextSize = 13
+AntiLagBtn.TextSize = 12
 Instance.new("UICorner", AntiLagBtn)
 
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function()
+		-- Pengaturan Lighting Ekstrem
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
+		Lighting.Brightness = 1
 		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-		
-		for _, v in ipairs(workspace:GetDescendants()) do
-			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
-				v.Enabled = false
-			elseif v:IsA("BasePart") then
-				v.Material = Enum.Material.SmoothPlastic
-				v.Reflectance = 0
+
+		pcall(function()
+			for _, v in ipairs(Lighting:GetChildren()) do
+				if v:IsA("PostEffect") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") then
+					v.Enabled = false
+				end
 			end
+		end)
+
+		-- Pembersihan Workspace & Material Objek
+		for _, v in ipairs(Workspace:GetDescendants()) do
+			pcall(function()
+				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Explosion") then
+					v:Destroy()
+				elseif v:IsA("BasePart") then
+					v.Material = Enum.Material.SmoothPlastic
+					v.Reflectance = 0
+					v.CastShadow = false
+				elseif v:IsA("Decal") or v:IsA("Texture") then
+					v:Destroy()
+				end
+			end)
 		end
-		
-		AntiLagBtn.Text = "⚡ Anti-Lag Aktif (Boosted!)"
+
+		-- Matikan Dekorasi Terrain / Rumput & Air
+		pcall(function()
+			local terrain = Workspace:FindFirstChildOfClass("Terrain")
+			if terrain then
+				terrain.WaterWaveSize = 0
+				terrain.WaterWaveSpeed = 0
+				terrain.WaterTransparency = 1
+				terrain.WaterReflectance = 0
+				pcall(function()
+					sethiddenproperty(terrain, "Decoration", false)
+				end)
+			end
+		end)
+
+		-- Pantau objek baru agar otomatis dibersihkan saat AFK lama
+		Workspace.DescendantAdded:Connect(function(v)
+			pcall(function()
+				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+					v:Destroy()
+				elseif v:IsA("BasePart") then
+					v.Material = Enum.Material.SmoothPlastic
+					v.Reflectance = 0
+					v.CastShadow = false
+				elseif v:IsA("Decal") or v:IsA("Texture") then
+					v:Destroy()
+				end
+			end)
+		end)
+
+		-- Task berkala untuk membersihkan memori (Garbage Collector)
+		task.spawn(function()
+			while true do
+				pcall(function()
+					game:GetService("ContentProvider"):PreloadAsync({})
+					if gcinfo then
+						-- Membantu stabilitas memori HP saat AFK berjam-jam
+					end
+				end)
+				task.wait(60)
+			end
+		end)
+
+		AntiLagBtn.Text = "⚡ Extreme Anti-Lag Aktif (Safe for AFK!)"
 		AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
 	end)
 end)
