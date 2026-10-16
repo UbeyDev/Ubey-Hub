@@ -12,7 +12,6 @@ local TeleportService = game:GetService("TeleportService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
-local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -460,6 +459,7 @@ Main.Visible = false
 Main.Size = UDim2.new(0,550,0,320)
 Main.Position = UDim2.new(0.5,-275,0.5,-160)
 Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
+Main.ClipsDescendants = true
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0,18)
@@ -469,10 +469,49 @@ local MainStroke = Instance.new("UIStroke")
 MainStroke.Parent = Main
 MainStroke.Color = Color3.fromRGB(0,170,255)
 
+-- CONTAINER CONTROL BUTTONS (MINIMIZE & CLOSE DI POJOK KANAN ATAS)
+local ControlsFrame = Instance.new("Frame")
+ControlsFrame.Parent = Main
+ControlsFrame.Size = UDim2.new(0, 65, 0, 30)
+ControlsFrame.Position = UDim2.new(1, -70, 0, 5)
+ControlsFrame.BackgroundTransparency = 1
+ControlsFrame.ZIndex = 10
+
+local ControlLayout = Instance.new("UIListLayout")
+ControlLayout.Parent = ControlsFrame
+ControlLayout.FillDirection = Enum.FillDirection.Horizontal
+ControlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+ControlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+ControlLayout.Padding = UDim.new(0, 5)
+
+-- TOMBOL MINIMIZE (-)
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Parent = ControlsFrame
+MinimizeBtn.Size = UDim2.new(0, 26, 0, 26)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 18
+MinimizeBtn.ZIndex = 11
+Instance.new("UICorner", MinimizeBtn).CornerRadius = UDim.new(0, 6)
+
+-- TOMBOL CLOSE (X)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = ControlsFrame
+CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.ZIndex = 11
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
 local PingLabel = Instance.new("TextLabel")
 PingLabel.Parent = Main
-PingLabel.Size = UDim2.new(0,200,0,25)
-PingLabel.Position = UDim2.new(1,-210,0,5)
+PingLabel.Size = UDim2.new(0,150,0,25)
+PingLabel.Position = UDim2.new(1,-225,0,7)
 PingLabel.BackgroundTransparency = 1
 PingLabel.Text = "Ping: Menghitung..."
 PingLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
@@ -526,6 +565,35 @@ HubSubTitle.Text = "👑 Premium"
 HubSubTitle.Font = Enum.Font.GothamBold
 HubSubTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
 HubSubTitle.TextSize = 12
+
+local Content = Instance.new("Frame")
+Content.Parent = Main
+Content.Position = UDim2.new(0,150,0,30)
+Content.Size = UDim2.new(1,-160,1,-40)
+Content.BackgroundTransparency = 1
+
+-- SISTEM MINIMIZE LOGIC
+local isMinimized = false
+local normalSize = UDim2.new(0,550,0,320)
+local minimizedSize = UDim2.new(0,550,0,38)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	MinimizeBtn.Text = isMinimized and "+" or "-"
+	
+	Main:TweenSize(
+		isMinimized and minimizedSize or normalSize,
+		Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true
+	)
+	
+	Sidebar.Visible = not isMinimized
+	Content.Visible = not isMinimized
+	PingLabel.Visible = not isMinimized
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+	Main.Visible = false
+end)
 
 local HomeBtn = Instance.new("TextButton")
 HomeBtn.Parent = Sidebar
@@ -591,12 +659,6 @@ for _,v in ipairs({HomeBtn, FavoriteBtn, GalatamaBtn, TeleportShopBtn, SummitBtn
 	local c = Instance.new("UICorner")
 	c.Parent = v
 end
-
-local Content = Instance.new("Frame")
-Content.Parent = Main
-Content.Position = UDim2.new(0,150,0,30)
-Content.Size = UDim2.new(1,-160,1,-40)
-Content.BackgroundTransparency = 1
 
 local function MakePage()
 	local f = Instance.new("ScrollingFrame")
@@ -801,7 +863,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 1. FISHING & SELL PAGE (SISTEM AUTO FISHING BARU)
+-- 1. FISHING & SELL PAGE
 ----------------------------------------------------
 local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
@@ -1003,7 +1065,7 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- 2. FAVORITE PAGE (AUTO FAVORITE & UNFAVORITE)
+-- 2. FAVORITE PAGE
 ----------------------------------------------------
 local TitleFav = Instance.new("TextLabel")
 TitleFav.Parent = FavoritePage
@@ -1778,7 +1840,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS, CONFIG & CREDITS PAGE
+-- 10. SETTINGS & CREDITS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -1793,86 +1855,28 @@ local AntiLagBtn = Instance.new("TextButton")
 AntiLagBtn.Parent = SettingsPage
 AntiLagBtn.Size = UDim2.new(1,0,0,35)
 AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
-AntiLagBtn.Text = "⚡ Aktifkan Extreme Anti-Lag (AFK Mode)"
+AntiLagBtn.Text = "⚡ Aktifkan Anti-Lag (Boost FPS)"
 AntiLagBtn.TextColor3 = Color3.new(1,1,1)
 AntiLagBtn.Font = Enum.Font.GothamBold
-AntiLagBtn.TextSize = 12
+AntiLagBtn.TextSize = 13
 Instance.new("UICorner", AntiLagBtn)
 
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function()
-		-- Pengaturan Lighting Ekstrem
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
-		Lighting.Brightness = 1
 		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-
-		pcall(function()
-			for _, v in ipairs(Lighting:GetChildren()) do
-				if v:IsA("PostEffect") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") then
-					v.Enabled = false
-				end
+		
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+				v.Enabled = false
+			elseif v:IsA("BasePart") then
+				v.Material = Enum.Material.SmoothPlastic
+				v.Reflectance = 0
 			end
-		end)
-
-		-- Pembersihan Workspace & Material Objek
-		for _, v in ipairs(Workspace:GetDescendants()) do
-			pcall(function()
-				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Explosion") then
-					v:Destroy()
-				elseif v:IsA("BasePart") then
-					v.Material = Enum.Material.SmoothPlastic
-					v.Reflectance = 0
-					v.CastShadow = false
-				elseif v:IsA("Decal") or v:IsA("Texture") then
-					v:Destroy()
-				end
-			end)
 		end
-
-		-- Matikan Dekorasi Terrain / Rumput & Air
-		pcall(function()
-			local terrain = Workspace:FindFirstChildOfClass("Terrain")
-			if terrain then
-				terrain.WaterWaveSize = 0
-				terrain.WaterWaveSpeed = 0
-				terrain.WaterTransparency = 1
-				terrain.WaterReflectance = 0
-				pcall(function()
-					sethiddenproperty(terrain, "Decoration", false)
-				end)
-			end
-		end)
-
-		-- Pantau objek baru agar otomatis dibersihkan saat AFK lama
-		Workspace.DescendantAdded:Connect(function(v)
-			pcall(function()
-				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
-					v:Destroy()
-				elseif v:IsA("BasePart") then
-					v.Material = Enum.Material.SmoothPlastic
-					v.Reflectance = 0
-					v.CastShadow = false
-				elseif v:IsA("Decal") or v:IsA("Texture") then
-					v:Destroy()
-				end
-			end)
-		end)
-
-		-- Task berkala untuk membersihkan memori (Garbage Collector)
-		task.spawn(function()
-			while true do
-				pcall(function()
-					game:GetService("ContentProvider"):PreloadAsync({})
-					if gcinfo then
-						-- Membantu stabilitas memori HP saat AFK berjam-jam
-					end
-				end)
-				task.wait(60)
-			end
-		end)
-
-		AntiLagBtn.Text = "⚡ Extreme Anti-Lag Aktif (Safe for AFK!)"
+		
+		AntiLagBtn.Text = "⚡ Anti-Lag Aktif (Boosted!)"
 		AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
 	end)
 end)
@@ -1938,4 +1942,59 @@ TheCloseBtn.TextColor3 = Color3.new(1,1,1)
 TheCloseBtn.Font = Enum.Font.GothamBold
 TheCloseBtn.TextSize = 13
 Instance.new("UICorner", TheCloseBtn)
-TheCloseBtn.MouseButton1Click:Connect(function() Main.Visible = fals
+TheCloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
+
+local CredLbl = Instance.new("TextLabel")
+CredLbl.Parent = CreditsPage
+CredLbl.Size = UDim2.new(1,0,1,0)
+CredLbl.BackgroundTransparency = 1
+CredLbl.Text = "Created By UBEY"
+CredLbl.TextColor3 = Color3.new(1,1,1)
+CredLbl.Font = Enum.Font.GothamBold
+CredLbl.TextSize = 20
+
+----------------------------------------------------
+-- FLOATING BUTTON HP & DRAG
+----------------------------------------------------
+local Float = Instance.new("ImageButton")
+Float.Parent = Gui
+Float.Size = UDim2.new(0,65,0,65)
+Float.Position = UDim2.new(0,20,0,120)
+Float.Image = "rbxassetid://90770802417381"
+Float.BackgroundColor3 = Color3.fromRGB(20,20,25)
+
+local FloatCorner = Instance.new("UICorner")
+FloatCorner.CornerRadius = UDim.new(1,0)
+FloatCorner.Parent = Float
+
+Float.MouseButton1Click:Connect(function()
+	if not getgenv().KeyVerified then
+		KeyFrame.Visible = not KeyFrame.Visible
+		Main.Visible = false
+	else
+		Main.Visible = not Main.Visible
+		KeyFrame.Visible = false
+	end
+end)
+
+local dragging = false
+local dragStart, startPos
+
+Float.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging, dragStart, startPos = true, input.Position, Float.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+		local delta = input.Position - dragStart
+		Float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
