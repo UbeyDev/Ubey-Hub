@@ -994,7 +994,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning do
+							if hooked and getgenv().AutoFishingEventRunning then
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
@@ -1176,7 +1176,6 @@ CreateSpotTimerSetting(FishingPage, "Spot Mancing Jembatan")
 CreateSpotTimerSetting(FishingPage, "Spot Mancing Core")
 CreateSpotTimerSetting(FishingPage, "Spot Mancing Ikan Anomali")
 
--- LOOP LOGIC TASK
 task.spawn(function()
 	local spotOrder = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
 	while true do
@@ -1187,7 +1186,6 @@ task.spawn(function()
 					getgenv().SelectedFishingSpot = name
 					SpotLabel.Text = "Lokasi Saat Ini: " .. name
 					
-					-- Teleport jika Auto Fishing sedang aktif
 					pcall(function()
 						local character = LocalPlayer.Character
 						local hrp = character and character:FindFirstChild("HumanoidRootPart")
