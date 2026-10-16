@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM (PREMIUM EDITION)
+-- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + AUTO EVENT CORE & RETURN
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -12,6 +12,7 @@ local TeleportService = game:GetService("TeleportService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -140,6 +141,9 @@ getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
+
+-- AUTO DETECT CORE EVENT STATE
+getgenv().AutoDetectCoreEvent = false
 
 -- LOOP SPOT TIMER STATES
 getgenv().LoopSpotEnabled = false
@@ -994,7 +998,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
+							if hooked and getgenv().AutoFishingEventRunning do
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
@@ -1043,7 +1047,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
+							if hooked and getgenv().AutoFishingEventRunning do
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
@@ -1108,6 +1112,92 @@ SellTimerBox.FocusLost:Connect(function()
 	getgenv().AutoSellTimerInput = SellTimerBox.Text
 	getgenv().UbeyConfig.AutoSellTimer = SellTimerBox.Text
 	SaveConfig()
+end)
+
+----------------------------------------------------
+-- SYSTEM AUTO DETEKSI EVENT CORE + AUTO RETURN
+----------------------------------------------------
+local DividerCore = Instance.new("Frame")
+DividerCore.Parent = FishingPage
+DividerCore.Size = UDim2.new(1,0,0,2)
+DividerCore.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleCoreEvent = Instance.new("TextLabel")
+TitleCoreEvent.Parent = FishingPage
+TitleCoreEvent.Size = UDim2.new(1,0,0,25)
+TitleCoreEvent.BackgroundTransparency = 1
+TitleCoreEvent.Text = "💎 AUTO DETECT WITHERING CORE EVENT"
+TitleCoreEvent.TextColor3 = Color3.fromRGB(255,200,0)
+TitleCoreEvent.Font = Enum.Font.GothamBold
+TitleCoreEvent.TextSize = 13
+
+AddToggle(FishingPage, "Auto Teleport Saat Event Core Berlangsung", function(v)
+	getgenv().AutoDetectCoreEvent = v
+end)
+
+-- LOGIKA SCANNER EVENT CORE & OTOMATIS KEMBALI KE SPOT AWAL
+local SavedPreviousSpot = nil
+local IsAtCoreEvent = false
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoDetectCoreEvent then
+			pcall(function()
+				local eventCoreObj = Workspace:FindFirstChild("EventCore")
+				if eventCoreObj then
+					local timerLabel = eventCoreObj:FindFirstChild("Timer", true) or eventCoreObj:FindFirstChild("Countdown", true)
+					if timerLabel and timerLabel:IsA("TextLabel") then
+						local textContent = string.lower(timerLabel.Text)
+						
+						-- JIKA EVENT SEDANG BERLANGSUNG
+						if string.find(textContent, "sedang berlangsung") or string.find(textContent, "berlangsung") then
+							if not IsAtCoreEvent then
+								SavedPreviousSpot = getgenv().SelectedFishingSpot
+								IsAtCoreEvent = true
+							end
+							
+							getgenv().SelectedFishingSpot = "Spot Mancing Core"
+							if SpotLabel then
+								SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ EVENT AKTIFF!)"
+							end
+							
+							local character = LocalPlayer.Character
+							local hrp = character and character:FindFirstChild("HumanoidRootPart")
+							local targetCFrame = FishingSpots["Spot Mancing Core"]
+							
+							if hrp and targetCFrame then
+								if (hrp.Position - targetCFrame.Position).Magnitude > 20 then
+									hrp.CFrame = targetCFrame
+								end
+							end
+							
+						-- JIKA EVENT CORE SELESAI
+						else
+							if IsAtCoreEvent then
+								IsAtCoreEvent = false
+								
+								if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
+									getgenv().SelectedFishingSpot = SavedPreviousSpot
+									if SpotLabel then
+										SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Return)"
+									end
+									
+									local character = LocalPlayer.Character
+									local hrp = character and character:FindFirstChild("HumanoidRootPart")
+									local prevCFrame = FishingSpots[SavedPreviousSpot]
+									
+									if hrp and prevCFrame then
+										hrp.CFrame = prevCFrame
+									end
+								end
+							end
+						end
+					end
+				end
+			end)
+		end
+		task.wait(2) -- Cek setiap 2 detik
+	end
 end)
 
 ----------------------------------------------------
@@ -1179,7 +1269,7 @@ CreateSpotTimerSetting(FishingPage, "Spot Mancing Ikan Anomali")
 task.spawn(function()
 	local spotOrder = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
 	while true do
-		if getgenv().LoopSpotEnabled then
+		if getgenv().LoopSpotEnabled and not getgenv().AutoDetectCoreEvent then
 			for _, name in ipairs(spotOrder) do
 				local cfg = getgenv().SpotLoopConfig[name]
 				if getgenv().LoopSpotEnabled and cfg and cfg.Enabled then
