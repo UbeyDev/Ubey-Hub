@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + WEBHOOK & FILTER
+-- UBEY HUB V3 | FINAL HWID BINDING & AUTO-LOGIN SYSTEM + WEBHOOK FILTER
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -140,7 +140,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 				["embeds"] = {
 					{
 						["title"] = "🚨 Ubey Hub V3 - Tangkapan Istimewa!",
-						["description"] = "Pemain **" .. LocalPlayer.Name .. "** mendapatkan ikan langka!",
+						["description"] = "Pemain **" .. LocalPlayer.Name .. "** mendapatkan ikan tangkapan langka!",
 						["color"] = 16766720,
 						["fields"] = {
 							{ ["name"] = "Nama Ikan", ["value"] = fishName, ["inline"] = true },
@@ -164,7 +164,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
+-- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE (WITH ANTI-CACHE)
 ------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
@@ -207,8 +207,11 @@ getgenv().HideNameRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
+
+-- AUTO DETECT CORE EVENT STATE
 getgenv().AutoDetectCoreEvent = false
 
+-- LOOP SPOT TIMER STATES
 getgenv().LoopSpotEnabled = false
 getgenv().SpotLoopConfig = {
 	["Spot Mancing Jembatan"] = { Enabled = false, Timer = "10" },
@@ -216,6 +219,7 @@ getgenv().SpotLoopConfig = {
 	["Spot Mancing Ikan Anomali"] = { Enabled = false, Timer = "10" }
 }
 
+-- AUTO FAVORITE STATES
 getgenv().AutoFavoriteRunning = false
 getgenv().FavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
@@ -231,6 +235,7 @@ getgenv().FavMutations = {
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
 
+-- AUTO UNFAVORITE FILTER STATES
 getgenv().UnfavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
 	["Legendary"] = false, ["Mythical"] = false, ["Secret"] = false, ["Forgotten"] = false
@@ -245,6 +250,7 @@ getgenv().UnfavMutations = {
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
 
+-- DATA KOORDINAT SPOT & SHOP
 local FishingSpots = {
 	["Spot Mancing Jembatan"] = CFrame.new(-6783.74756, 1322.81006, -9757.34473, 0.0899723172, -9.34088291e-08, 0.995944262, 1.76120434e-08, 1, 9.21981638e-08, -0.995944262, 9.24533072e-09, 0.0899723172),
 	["Spot Mancing Core"] = CFrame.new(-9069.33887, 1250.32092, -6510.3374, 0.99812746, -7.96398965e-08, -0.0611686334, 8.05492206e-08, 1, 1.24000188e-08, 0.0611686334, -1.73038845e-08, 0.99812746),
@@ -292,6 +298,9 @@ local function TriggerSellToNpc()
 	end)
 end
 
+-- ==============================================================================
+-- LOGIKA PARSER AMBILSEMUA SERVER DATA
+-- ==============================================================================
 local function GetInventoryRemote()
 	local repStorage = game:GetService("ReplicatedStorage")
 	return repStorage:FindFirstChild("Remote") 
@@ -390,6 +399,7 @@ task.spawn(function()
 	end
 end)
 
+-- UNFAVORITE ALL
 local function UnfavoriteAllFish()
 	task.spawn(function()
 		pcall(function()
@@ -405,6 +415,7 @@ local function UnfavoriteAllFish()
 	end)
 end
 
+-- UNFAVORITE BY SPECIFIC UNFAV FILTER
 local function UnfavoriteByFilter()
 	task.spawn(function()
 		pcall(function()
@@ -447,6 +458,7 @@ Gui.Name = "UbeyHub"
 Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
+-- FUNGSI DRAGGABLE UNIVERSAL (MOBILE & PC)
 local function MakeDraggable(guiObject, handleObject)
 	handleObject = handleObject or guiObject
 	local dragging, dragInput, dragStart, startPos
@@ -577,6 +589,7 @@ local MainStroke = Instance.new("UIStroke")
 MainStroke.Parent = Main
 MainStroke.Color = Color3.fromRGB(0,170,255)
 
+-- CONTROLS (MINIMIZE & CLOSE)
 local ControlsFrame = Instance.new("Frame")
 ControlsFrame.Parent = Main
 ControlsFrame.Size = UDim2.new(0, 65, 0, 30)
@@ -1169,7 +1182,7 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- EVENT CORE & LOOP SPOT
+-- SYSTEM AUTO DETEKSI EVENT CORE + AUTO RETURN
 ----------------------------------------------------
 local DividerCore = Instance.new("Frame")
 DividerCore.Parent = FishingPage
@@ -1208,7 +1221,7 @@ task.spawn(function()
 							end
 							getgenv().SelectedFishingSpot = "Spot Mancing Core"
 							if SpotLabel then
-								SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ EVENT AKTIF!)"
+								SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ EVENT AKTIFF!)"
 							end
 							local character = LocalPlayer.Character
 							local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1240,6 +1253,104 @@ task.spawn(function()
 			end)
 		end
 		task.wait(2)
+	end
+end)
+
+----------------------------------------------------
+-- SYSTEM AUTO ROTASI / LOOP SPOT MANCING BERDASARKAN WAKTU
+----------------------------------------------------
+local DividerLoop = Instance.new("Frame")
+DividerLoop.Parent = FishingPage
+DividerLoop.Size = UDim2.new(1,0,0,2)
+DividerLoop.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleLoop = Instance.new("TextLabel")
+TitleLoop.Parent = FishingPage
+TitleLoop.Size = UDim2.new(1,0,0,25)
+TitleLoop.BackgroundTransparency = 1
+TitleLoop.Text = "⏳ ROTASI AUTO SPOT MANCING (TIMER)"
+TitleLoop.TextColor3 = Color3.fromRGB(0,255,170)
+TitleLoop.Font = Enum.Font.GothamBold
+TitleLoop.TextSize = 13
+
+AddToggle(FishingPage, "Aktifkan Loop Spot Mancing (Timer)", function(v)
+	getgenv().LoopSpotEnabled = v
+end)
+
+local function CreateSpotTimerSetting(parent, spotName)
+	local frame = Instance.new("Frame")
+	frame.Parent = parent
+	frame.Size = UDim2.new(1,0,0,35)
+	frame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	Instance.new("UICorner", frame)
+
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Parent = frame
+	toggleBtn.Size = UDim2.new(0.65,0,1,0)
+	toggleBtn.BackgroundTransparency = 1
+	toggleBtn.Text = "  " .. spotName .. " [OFF]"
+	toggleBtn.TextColor3 = Color3.new(1,1,1)
+	toggleBtn.Font = Enum.Font.Gotham
+	toggleBtn.TextSize = 11
+	toggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+	local timeBox = Instance.new("TextBox")
+	timeBox.Parent = frame
+	timeBox.Size = UDim2.new(0.3, -5, 0, 25)
+	timeBox.Position = UDim2.new(0.7, 0, 0, 5)
+	timeBox.BackgroundColor3 = Color3.fromRGB(45,45,55)
+	timeBox.Text = getgenv().SpotLoopConfig[spotName].Timer
+	timeBox.PlaceholderText = "Menit"
+	timeBox.TextColor3 = Color3.fromRGB(0,170,255)
+	timeBox.Font = Enum.Font.GothamBold
+	timeBox.TextSize = 11
+	Instance.new("UICorner", timeBox)
+
+	toggleBtn.MouseButton1Click:Connect(function()
+		local cur = not getgenv().SpotLoopConfig[spotName].Enabled
+		getgenv().SpotLoopConfig[spotName].Enabled = cur
+		toggleBtn.Text = "  " .. spotName .. (cur and " [ON]" or " [OFF]")
+		toggleBtn.TextColor3 = cur and Color3.fromRGB(0,255,150) or Color3.new(1,1,1)
+	end)
+
+	timeBox.FocusLost:Connect(function()
+		getgenv().SpotLoopConfig[spotName].Timer = timeBox.Text
+	end)
+end
+
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Jembatan")
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Core")
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Ikan Anomali")
+
+task.spawn(function()
+	local spotOrder = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+	while true do
+		if getgenv().LoopSpotEnabled and not getgenv().AutoDetectCoreEvent then
+			for _, name in ipairs(spotOrder) do
+				local cfg = getgenv().SpotLoopConfig[name]
+				if getgenv().LoopSpotEnabled and cfg and cfg.Enabled then
+					getgenv().SelectedFishingSpot = name
+					SpotLabel.Text = "Lokasi Saat Ini: " .. name
+					
+					pcall(function()
+						local character = LocalPlayer.Character
+						local hrp = character and character:FindFirstChild("HumanoidRootPart")
+						local targetCFrame = FishingSpots[name]
+						if hrp and targetCFrame then
+							hrp.CFrame = targetCFrame
+						end
+					end)
+					
+					local duration = (tonumber(cfg.Timer) or 10) * 60
+					local timerStart = tick()
+					
+					while getgenv().LoopSpotEnabled and cfg.Enabled and (tick() - timerStart < duration) do
+						task.wait(1)
+					end
+				end
+			end
+		end
+		task.wait(1)
 	end
 end)
 
@@ -1382,6 +1493,40 @@ local mutationList = {
 
 CreateMultiSelectDropdown(FavoritePage, "Fav Filter Rarity", rarityList, getgenv().FavRarities)
 CreateMultiSelectDropdown(FavoritePage, "Fav Filter Mutasi", mutationList, getgenv().FavMutations)
+
+local DividerFav = Instance.new("Frame")
+DividerFav.Parent = FavoritePage
+DividerFav.Size = UDim2.new(1,0,0,2)
+DividerFav.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleUnfav = Instance.new("TextLabel")
+TitleUnfav.Parent = FavoritePage
+TitleUnfav.Size = UDim2.new(1,0,0,25)
+TitleUnfav.BackgroundTransparency = 1
+TitleUnfav.Text = "🗑️ UNFAVORITE FILTER SETTINGS"
+TitleUnfav.TextColor3 = Color3.fromRGB(255,100,100)
+TitleUnfav.Font = Enum.Font.GothamBold
+TitleUnfav.TextSize = 13
+
+CreateMultiSelectDropdown(FavoritePage, "Unfav Filter Rarity", rarityList, getgenv().UnfavRarities)
+CreateMultiSelectDropdown(FavoritePage, "Unfav Filter Mutasi", mutationList, getgenv().UnfavMutations)
+
+local UnfavFilterBtn = Instance.new("TextButton")
+UnfavFilterBtn.Parent = FavoritePage
+UnfavFilterBtn.Size = UDim2.new(1,0,0,38)
+UnfavFilterBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 30)
+UnfavFilterBtn.Text = "🎯 UNFAVORITE BY FILTER (Rarity/Mutasi Diatas)"
+UnfavFilterBtn.TextColor3 = Color3.new(1,1,1)
+UnfavFilterBtn.Font = Enum.Font.GothamBold
+UnfavFilterBtn.TextSize = 12
+Instance.new("UICorner", UnfavFilterBtn)
+
+UnfavFilterBtn.MouseButton1Click:Connect(function()
+	UnfavFilterBtn.Text = "⌛ Processing Unfav Filter..."
+	UnfavoriteByFilter()
+	task.wait(1.5)
+	UnfavFilterBtn.Text = "🎯 UNFAVORITE BY FILTER (Rarity/Mutasi Diatas)"
+end)
 
 local UnfavBtn = Instance.new("TextButton")
 UnfavBtn.Parent = FavoritePage
@@ -1589,8 +1734,400 @@ LocalPlayer.Idled:Connect(function()
 	end
 end)
 
+local HeadlessBtn = Instance.new("TextButton")
+HeadlessBtn.Parent = PlayerPage
+HeadlessBtn.Size = UDim2.new(1,0,0,35)
+HeadlessBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
+HeadlessBtn.Text = "👻 Enable Headless"
+HeadlessBtn.TextColor3 = Color3.new(1,1,1)
+HeadlessBtn.Font = Enum.Font.GothamBold
+HeadlessBtn.TextSize = 13
+Instance.new("UICorner", HeadlessBtn)
+
+HeadlessBtn.MouseButton1Click:Connect(function()
+	pcall(function()
+		local char = LocalPlayer.Character
+		if char then
+			local head = char:FindFirstChild("Head")
+			if head then
+				head.Transparency = 1
+				for _, child in ipairs(head:GetChildren()) do
+					if child:IsA("Decal") then
+						child.Transparency = 1
+					end
+				end
+			end
+		end
+	end)
+end)
+
+local FireRgbBtn = Instance.new("TextButton")
+FireRgbBtn.Parent = PlayerPage
+FireRgbBtn.Size = UDim2.new(1,0,0,35)
+FireRgbBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 200)
+FireRgbBtn.Text = "🔥🌈 Auto RGB Fire: [OFF]"
+FireRgbBtn.TextColor3 = Color3.new(1,1,1)
+FireRgbBtn.Font = Enum.Font.GothamBold
+FireRgbBtn.TextSize = 13
+Instance.new("UICorner", FireRgbBtn)
+
+local autoRgbActive = false
+
+FireRgbBtn.MouseButton1Click:Connect(function()
+	autoRgbActive = not autoRgbActive
+	FireRgbBtn.Text = "🔥🌈 Auto RGB Fire: " .. (autoRgbActive and "[ON]" or "[OFF]")
+	FireRgbBtn.BackgroundColor3 = autoRgbActive and Color3.fromRGB(0, 150, 50) or Color3.fromRGB(150, 0, 200)
+	
+	pcall(function()
+		local char = LocalPlayer.Character
+		if char and char:FindFirstChild("Head") then
+			local head = char.Head
+			local fire = head:FindFirstChild("UbeyHeadFire")
+			if autoRgbActive and not fire then
+				fire = Instance.new("Fire")
+				fire.Name = "UbeyHeadFire"
+				fire.Size = 5
+				fire.Heat = 15
+				fire.Parent = head
+			elseif not autoRgbActive and fire then
+				fire:Destroy()
+			end
+		end
+	end)
+end)
+
+task.spawn(function()
+	local colors = {
+		Color3.fromRGB(255, 0, 0),
+		Color3.fromRGB(0, 255, 0),
+		Color3.fromRGB(0, 100, 255),
+		Color3.fromRGB(255, 0, 255),
+		Color3.fromRGB(255, 255, 0),
+		Color3.fromRGB(0, 255, 255)
+	}
+	local index = 1
+	while true do
+		if autoRgbActive then
+			pcall(function()
+				local char = LocalPlayer.Character
+				if char and char:FindFirstChild("Head") then
+					local fire = char.Head:FindFirstChild("UbeyHeadFire")
+					if fire then
+						index = index % #colors + 1
+						fire.Color = colors[index]
+						fire.SecondaryColor = colors[(index % #colors) + 1]
+					end
+				end
+			end)
+		end
+		task.wait(1)
+	end
+end)
+
 ----------------------------------------------------
--- 10. SETTINGS & DISCORD WEBHOOK CONFIG PAGE
+-- 7. HALO PAGE
+----------------------------------------------------
+local TitleHalo = Instance.new("TextLabel")
+TitleHalo.Parent = HaloPage
+TitleHalo.Size = UDim2.new(1,0,0,30)
+TitleHalo.BackgroundTransparency = 1
+TitleHalo.Text = "👑 HALO & AKSESORIS KEPALA"
+TitleHalo.TextColor3 = Color3.fromRGB(0,170,255)
+TitleHalo.Font = Enum.Font.GothamBold
+TitleHalo.TextSize = 13
+
+local function ApplyHaloToCharacter(haloName)
+	getgenv().CurrentSelectedHalo = haloName
+	pcall(function()
+		local character = LocalPlayer.Character
+		local head = character and character:FindFirstChild("Head")
+		if not head then return end
+		
+		for _, v in ipairs(head:GetChildren()) do
+			if v.Name == "CustomPlayerHalo" then
+				v:Destroy()
+			end
+		end
+		
+		local haloSourceFolder = ReplicatedStorage:FindFirstChild("HaloKenyal")
+		if haloSourceFolder then
+			local targetHaloModel = haloSourceFolder:FindFirstChild(haloName)
+			if targetHaloModel then
+				local cloneModel = targetHaloModel:Clone()
+				cloneModel.Name = "CustomPlayerHalo"
+				
+				local primaryPart = cloneModel:FindFirstChild("Handle") or cloneModel:FindFirstChild("Antenna") or cloneModel:FindFirstChildWhichIsA("BasePart")
+				
+				cloneModel.Parent = head
+				
+				for _, desc in ipairs(cloneModel:GetDescendants()) do
+					if desc:IsA("BasePart") then
+						desc.Anchored = false
+						desc.CanCollide = false
+						desc.Massless = true
+					elseif desc:IsA("Script") or desc:IsA("LocalScript") then
+						desc:Destroy()
+					end
+				end
+				
+				if primaryPart then
+					primaryPart.CFrame = head.CFrame * CFrame.new(0, 1.3, 0)
+					local weld = Instance.new("WeldConstraint")
+					weld.Part0 = head
+					weld.Part1 = primaryPart
+					weld.Parent = primaryPart
+				end
+			end
+		end
+	end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+	task.wait(1)
+	if getgenv().CurrentSelectedHalo then
+		ApplyHaloToCharacter(getgenv().CurrentSelectedHalo)
+	end
+end)
+
+pcall(function()
+	local haloSourceFolder = ReplicatedStorage:FindFirstChild("HaloKenyal")
+	if haloSourceFolder then
+		local clearHaloBtn = Instance.new("TextButton")
+		clearHaloBtn.Parent = HaloPage
+		clearHaloBtn.Size = UDim2.new(1,0,0,32)
+		clearHaloBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+		clearHaloBtn.Text = "❌ Lepas Aksesoris Kepala"
+		clearHaloBtn.TextColor3 = Color3.new(1,1,1)
+		clearHaloBtn.Font = Enum.Font.GothamBold
+		clearHaloBtn.TextSize = 12
+		Instance.new("UICorner", clearHaloBtn)
+		
+		clearHaloBtn.MouseButton1Click:Connect(function()
+			getgenv().CurrentSelectedHalo = nil
+			pcall(function()
+				local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+				if head then
+					for _, v in ipairs(head:GetChildren()) do
+						if v.Name == "CustomPlayerHalo" then v:Destroy() end
+					end
+				end
+			end)
+		end)
+		
+		for _, haloItem in ipairs(haloSourceFolder:GetChildren()) do
+			local name = haloItem.Name
+			local haloBtn = Instance.new("TextButton")
+			haloBtn.Parent = HaloPage
+			haloBtn.Size = UDim2.new(1,0,0,32)
+			haloBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
+			haloBtn.Text = "👑 " .. name
+			haloBtn.TextColor3 = Color3.new(1,1,1)
+			haloBtn.Font = Enum.Font.GothamMedium
+			haloBtn.TextSize = 12
+			Instance.new("UICorner", haloBtn)
+			
+			haloBtn.MouseButton1Click:Connect(function()
+				ApplyHaloToCharacter(name)
+			end)
+		end
+	end
+end)
+
+----------------------------------------------------
+-- 8. TELEPORT PLAYER PAGE
+----------------------------------------------------
+local TitleTpPly = Instance.new("TextLabel")
+TitleTpPly.Parent = PlayerTpPage
+TitleTpPly.Size = UDim2.new(1,0,0,30)
+TitleTpPly.BackgroundTransparency = 1
+TitleTpPly.Text = "👥 TELEPORT TO OTHER PLAYERS"
+TitleTpPly.TextColor3 = Color3.fromRGB(0,170,255)
+TitleTpPly.Font = Enum.Font.GothamBold
+TitleTpPly.TextSize = 13
+
+local RefreshPlayerBtn = Instance.new("TextButton")
+RefreshPlayerBtn.Parent = PlayerTpPage
+RefreshPlayerBtn.Size = UDim2.new(1,0,0,35)
+RefreshPlayerBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
+RefreshPlayerBtn.Text = "🔄 Refresh / Scan Pemain di Server"
+RefreshPlayerBtn.TextColor3 = Color3.new(1,1,1)
+RefreshPlayerBtn.Font = Enum.Font.GothamBold
+RefreshPlayerBtn.TextSize = 12
+Instance.new("UICorner", RefreshPlayerBtn)
+
+local PlayerListContainer = Instance.new("ScrollingFrame")
+PlayerListContainer.Parent = PlayerTpPage
+PlayerListContainer.Size = UDim2.new(1,0,0,210)
+PlayerListContainer.BackgroundTransparency = 1
+PlayerListContainer.CanvasSize = UDim2.new(0,0,2,0)
+PlayerListContainer.ScrollBarThickness = 3
+
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Parent = PlayerListContainer
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ListLayout.Padding = UDim.new(0, 5)
+
+local function ScanAndDisplayPlayers()
+	for _, child in ipairs(PlayerListContainer:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer then
+			local pBtn = Instance.new("TextButton")
+			pBtn.Parent = PlayerListContainer
+			pBtn.Size = UDim2.new(1,0,0,32)
+			pBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
+			pBtn.Text = "👤 " .. plr.Name .. " (" .. plr.DisplayName .. ")"
+			pBtn.TextColor3 = Color3.new(1,1,1)
+			pBtn.Font = Enum.Font.GothamMedium
+			pBtn.TextSize = 11
+			Instance.new("UICorner", pBtn)
+			
+			pBtn.MouseButton1Click:Connect(function()
+				pcall(function()
+					local char = plr.Character
+					local hrpTarget = char and char:FindFirstChild("HumanoidRootPart")
+					local myChar = LocalPlayer.Character
+					local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+					
+					if hrpTarget and myHrp then
+						myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 3, 0)
+					end
+				end)
+			end)
+		end
+	end
+end
+
+RefreshPlayerBtn.MouseButton1Click:Connect(function()
+	ScanAndDisplayPlayers()
+end)
+
+task.spawn(function()
+	task.wait(2)
+	ScanAndDisplayPlayers()
+end)
+
+----------------------------------------------------
+-- 9. PRIVACY & ANTI-ADMIN PAGE
+----------------------------------------------------
+local TitlePrv = Instance.new("TextLabel")
+TitlePrv.Parent = PrivacyPage
+TitlePrv.Size = UDim2.new(1,0,0,30)
+TitlePrv.BackgroundTransparency = 1
+TitlePrv.Text = "🛡️ PRIVACY & ANTI-ADMIN"
+TitlePrv.TextColor3 = Color3.fromRGB(0,170,255)
+TitlePrv.Font = Enum.Font.GothamBold
+TitlePrv.TextSize = 13
+
+local FakeNameBox = Instance.new("TextBox")
+FakeNameBox.Parent = PrivacyPage
+FakeNameBox.Size = UDim2.new(1,0,0,35)
+FakeNameBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+FakeNameBox.PlaceholderText = "Nama Samaran (Cth: UBEY HUB)"
+FakeNameBox.Text = "UBEY HUB"
+FakeNameBox.TextColor3 = Color3.new(1,1,1)
+FakeNameBox.Font = Enum.Font.Gotham
+FakeNameBox.TextSize = 12
+Instance.new("UICorner", FakeNameBox)
+FakeNameBox.FocusLost:Connect(function()
+	getgenv().FakeNameInput = FakeNameBox.Text
+end)
+
+AddToggle(PrivacyPage, "Privacy Mode (Hide Name & Summit)", function(v)
+	getgenv().HideNameRunning = v
+	if v then
+		task.spawn(function()
+			while getgenv().HideNameRunning do
+				pcall(function()
+					local fakeName = getgenv().FakeNameInput or "UBEY HUB"
+					local character = LocalPlayer.Character
+					if character then
+						local head = character:FindFirstChild("Head")
+						if head then
+							for _, child in ipairs(head:GetDescendants()) do
+								if child:IsA("TextLabel") or child:IsA("TextMesh") then
+									local txt = child.Text
+									if string.find(txt, LocalPlayer.Name) or string.find(txt, LocalPlayer.DisplayName) then
+										child.Text = fakeName
+									elseif string.find(string.lower(txt), "summit") or (tonumber(txt) ~= nil and tonumber(txt) > 0) then
+										child.Text = ""
+									end
+								end
+							end
+						end
+					end
+				end)
+				task.wait(1)
+			end
+		end)
+	end
+end)
+
+local AntiAdminToggleBtn = Instance.new("TextButton")
+AntiAdminToggleBtn.Parent = PrivacyPage
+AntiAdminToggleBtn.Size = UDim2.new(1,0,0,35)
+AntiAdminToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AntiAdminEnabled and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(30, 30, 40)
+AntiAdminToggleBtn.Text = "  Anti-Admin Protect (MPG Group): " .. (getgenv().UbeyConfig.AntiAdminEnabled and "[ON]" or "[OFF]")
+AntiAdminToggleBtn.TextColor3 = Color3.new(1,1,1)
+AntiAdminToggleBtn.Font = Enum.Font.Gotham
+AntiAdminToggleBtn.TextSize = 13
+AntiAdminToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner", AntiAdminToggleBtn)
+
+AntiAdminToggleBtn.MouseButton1Click:Connect(function()
+	getgenv().UbeyConfig.AntiAdminEnabled = not getgenv().UbeyConfig.AntiAdminEnabled
+	local active = getgenv().UbeyConfig.AntiAdminEnabled
+	AntiAdminToggleBtn.Text = "  Anti-Admin Protect (MPG Group): " .. (active and "[ON]" or "[OFF]")
+	AntiAdminToggleBtn.BackgroundColor3 = active and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(30, 30, 40)
+	SaveConfig()
+end)
+
+local function CheckPlayerIsAdmin(player)
+	local groupId = getgenv().UbeyConfig.TargetGroupId or 7019573
+	local success, rank = pcall(function()
+		return player:GetRankInGroup(groupId)
+	end)
+	
+	if success and rank then
+		if rank > 1 then
+			return true
+		end
+	end
+	return false
+end
+
+Players.PlayerAdded:Connect(function(player)
+	if player ~= LocalPlayer then
+		task.spawn(function()
+			task.wait(1.5)
+			if getgenv().UbeyConfig.AntiAdminEnabled then
+				if CheckPlayerIsAdmin(player) then
+					warn("🚨 [ANTI-ADMIN]: Staff MPG Community terdeteksi join: " .. player.Name)
+					game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+				end
+			end
+		end)
+	end
+end)
+
+task.spawn(function()
+	task.wait(2)
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and getgenv().UbeyConfig.AntiAdminEnabled then
+			if CheckPlayerIsAdmin(player) then
+				warn("🚨 [ANTI-ADMIN]: Staff MPG Community sudah ada di server: " .. player.Name)
+				game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+			end
+		end
+	end
+end)
+
+----------------------------------------------------
+-- 10. SETTINGS & WEBHOOK PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -1616,6 +2153,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
 		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+		
 		for _, v in ipairs(workspace:GetDescendants()) do
 			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
 				v.Enabled = false
@@ -1624,6 +2162,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 				v.Reflectance = 0
 			end
 		end
+		
 		AntiLagBtn.Text = "⚡ Anti-Lag Aktif (Boosted!)"
 		AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
 	end)
@@ -1664,6 +2203,24 @@ WebhookBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
+local AutoExecToggleBtn = Instance.new("TextButton")
+AutoExecToggleBtn.Parent = SettingsPage
+AutoExecToggleBtn.Size = UDim2.new(1,0,0,35)
+AutoExecToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AutoExecuteEnabled and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(30, 30, 40)
+AutoExecToggleBtn.Text = "  Auto Execute (Teleport): " .. (getgenv().UbeyConfig.AutoExecuteEnabled and "[ON]" or "[OFF]")
+AutoExecToggleBtn.TextColor3 = Color3.new(1,1,1)
+AutoExecToggleBtn.Font = Enum.Font.Gotham
+AutoExecToggleBtn.TextSize = 13
+AutoExecToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+Instance.new("UICorner", AutoExecToggleBtn)
+
+AutoExecToggleBtn.MouseButton1Click:Connect(function()
+	getgenv().UbeyConfig.AutoExecuteEnabled = not getgenv().UbeyConfig.AutoExecuteEnabled
+	AutoExecToggleBtn.Text = "  Auto Execute (Teleport): " .. (getgenv().UbeyConfig.AutoExecuteEnabled and "[ON]" or "[OFF]")
+	AutoExecToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.AutoExecuteEnabled and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(30, 30, 40)
+	SaveConfig()
+end)
+
 local SaveConfigBtn = Instance.new("TextButton")
 SaveConfigBtn.Parent = SettingsPage
 SaveConfigBtn.Size = UDim2.new(1,0,0,35)
@@ -1698,8 +2255,28 @@ ResetConfigBtn.MouseButton1Click:Connect(function()
 	ResetConfigBtn.Text = "🔄 Reset Konfigurasi & Clear Key"
 end)
 
+local TheCloseBtn = Instance.new("TextButton")
+TheCloseBtn.Parent = SettingsPage
+TheCloseBtn.Size = UDim2.new(1,0,0,35)
+TheCloseBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+TheCloseBtn.Text = "Tutup / Hide UI"
+TheCloseBtn.TextColor3 = Color3.new(1,1,1)
+TheCloseBtn.Font = Enum.Font.GothamBold
+TheCloseBtn.TextSize = 13
+Instance.new("UICorner", TheCloseBtn)
+TheCloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
+
+local CredLbl = Instance.new("TextLabel")
+CredLbl.Parent = CreditsPage
+CredLbl.Size = UDim2.new(1,0,1,0)
+CredLbl.BackgroundTransparency = 1
+CredLbl.Text = "Created By UBEY"
+CredLbl.TextColor3 = Color3.new(1,1,1)
+CredLbl.Font = Enum.Font.GothamBold
+CredLbl.TextSize = 20
+
 ----------------------------------------------------
--- FLOATING BUTTON
+-- FLOATING BUTTON (DAPAT DIGESER DENGAN MULUS DI HP & PC)
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
