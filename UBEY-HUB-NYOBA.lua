@@ -1585,7 +1585,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 8. TELEPORT PLAYER PAGE (FIXED STREAMING DISTANCE)
+-- 8. TELEPORT PLAYER PAGE
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1618,21 +1618,6 @@ ListLayout.Parent = PlayerListContainer
 ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ListLayout.Padding = UDim.new(0, 5)
 
-local function GetPlayerTargetCFrame(targetPlr)
-	if targetPlr.Character then
-		local hrp = targetPlr.Character:FindFirstChild("HumanoidRootPart") or targetPlr.Character:FindFirstChild("Head")
-		if hrp then return hrp.CFrame end
-	end
-	
-	local foundModel = Workspace:FindFirstChild(targetPlr.Name)
-	if foundModel then
-		local hrp = foundModel:FindFirstChild("HumanoidRootPart") or foundModel:FindFirstChild("Head")
-		if hrp then return hrp.CFrame end
-	end
-	
-	return nil
-end
-
 local function ScanAndDisplayPlayers()
 	for _, child in ipairs(PlayerListContainer:GetChildren()) do
 		if child:IsA("TextButton") then
@@ -1653,48 +1638,15 @@ local function ScanAndDisplayPlayers()
 			Instance.new("UICorner", pBtn)
 			
 			pBtn.MouseButton1Click:Connect(function()
-				task.spawn(function()
-					pcall(function()
-						local myChar = LocalPlayer.Character
-						local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-						if not myHrp then return end
-						
-						pBtn.Text = "⏳ TP ke " .. plr.Name .. "..."
-						
-						local targetCF = GetPlayerTargetCFrame(plr)
-						
-						if not targetCF and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-							targetCF = plr.Character.HumanoidRootPart.CFrame
-						end
-						
-						if targetCF then
-							if LocalPlayer.RequestStreamAroundAsync then
-								pcall(function()
-									LocalPlayer:RequestStreamAroundAsync(targetCF.Position)
-								end)
-							end
-							
-							myHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-							myHrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-							myHrp.CFrame = targetCF + Vector3.new(0, 3, 0)
-							myHrp.Anchored = true
-							task.wait(0.3)
-							
-							local finalCF = GetPlayerTargetCFrame(plr)
-							if finalCF then
-								myHrp.CFrame = finalCF + Vector3.new(0, 3, 0)
-							end
-							
-							myHrp.Anchored = false
-							pBtn.Text = "✅ Berhasil TP ke " .. plr.Name
-							task.wait(1.5)
-						else
-							pBtn.Text = "❌ Gagal: Teman sedang Loading/Reset!"
-							task.wait(1.5)
-						end
-						
-						pBtn.Text = "👤 " .. plr.Name .. " (" .. plr.DisplayName .. ")"
-					end)
+				pcall(function()
+					local char = plr.Character
+					local hrpTarget = char and char:FindFirstChild("HumanoidRootPart")
+					local myChar = LocalPlayer.Character
+					local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+					
+					if hrpTarget and myHrp then
+						myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 3, 0)
+					end
 				end)
 			end)
 		end
@@ -1849,6 +1801,7 @@ Instance.new("UICorner", AntiLagBtn)
 
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function()
+		-- Pengaturan Lighting Ekstrem
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
 		Lighting.Brightness = 1
@@ -1862,6 +1815,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end
 		end)
 
+		-- Pembersihan Workspace & Material Objek
 		for _, v in ipairs(Workspace:GetDescendants()) do
 			pcall(function()
 				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Explosion") then
@@ -1876,6 +1830,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end)
 		end
 
+		-- Matikan Dekorasi Terrain / Rumput & Air
 		pcall(function()
 			local terrain = Workspace:FindFirstChildOfClass("Terrain")
 			if terrain then
@@ -1889,6 +1844,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end
 		end)
 
+		-- Pantau objek baru agar otomatis dibersihkan saat AFK lama
 		Workspace.DescendantAdded:Connect(function(v)
 			pcall(function()
 				if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
@@ -1903,11 +1859,13 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 			end)
 		end)
 
+		-- Task berkala untuk membersihkan memori (Garbage Collector)
 		task.spawn(function()
 			while true do
 				pcall(function()
 					game:GetService("ContentProvider"):PreloadAsync({})
 					if gcinfo then
+						-- Membantu stabilitas memori HP saat AFK berjam-jam
 					end
 				end)
 				task.wait(60)
@@ -1980,57 +1938,4 @@ TheCloseBtn.TextColor3 = Color3.new(1,1,1)
 TheCloseBtn.Font = Enum.Font.GothamBold
 TheCloseBtn.TextSize = 13
 Instance.new("UICorner", TheCloseBtn)
-TheCloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
-
-local CredLbl = Instance.new("TextLabel")
-CredLbl.Parent = CreditsPage
-CredLbl.Size = UDim2.new(1,0,1,0)
-CredLbl.BackgroundTransparency = 1
-CredLbl.Text = "Created By UBEY"
-CredLbl.TextColor3 = Color3.new(1,1,1)
-CredLbl.Font = Enum.Font.GothamBold
-CredLbl.TextSize = 20
-
-----------------------------------------------------
--- FLOATING BUTTON HP & DRAG
-----------------------------------------------------
-local Float = Instance.new("ImageButton")
-Float.Parent = Gui
-Float.Size = UDim2.new(0,65,0,65)
-Float.Position = UDim2.new(0,20,0,120)
-Float.Image = "rbxassetid://90770802417381"
-Float.BackgroundColor3 = Color3.fromRGB(20,20,25)
-
-local FloatCorner = Instance.new("UICorner")
-FloatCorner.CornerRadius = UDim.new(1,0)
-FloatCorner.Parent = Float
-
-Float.MouseButton1Click:Connect(function()
-	if not getgenv().KeyVerified then
-        KeyFrame.Visible = not KeyFrame.Visible
-        Main.Visible = false
-	else
-        Main.Visible = not Main.Visible
-        KeyFrame.Visible = false
-	end
-end)
-
-local dragging = false
-local dragStart, startPos
-
-Float.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch then
-		dragging, dragStart, startPos = true, input.Position, Float.Position
-	end
-end)
-
-UIS.TouchMoved:Connect(function(input)
-	if dragging then
-		local delta = input.Position - dragStart
-		Float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
-UIS.TouchEnded:Connect(function()
-	dragging = false
-end)
+TheCloseBtn.MouseButton1Click:Connect(function() Main.Visible = fals
