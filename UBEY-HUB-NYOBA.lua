@@ -379,6 +379,43 @@ Gui.Name = "UbeyHub"
 Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
+-- FUNGSI DRAGGABLE UNIVERSAL (LANCAR DI PC & MOBILE HP)
+local function MakeDraggable(guiObject, handleObject)
+	handleObject = handleObject or guiObject
+	local dragging, dragInput, dragStart, startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	handleObject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = guiObject.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	handleObject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
 ----------------------------------------------------
 -- KEY SYSTEM UI
 ----------------------------------------------------
@@ -388,6 +425,8 @@ KeyFrame.Size = UDim2.new(0,380,0,185)
 KeyFrame.Position = UDim2.new(0.5,-190,0.5,-92)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 KeyFrame.Visible = false
+
+MakeDraggable(KeyFrame)
 
 local KeyCorner = Instance.new("UICorner")
 KeyCorner.CornerRadius = UDim.new(0,15)
@@ -460,6 +499,9 @@ Main.Size = UDim2.new(0,550,0,320)
 Main.Position = UDim2.new(0.5,-275,0.5,-160)
 Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
 Main.ClipsDescendants = true
+
+-- MEMBERIKAN FITUR DRAG / GESER PADA FRAME UTAMA (BISA DIGESER DARI MANA SAJA AREA UI)
+MakeDraggable(Main)
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0,18)
@@ -1954,7 +1996,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- FLOATING BUTTON HP & DRAG
+-- FLOATING BUTTON (DAPAT DIGESER DENGAN MULUS DI HP & PC)
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
 Float.Parent = Gui
@@ -1967,6 +2009,8 @@ local FloatCorner = Instance.new("UICorner")
 FloatCorner.CornerRadius = UDim.new(1,0)
 FloatCorner.Parent = Float
 
+MakeDraggable(Float)
+
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
 		KeyFrame.Visible = not KeyFrame.Visible
@@ -1974,27 +2018,5 @@ Float.MouseButton1Click:Connect(function()
 	else
 		Main.Visible = not Main.Visible
 		KeyFrame.Visible = false
-	end
-end)
-
-local dragging = false
-local dragStart, startPos
-
-Float.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging, dragStart, startPos = true, input.Position, Float.Position
-	end
-end)
-
-UIS.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
-		local delta = input.Position - dragStart
-		Float.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
-UIS.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
 	end
 end)
