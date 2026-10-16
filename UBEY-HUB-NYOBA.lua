@@ -998,7 +998,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning do
+							if hooked and getgenv().AutoFishingEventRunning then
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
@@ -1047,7 +1047,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning do
+							if hooked and getgenv().AutoFishingEventRunning then
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
