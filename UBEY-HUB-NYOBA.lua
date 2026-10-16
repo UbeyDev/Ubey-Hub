@@ -1585,7 +1585,7 @@ pcall(function()
 end)
 
 ----------------------------------------------------
--- 8. TELEPORT PLAYER PAGE
+-- 8. TELEPORT PLAYER PAGE (PERBAIKAN STREAMING & SPOT)
 ----------------------------------------------------
 local TitleTpPly = Instance.new("TextLabel")
 TitleTpPly.Parent = PlayerTpPage
@@ -1638,15 +1638,45 @@ local function ScanAndDisplayPlayers()
 			Instance.new("UICorner", pBtn)
 			
 			pBtn.MouseButton1Click:Connect(function()
-				pcall(function()
-					local char = plr.Character
-					local hrpTarget = char and char:FindFirstChild("HumanoidRootPart")
-					local myChar = LocalPlayer.Character
-					local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-					
-					if hrpTarget and myHrp then
-						myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 3, 0)
-					end
+				task.spawn(function()
+					pcall(function()
+						local targetChar = plr.Character
+						local myChar = LocalPlayer.Character
+						local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+						
+						if myHrp and targetChar then
+							-- Cari koordinat target (baik dari HRP atau Pivot)
+							local targetCFrame = nil
+							local targetHrp = targetChar:FindFirstChild("HumanoidRootPart") or targetChar:FindFirstChild("Head")
+							
+							if targetHrp then
+								targetCFrame = targetHrp.CFrame
+							elseif targetChar.GetPivot then
+								targetCFrame = targetChar:GetPivot()
+							end
+							
+							if targetCFrame then
+								-- Paksa client memuat/load chunk tempat teman berada
+								if LocalPlayer.RequestStreamAroundAsync then
+									pcall(function()
+										LocalPlayer:RequestStreamAroundAsync(targetCFrame.Position)
+									end)
+								end
+								
+								-- Hentikan pergerakan karakter agar tidak jatuh saat teleportasi jauh
+								myHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+								myHrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+								myHrp.Anchored = true
+								
+								-- Pindahkan ke posisi target
+								myHrp.CFrame = targetCFrame + Vector3.new(0, 3, 0)
+								
+								-- Tahan posisi sebentar lalu unanchor agar tempat baru sempat dirender
+								task.wait(0.3)
+								myHrp.Anchored = false
+							end
+						end
+					end)
 				end)
 			end)
 		end
