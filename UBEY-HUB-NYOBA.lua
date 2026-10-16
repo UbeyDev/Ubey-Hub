@@ -98,7 +98,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE
+-- AUTO RECONNECT & CONDITIONAL AUTO EXECUTE (WITH ANTI-CACHE)
 ------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
@@ -115,7 +115,7 @@ pcall(function()
 	if queue_on_teleport and getgenv().UbeyConfig.AutoExecuteEnabled then
 		queue_on_teleport([[
 			task.wait(3)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/UbeyDev/Ubey-Hub/refs/heads/main/UBEY-HUB-NYOBA.lua"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/UbeyDev/Ubey-Hub/refs/heads/main/UBEY-HUB-NYOBA.lua?v=" .. math.random(1, 100000)))()
 		]])
 	end
 end)
@@ -1196,7 +1196,7 @@ task.spawn(function()
 				end
 			end)
 		end
-		task.wait(2) -- Cek setiap 2 detik
+		task.wait(2)
 	end
 end)
 
