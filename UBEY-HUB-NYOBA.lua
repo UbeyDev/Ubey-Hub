@@ -141,6 +141,14 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 
+-- LOOP SPOT TIMER STATES
+getgenv().LoopSpotEnabled = false
+getgenv().SpotLoopConfig = {
+	["Spot Mancing Jembatan"] = { Enabled = false, Timer = "10" },
+	["Spot Mancing Core"] = { Enabled = false, Timer = "10" },
+	["Spot Mancing Ikan Anomali"] = { Enabled = false, Timer = "10" }
+}
+
 -- AUTO FAVORITE STATES
 getgenv().AutoFavoriteRunning = false
 getgenv().FavRarities = {
@@ -379,7 +387,7 @@ Gui.Name = "UbeyHub"
 Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
--- FUNGSI DRAGGABLE UNIVERSAL (LANCAR DI PC & MOBILE HP)
+-- FUNGSI DRAGGABLE UNIVERSAL (MOBILE & PC)
 local function MakeDraggable(guiObject, handleObject)
 	handleObject = handleObject or guiObject
 	local dragging, dragInput, dragStart, startPos
@@ -500,7 +508,6 @@ Main.Position = UDim2.new(0.5,-275,0.5,-160)
 Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
 Main.ClipsDescendants = true
 
--- MEMBERIKAN FITUR DRAG / GESER PADA FRAME UTAMA (BISA DIGESER DARI MANA SAJA AREA UI)
 MakeDraggable(Main)
 
 local MainCorner = Instance.new("UICorner")
@@ -511,7 +518,7 @@ local MainStroke = Instance.new("UIStroke")
 MainStroke.Parent = Main
 MainStroke.Color = Color3.fromRGB(0,170,255)
 
--- CONTAINER CONTROL BUTTONS (MINIMIZE & CLOSE DI POJOK KANAN ATAS)
+-- CONTROLS (MINIMIZE & CLOSE)
 local ControlsFrame = Instance.new("Frame")
 ControlsFrame.Parent = Main
 ControlsFrame.Size = UDim2.new(0, 65, 0, 30)
@@ -526,7 +533,6 @@ ControlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
 ControlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 ControlLayout.Padding = UDim.new(0, 5)
 
--- TOMBOL MINIMIZE (-)
 local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Parent = ControlsFrame
 MinimizeBtn.Size = UDim2.new(0, 26, 0, 26)
@@ -538,7 +544,6 @@ MinimizeBtn.TextSize = 18
 MinimizeBtn.ZIndex = 11
 Instance.new("UICorner", MinimizeBtn).CornerRadius = UDim.new(0, 6)
 
--- TOMBOL CLOSE (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = ControlsFrame
 CloseBtn.Size = UDim2.new(0, 26, 0, 26)
@@ -614,7 +619,6 @@ Content.Position = UDim2.new(0,150,0,30)
 Content.Size = UDim2.new(1,-160,1,-40)
 Content.BackgroundTransparency = 1
 
--- SISTEM MINIMIZE LOGIC
 local isMinimized = false
 local normalSize = UDim2.new(0,550,0,320)
 local minimizedSize = UDim2.new(0,550,0,38)
@@ -920,7 +924,7 @@ local SpotLabel = Instance.new("TextLabel")
 SpotLabel.Parent = FishingPage
 SpotLabel.Size = UDim2.new(1,0,0,25)
 SpotLabel.BackgroundTransparency = 1
-SpotLabel.Text = "Pilih Lokasi: " .. getgenv().SelectedFishingSpot
+SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
 SpotLabel.TextColor3 = Color3.new(1,1,1)
 SpotLabel.Font = Enum.Font.Gotham
 SpotLabel.TextSize = 12
@@ -929,7 +933,7 @@ local ChangeSpotBtn = Instance.new("TextButton")
 ChangeSpotBtn.Parent = FishingPage
 ChangeSpotBtn.Size = UDim2.new(1,0,0,32)
 ChangeSpotBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
-ChangeSpotBtn.Text = "Ganti Spot (Jembatan -> Core -> Anomali)"
+ChangeSpotBtn.Text = "Ganti Spot Manual (Jembatan -> Core -> Anomali)"
 ChangeSpotBtn.TextColor3 = Color3.new(1,1,1)
 ChangeSpotBtn.Font = Enum.Font.GothamMedium
 ChangeSpotBtn.TextSize = 12
@@ -944,7 +948,7 @@ end
 ChangeSpotBtn.MouseButton1Click:Connect(function()
 	spotIndex = spotIndex % #spotList + 1
 	getgenv().SelectedFishingSpot = spotList[spotIndex]
-	SpotLabel.Text = "Pilih Lokasi: " .. getgenv().SelectedFishingSpot
+	SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
 	getgenv().UbeyConfig.SelectedSpot = getgenv().SelectedFishingSpot
 	SaveConfig()
 end)
@@ -990,7 +994,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 							end
 							if conn then conn:Disconnect() end
 							
-							if hooked and getgenv().AutoFishingEventRunning then
+							if hooked and getgenv().AutoFishingEventRunning do
 								local currentDelay = tonumber(getgenv().BiteDelayInput) or 0.5
 								task.wait(currentDelay)
 								remoteFolder.MiniGame:FireServer(true)
@@ -1104,6 +1108,106 @@ SellTimerBox.FocusLost:Connect(function()
 	getgenv().AutoSellTimerInput = SellTimerBox.Text
 	getgenv().UbeyConfig.AutoSellTimer = SellTimerBox.Text
 	SaveConfig()
+end)
+
+----------------------------------------------------
+-- SYSTEM AUTO ROTASI / LOOP SPOT MANCING BERDASARKAN WAKTU
+----------------------------------------------------
+local DividerLoop = Instance.new("Frame")
+DividerLoop.Parent = FishingPage
+DividerLoop.Size = UDim2.new(1,0,0,2)
+DividerLoop.BackgroundColor3 = Color3.fromRGB(50,50,65)
+
+local TitleLoop = Instance.new("TextLabel")
+TitleLoop.Parent = FishingPage
+TitleLoop.Size = UDim2.new(1,0,0,25)
+TitleLoop.BackgroundTransparency = 1
+TitleLoop.Text = "⏳ ROTASI AUTO SPOT MANCING (TIMER)"
+TitleLoop.TextColor3 = Color3.fromRGB(0,255,170)
+TitleLoop.Font = Enum.Font.GothamBold
+TitleLoop.TextSize = 13
+
+AddToggle(FishingPage, "Aktifkan Loop Spot Mancing (Timer)", function(v)
+	getgenv().LoopSpotEnabled = v
+end)
+
+local function CreateSpotTimerSetting(parent, spotName)
+	local frame = Instance.new("Frame")
+	frame.Parent = parent
+	frame.Size = UDim2.new(1,0,0,35)
+	frame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	Instance.new("UICorner", frame)
+
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Parent = frame
+	toggleBtn.Size = UDim2.new(0.65,0,1,0)
+	toggleBtn.BackgroundTransparency = 1
+	toggleBtn.Text = "  " .. spotName .. " [OFF]"
+	toggleBtn.TextColor3 = Color3.new(1,1,1)
+	toggleBtn.Font = Enum.Font.Gotham
+	toggleBtn.TextSize = 11
+	toggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+	local timeBox = Instance.new("TextBox")
+	timeBox.Parent = frame
+	timeBox.Size = UDim2.new(0.3, -5, 0, 25)
+	timeBox.Position = UDim2.new(0.7, 0, 0, 5)
+	timeBox.BackgroundColor3 = Color3.fromRGB(45,45,55)
+	timeBox.Text = getgenv().SpotLoopConfig[spotName].Timer
+	timeBox.PlaceholderText = "Menit"
+	timeBox.TextColor3 = Color3.fromRGB(0,170,255)
+	timeBox.Font = Enum.Font.GothamBold
+	timeBox.TextSize = 11
+	Instance.new("UICorner", timeBox)
+
+	toggleBtn.MouseButton1Click:Connect(function()
+		local cur = not getgenv().SpotLoopConfig[spotName].Enabled
+		getgenv().SpotLoopConfig[spotName].Enabled = cur
+		toggleBtn.Text = "  " .. spotName .. (cur and " [ON]" or " [OFF]")
+		toggleBtn.TextColor3 = cur and Color3.fromRGB(0,255,150) or Color3.new(1,1,1)
+	end)
+
+	timeBox.FocusLost:Connect(function()
+		getgenv().SpotLoopConfig[spotName].Timer = timeBox.Text
+	end)
+end
+
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Jembatan")
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Core")
+CreateSpotTimerSetting(FishingPage, "Spot Mancing Ikan Anomali")
+
+-- LOOP LOGIC TASK
+task.spawn(function()
+	local spotOrder = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+	while true do
+		if getgenv().LoopSpotEnabled then
+			for _, name in ipairs(spotOrder) do
+				local cfg = getgenv().SpotLoopConfig[name]
+				if getgenv().LoopSpotEnabled and cfg and cfg.Enabled then
+					getgenv().SelectedFishingSpot = name
+					SpotLabel.Text = "Lokasi Saat Ini: " .. name
+					
+					-- Teleport jika Auto Fishing sedang aktif
+					pcall(function()
+						local character = LocalPlayer.Character
+						local hrp = character and character:FindFirstChild("HumanoidRootPart")
+						local targetCFrame = FishingSpots[name]
+						if hrp and targetCFrame then
+							hrp.CFrame = targetCFrame
+						end
+					end)
+					
+					local duration = (tonumber(cfg.Timer) or 10) * 60
+					local timerStart = tick()
+					
+					while getgenv().LoopSpotEnabled and cfg.Enabled and (tick() - timerStart < duration) do
+						task.wait(1)
+					end
+				end
+			end
+		end
+		task.wait(1)
+	end
 end)
 
 ----------------------------------------------------
