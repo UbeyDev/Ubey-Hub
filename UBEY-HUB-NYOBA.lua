@@ -1458,26 +1458,26 @@ AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.6
 
 ----------------------------------------------------
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FULL PRECISION CFRAME & ROTATION WALK)
+-- 5. SUMMIT PAGE (UPDATED CP 5 CFrame)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (FULL CFrame PATH)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (CP 5 FIXED)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop (TP & Walk)", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Lengkap (Posisi & Rotasi arah jalan yang benar untuk setiap Checkpoint)
+-- Daftar CFrame Lengkap dengan CP 5 yang sudah diperbarui posisinya
 local SummitCheckpoints = {
 	CFrame.new(464.5757, 444.6314, -8944.9775), -- CP 1
 	CFrame.new(451.756012, 488.997986, -9563.31348, 0.993951559, 7.51748885e-09, 0.109819196, -1.04630005e-09, 1, -5.89834706e-08, -0.109819196, 5.85118087e-08, 0.993951559), -- CP 2
 	CFrame.new(394.5212, 628.9980, -10113.1602), -- CP 3
 	CFrame.new(487.2241, 636.9980, -10685.8164), -- CP 4
-	CFrame.new(1084.3728, 724.9941, -11160.0850), -- CP 5 (Akan menggunakan rotasi titik aslinya agar arah jalannya pas)
+	CFrame.new(1085.21948, 724.997986, -11151.3574, 0.999599159, 5.59065114e-08, 0.0283109378, -5.36427329e-08, 1, -8.07207527e-08, -0.0283109378, 7.91697232e-08, 0.999599159), -- CP 5 (Updated)
 	CFrame.new(970.9746, 732.9639, -11810.7012), -- CP 6
 	CFrame.new(389.8508, 884.9980, -11839.1611), -- CP 7
 	CFrame.new(-325.3976, 848.9980, -11735.5684), -- CP 8
@@ -1510,11 +1510,11 @@ task.spawn(function()
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						-- 1. Teleport ke CFrame checkpoint (membawa posisi & rotasi hadap yang benar)
+						-- Teleport ke CFrame checkpoint
 						hrp.CFrame = cpCFrame + Vector3.new(0, 2, 0)
 						task.wait(0.3)
 						
-						-- 2. Berjalan maju mengikuti arah hadap rotasi checkpoint tersebut secara akurat
+						-- Berjalan maju mengikuti arah rotasi checkpoint
 						humanoid.WalkSpeed = 25
 						humanoid:MoveTo(hrp.Position + (hrp.CFrame.LookVector * 6))
 						task.wait(0.6)
@@ -1537,6 +1537,7 @@ task.spawn(function()
 		end
 	end
 end)
+
 
 
 ----------------------------------------------------
