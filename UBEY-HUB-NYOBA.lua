@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (HIGH ALTITUDE & TYPO CLEANED)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (LONGER CHECKPOINT WAIT TIME)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -346,7 +346,7 @@ local function RunAutoFishCycle(remoteFolder)
 		end
 		if conn then conn:Disconnect() end
 		
-		if hooked and getgenv().AutoFishingEventRunning then
+		if hooked and getgenv().AutoFishingEventRunning do
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
@@ -1457,20 +1457,20 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (HIGHER ALTITUDE & CHECKPOINT DELAY)
+-- 5. SUMMIT PAGE (EXTENDED CHECKPOINT DELAY)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (HIGH ALTITUDE)"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (EXTENDED DELAY)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint 1 sampai 20 dengan Ketinggian (Y) yang dinaikkan (+25) agar jauh lebih tinggi
+-- Daftar CFrame Checkpoint 1 sampai 20 dengan ketinggian presisi
 local CheckpointPath = {
 	CFrame.new(464.5757, 469.6314, -8944.9775),
 	CFrame.new(450.3757, 513.9970, -9572.0254),
@@ -1494,7 +1494,6 @@ local CheckpointPath = {
 	CFrame.new(-6745.1304, 1127.5760, -10796.0947)
 }
 
--- Ketinggian Puncak & BaseCamp juga dinaikkan agar berada di udara aman
 local SummitPuncakVector = Vector3.new(-6766.44629, 1360, -10083.8037)
 local BaseCampVector = Vector3.new(-6834.84912, 1350, -9902.42285)
 
@@ -1515,7 +1514,7 @@ RunService.Stepped:Connect(function()
 	end)
 end)
 
--- Fungsi Tween CFrame dengan kecepatan aman
+-- Fungsi Tween CFrame dengan kecepatan stabil
 local function TweenToPosition(targetCFrame, duration)
 	pcall(function()
 		local character = LocalPlayer.Character
@@ -1566,25 +1565,23 @@ task.spawn(function()
 							end
 							
 							if targetPos then
-								-- Posisi Y dinaikkan +15 di atas objek checkpoint asli
 								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)), 1.0)
-								task.wait(0.5) 
+								task.wait(1.5) -- JEDA DIAM DIPERLAMA (1.5 DETIK) AGAR TERDETEKSI SEMPURNA
 								currentTargetIndex = currentTargetIndex + 1
 							else
 								currentTargetIndex = currentTargetIndex + 1
 							end
 						else
-							-- Jalur pancingan CFrame ditambah offset tinggi +15
 							local fallbackCFrame = CheckpointPath[currentTargetIndex]
 							if fallbackCFrame then
 								TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0), 1.2)
-								task.wait(0.5)
+								task.wait(1.5) -- JEDA DIAM DIPERLAMA (1.5 DETIK)
 							end
 							currentTargetIndex = currentTargetIndex + 1
 						end
 					end
 					
-					-- Finishing ke Puncak & BaseCamp dengan posisi tinggi yang aman
+					-- Finishing ke Puncak & BaseCamp
 					if getgenv().AutoSummitRunning then
 						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
 						task.wait(3.0)
