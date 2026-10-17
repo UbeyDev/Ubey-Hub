@@ -1508,7 +1508,7 @@ task.spawn(function()
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						hrp.CFrame = cpCFrame + Vector3.new(0, 3, 0)
-						task.wait(0.25)
+						task.wait(1)
 					end
 					
 					-- Teleport ke Puncak setelah melewati semua checkpoint
