@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (INSTANT TELEPORT SUMMIT VERSION)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (NATURAL WALK SUMMIT VERSION)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1457,13 +1457,13 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIX: WALKING / MOVETO SIMULATION)
+-- 5. SUMMIT PAGE (FIX: NATURAL WALKING SIMULATION)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (WALK SIMULATION)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (NATURAL WALK)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
@@ -1497,6 +1497,23 @@ local SummitCheckpoints = {
 local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
 
+local function WalkToPosition(humanoid, targetPos)
+	humanoid:MoveTo(targetPos)
+	local reached = false
+	local conn
+	conn = humanoid.MoveToFinished:Connect(function(isReached)
+		reached = true
+		if conn then conn:Disconnect() end
+	end)
+	
+	local startTick = tick()
+	while not reached and getgenv().AutoSummitRunning do
+		if (tick() - startTick) > 4 then break end
+		task.wait(0.1)
+	end
+	if conn then conn:Disconnect() end
+end
+
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
@@ -1509,23 +1526,15 @@ task.spawn(function()
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						-- Teleport mendekati CP agar mulus, lalu gunakan MoveTo agar terhitung bergerak seperti analog
-						hrp.CFrame = cpCFrame + Vector3.new(0, 1, 0)
-						humanoid:MoveTo(cpCFrame.Position)
-						
-						-- Jeda tunggu sebentar agar game mencatat langkah karakter
-						task.wait(0.6)
+						humanoid.WalkSpeed = 35
+						WalkToPosition(humanoid, cpCFrame.Position)
+						task.wait(0.4)
 					end
 					
-					-- Ke Puncak
 					if getgenv().AutoSummitRunning then
-						hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 1, 0)
-						humanoid:MoveTo(SummitPuncakCFrame.Position)
-						task.wait(3.5)
-						
-						-- Kembali ke BaseCamp
-						hrp.CFrame = BaseCampCFrame + Vector3.new(0, 1, 0)
-						humanoid:MoveTo(BaseCampCFrame.Position)
+						WalkToPosition(humanoid, SummitPuncakCFrame.Position)
+						task.wait(2.0)
+						WalkToPosition(humanoid, BaseCampCFrame.Position)
 					end
 				end
 			end)
