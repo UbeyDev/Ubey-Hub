@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (SECRET & FORGOTTEN WEBHOOK ONLY)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (POST-UPDATE AUTO FISHING FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -316,6 +316,58 @@ local function OptimizeRodSettings()
 				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
 				if enableMiniGame then enableMiniGame.Value = false end
 			end
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- POST-UPDATE AUTO FISHING FUNCTION (EXECUTE ALL REQUIRED REMOTES)
+------------------------------------------------------------------
+local function RunAutoFishCycle(remoteFolder)
+	pcall(function()
+		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
+		
+		OptimizeRodSettings()
+		
+		-- 1. Fire CastEvent (Sesuai Log Update: 2x Call)[span_3](start_span)[span_3](end_span)
+		remoteFolder.CastEvent:FireServer(true)[span_4](start_span)[span_4](end_span)
+		task.wait(0.05)
+		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)[span_5](start_span)[span_5](end_span)
+		
+		-- 2. Wait for Bite Signal[span_6](start_span)[span_6](end_span)
+		local hooked = false
+		local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+			if actionType == "Bite" or actionType == "Hook" then hooked = true end
+		end)
+		
+		local start = tick()
+		while not hooked and getgenv().AutoFishingEventRunning do
+			if tick() - start > 8 then break end
+			task.wait(0.05)
+		end
+		if conn then conn:Disconnect() end
+		
+		if hooked and getgenv().AutoFishingEventRunning then
+			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
+			
+			-- 3. FIRE REMOTE BARU: TandaSeruBersama (Wajib dikirim sebelum MiniGame)[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)
+			if tandaSeruRemote then
+				local color1 = Color3.fromRGB(23, 255, 151)[span_11](start_span)[span_11](end_span)
+				local color2 = Color3.fromRGB(20, 20, 20)[span_12](start_span)[span_12](end_span)
+				local seq = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, color1),[span_13](start_span)[span_13](end_span)
+					ColorSequenceKeypoint.new(1, color1)[span_14](start_span)[span_14](end_span)
+				})
+				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)[span_15](start_span)[span_15](end_span)
+			end
+			
+			task.wait(0.1)
+			
+			-- 4. Fire MiniGame (true)[span_16](start_span)[span_16](end_span)[span_17](start_span)[span_17](end_span)
+			remoteFolder.MiniGame:FireServer(true)[span_18](start_span)[span_18](end_span)[span_19](start_span)[span_19](end_span)
+			task.wait(0.3)
 		end
 	end)
 end
@@ -866,7 +918,6 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 			local hrp = LocalPlayer.Character and LocalPlayer.Character:WaitForChild("HumanoidRootPart", 5)
 			if hrp then hrp.CFrame = FishingSpots[getgenv().SelectedFishingSpot] + Vector3.new(0, 5, 0) end
 		end)
-		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
@@ -874,24 +925,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
-							OptimizeRodSettings()
-							remoteFolder.CastEvent:FireServer(false, 100, LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector)
-							task.wait(0.05)
-							local hooked = false
-							local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then hooked = true end
-							end)
-							local start = tick()
-							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
-								task.wait(0.05)
-							end
-							if conn then conn:Disconnect() end
-							if hooked and getgenv().AutoFishingEventRunning then
-								task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
-								remoteFolder.MiniGame:FireServer(true)
-								task.wait(0.3)
-							end
+							RunAutoFishCycle(remoteFolder)
 						end
 					else
 						task.wait(1)
@@ -906,7 +940,6 @@ end)
 AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 	getgenv().AutoFishingEventRunning = v
 	if v then
-		OptimizeRodSettings()
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
@@ -914,24 +947,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
-							OptimizeRodSettings()
-							remoteFolder.CastEvent:FireServer(false, 100, LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector)
-							task.wait(0.05)
-							local hooked = false
-							local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-								if actionType == "Bite" then hooked = true end
-							end)
-							local start = tick()
-							while not hooked and getgenv().AutoFishingEventRunning do
-								if tick() - start > 10 then break end
-								task.wait(0.05)
-							end
-							if conn then conn:Disconnect() end
-							if hooked and getgenv().AutoFishingEventRunning then
-								task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
-								remoteFolder.MiniGame:FireServer(true)
-								task.wait(0.3)
-							end
+							RunAutoFishCycle(remoteFolder)
 						end
 					else
 						task.wait(1)
