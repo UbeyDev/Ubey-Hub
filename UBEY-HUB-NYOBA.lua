@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME WEBHOOK + CORE EVENT DI GALATAMA
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME WEBHOOK (EXACT MATCH) + CORE EVENT
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -130,7 +130,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM
+-- DISCORD FILTERED WEBHOOK SYSTEM (EXACT MATCH FIX)
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 	pcall(function()
@@ -147,17 +147,24 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 		local matchRarity = false
 		local matchMutation = false
 		
+		-- Exact Match untuk Rarity agar tidak bocor ke rarity lain
 		for rName, active in pairs(getgenv().UbeyConfig.WebhookRarities) do
-			if active and string.find(targetRarityLower, string.lower(rName)) then
-				matchRarity = true
-				break
+			if active then
+				local cfgRarityLower = string.lower(tostring(rName))
+				if cfgRarityLower == targetRarityLower then
+					matchRarity = true
+					break
+				end
 			end
 		end
 		
 		for mName, active in pairs(getgenv().UbeyConfig.WebhookMutations) do
-			if active and string.find(targetMutationLower, string.lower(mName)) then
-				matchMutation = true
-				break
+			if active then
+				local cfgMutationLower = string.lower(tostring(mName))
+				if string.find(targetMutationLower, cfgMutationLower) or cfgMutationLower == targetMutationLower then
+					matchMutation = true
+					break
+				end
 			end
 		end
 		
@@ -359,7 +366,7 @@ local function TriggerSellToNpc()
 		local hrp = character and character:FindFirstChild("HumanoidRootPart")
 		if not hrp then return end
 		local currentSpotCFrame = hrp.CFrame
-		hrp.CFrame = NpcSellCFrame
+		hrp.CFrame = NpcSellCFrame + Vector3.new(0, 5, 0)
 		task.wait(0.8)
 		local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
 		local jualSemua = mancing and mancing:FindFirstChild("JualSemua")
@@ -420,7 +427,7 @@ local function ProcessAutoFavorite()
 			local fishMutationLower = string.lower(fish.Mutation)
 			
 			for rName, active in pairs(getgenv().FavRarities) do
-				if active and string.find(fishRarityLower, string.lower(rName)) then shouldFav = true end
+				if active and string.lower(rName) == fishRarityLower then shouldFav = true end
 			end
 			for mName, active in pairs(getgenv().FavMutations) do
 				if active and string.find(fishMutationLower, string.lower(mName)) then shouldFav = true end
@@ -466,7 +473,7 @@ local function UnfavoriteByFilter()
 				local fishRarityLower = string.lower(fish.Rarity)
 				local fishMutationLower = string.lower(fish.Mutation)
 				for rName, active in pairs(getgenv().UnfavRarities) do
-					if active and string.find(fishRarityLower, string.lower(rName)) then shouldUnfav = true end
+					if active and string.lower(rName) == fishRarityLower then shouldUnfav = true end
 				end
 				for mName, active in pairs(getgenv().UnfavMutations) do
 					if active and string.find(fishMutationLower, string.lower(mName)) then shouldUnfav = true end
@@ -1277,7 +1284,7 @@ task.spawn(function()
 					local targetCFrame = FishingSpots["Spot Mancing Core"]
 					if hrp and targetCFrame then
 						if (hrp.Position - targetCFrame.Position).Magnitude > 20 then
-							hrp.CFrame = targetCFrame + Vector3.new(0, 5, 0) -- Lebih tinggi sedikit agar tidak tenggelam
+							hrp.CFrame = targetCFrame + Vector3.new(0, 5, 0)
 						end
 					end
 				else
@@ -1291,7 +1298,7 @@ task.spawn(function()
 							local hrp = character and character:FindFirstChild("HumanoidRootPart")
 							local prevCFrame = FishingSpots[SavedPreviousSpot]
 							if hrp and prevCFrame then
-								hrp.CFrame = prevCFrame + Vector3.new(0, 5, 0) -- Naik sedikit saat kembali ke spot awal
+								hrp.CFrame = prevCFrame + Vector3.new(0, 5, 0)
 							end
 						end
 					end
