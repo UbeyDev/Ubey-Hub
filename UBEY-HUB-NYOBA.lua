@@ -1458,47 +1458,23 @@ AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.6
 
 ----------------------------------------------------
 ----------------------------------------------------
--- 5. SUMMIT PAGE (STRAIGHT LEVEL TWEEN FIX)
+-- 5. SUMMIT PAGE (DYNAMIC WORKSPACE SCANNER FIX)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (STRAIGHT TWEEN)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (DYNAMIC)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (Straight)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (Dynamic)", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint 1 sampai 20
-local SummitCheckpoints = {
-	CFrame.new(464.5757, 444.6314, -8944.9775),
-	CFrame.new(451.756012, 488.997986, -9563.31348),
-	CFrame.new(394.5212, 628.9980, -10113.1602),
-	CFrame.new(487.2241, 636.9980, -10685.8164),
-	CFrame.new(1085.21948, 724.997986, -11151.3574),
-	CFrame.new(970.9746, 732.9639, -11810.7012),
-	CFrame.new(389.8508, 884.9980, -11839.1611),
-	CFrame.new(-325.3976, 848.9980, -11735.5684),
-	CFrame.new(-870.3784, 852.9980, -11735.9463),
-	CFrame.new(-1280.0693, 856.9980, -12095.6299),
-	CFrame.new(-1309.8514, 888.9980, -12831.5947),
-	CFrame.new(-2315.5291, 912.9980, -12673.0791),
-	CFrame.new(-2314.9072, 916.9980, -11851.2207),
-	CFrame.new(-2444.2737, 960.9980, -11056.3330),
-	CFrame.new(-3480.8328, 980.7667, -11012.4834),
-	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
-	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
-	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
-	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
-	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
-}
+local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
+local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
 
-local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
-local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
-
--- Sistem NoClip otomatis
+-- Sistem NoClip anti nyangkut
 local RunService = game:GetService("RunService")
 RunService.Stepped:Connect(function()
 	pcall(function()
@@ -1520,43 +1496,67 @@ task.spawn(function()
 		if getgenv().AutoSummitRunning then
 			pcall(function()
 				local character = LocalPlayer.Character
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
-				if hrp then
-					for i, targetCF in ipairs(SummitCheckpoints) do
-						if not getgenv().AutoSummitRunning then break end
+				if hrp and humanoid then
+					local cpFolder = workspace:FindFirstChild("Checkpoint")
+					if cpFolder then
+						-- Cari dan urutkan checkpoint berdasarkan angka namanya (Checkpoint 1, Checkpoint 2, dst)
+						local checkpoints = {}
+						for _, obj in ipairs(cpFolder:GetChildren()) do
+							if obj:IsA("BasePart") or obj:IsA("Model") then
+								local num = tonumber(obj.Name:match("%d+"))
+								if num then
+									table.insert(checkpoints, {index = num, part = obj})
+								end
+							end
+						end
 						
-						-- Mengambil posisi tujuan, namun tinggi Y dibuat minimal rata atau sedikit di atas titik target agar tidak menukik ke bawah
-						local currentPos = hrp.Position
-						local targetPos = targetCF.Position
+						-- Urutkan dari angka terkecil ke terbesar
+						table.sort(checkpoints, function(a, b)
+							return a.index < b.index
+						end)
 						
-						-- Menjaga jalur tetap lurus secara horizontal dengan tinggi yang aman (Y + 6)
-						local safeY = math.max(currentPos.Y, targetPos.Y) + 6
-						local straightTargetCF = CFrame.new(targetPos.X, safeY, targetPos.Z)
-						
-						local distance = (currentPos - straightTargetCF.Position).Magnitude
-						local speed = 300 
-						local tweenTime = math.clamp(distance / speed, 0.05, 0.4)
-						
-						local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
-						local tween = TweenService:Create(hrp, tweenInfo, {CFrame = straightTargetCF})
-						tween:Play()
-						
-						task.wait(tweenTime + 0.05)
+						-- Lewati satu per satu sesuai checkpoint yang dimuat game
+						for _, cpData in ipairs(checkpoints) do
+							if not getgenv().AutoSummitRunning then break end
+							
+							local targetPart = cpData.part
+							local targetPos = nil
+							
+							if targetPart:IsA("BasePart") then
+								targetPos = targetPart.Position
+							elseif targetPart:IsA("Model") and targetPart.PrimaryPart then
+								targetPos = targetPart.PrimaryPart.Position
+							elseif targetPart:IsA("Model") then
+								local cf, size = targetPart:GetBoundingBox()
+								targetPos = cf.Position
+							end
+							
+							if targetPos then
+								-- Teleport sedikit di atas posisi checkpoint aktif
+								hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
+								task.wait(0.15)
+								
+								-- Gerakan Maju-Mundur tipis agar sentuhan/touch terdeteksi game
+								humanoid:Move(Vector3.new(0, 0, -1))
+								task.wait(0.2)
+								humanoid:Move(Vector3.new(0, 0, 1))
+								task.wait(0.15)
+								humanoid:Move(Vector3.new(0, 0, 0))
+								task.wait(0.1)
+							end
+						end
 					end
 					
-					-- Menuju Puncak secara lurus
+					-- Jika sudah mencapai ujung atau ingin langsung ke Puncak
 					if getgenv().AutoSummitRunning then
-						local summitTarget = CFrame.new(SummitPuncakCFrame.X, SummitPuncakCFrame.Y + 6, SummitPuncakCFrame.Z)
-						local summitTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = summitTarget})
-						summitTween:Play()
-						task.wait(1.0)
+						hrp.CFrame = CFrame.new(SummitPuncakVector)
+						task.wait(2.5)
 						
-						-- Kembali ke BaseCamp
-						local baseTarget = CFrame.new(BaseCampCFrame.X, BaseCampCFrame.Y + 6, BaseCampCFrame.Z)
-						local baseTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = baseTarget})
-						baseTween:Play()
-						task.wait(0.8)
+						hrp.CFrame = CFrame.new(BaseCampVector)
+						task.wait(1.0)
 					end
 				end
 			end)
@@ -1566,6 +1566,7 @@ task.spawn(function()
 		end
 	end
 end)
+
 
 
 
