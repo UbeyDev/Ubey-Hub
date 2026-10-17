@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% FIXED AUTO SUMMIT & ALL TYPOS)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (INSTANT TELEPORT SUMMIT VERSION)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1456,18 +1456,42 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (PATH DENGAN SESUAI DEX++ DISESUAIKAN)
+-- 5. SUMMIT PAGE (INSTANT PHYSICAL CHECKPOINT FINDER)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (INSTANT TP)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
+
+local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
+local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
+
+local function FindCPObject(index)
+	local targetNames = {
+		"cp" .. tostring(index),
+		"CP" .. tostring(index),
+		"Checkpoint" .. tostring(index),
+		"Checkpoint " .. tostring(index)
+	}
+	for _, name in ipairs(targetNames) do
+		local obj = Workspace:FindFirstChild(name)
+		if obj then return obj end
+	end
+	local mainCPFolder = Workspace:FindFirstChild("Checkpoint")
+	if mainCPFolder then
+		for _, name in ipairs(targetNames) do
+			local obj = mainCPFolder:FindFirstChild(name)
+			if obj then return obj end
+		end
+	end
+	return nil
+end
 
 task.spawn(function()
 	while true do
@@ -1477,24 +1501,21 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					-- Mengambil Remote TpToCheckpoint langsung dari Workspace.Checkpoint (Sesuai Dex++)
-					local cpFolder = Workspace:FindFirstChild("Checkpoint")
-					local cpRemote = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
-					
-					if cpRemote then
-						for i = 1, 20 do
-							if not getgenv().AutoSummitRunning then break end
-							
-							cpRemote:FireServer(i)
-							task.wait(0.35)
+					for i = 1, 20 do
+						if not getgenv().AutoSummitRunning then break end
+						local cpObj = FindCPObject(i)
+						if cpObj then
+							local targetPart = cpObj:IsA("BasePart") and cpObj or cpObj:FindFirstChildWhichIsA("BasePart", true)
+							if targetPart then
+								hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+								task.wait(0.25)
+							end
 						end
 					end
 					
-					-- Teleport ke puncak & kembali ke area awal
-					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
+					hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 3, 0)
 					task.wait(2.5)
-					
-					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
+					hrp.CFrame = BaseCampCFrame + Vector3.new(0, 3, 0)
 				end
 			end)
 			task.wait(1)
