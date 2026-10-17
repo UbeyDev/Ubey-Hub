@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (INDEXBERUBAH FIX)
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (NOTIFYCLIENT GOTFISH)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -188,58 +188,58 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (FIX RARITY & MUTASI INDEXBERUBAH)
+-- REAL-TIME CATCH MONITOR (NOTIFYCLIENT - GOTFISH)
 ------------------------------------------------------------------
 local function ListenToFishCatch()
 	pcall(function()
-		local remoteFolder = ReplicatedStorage:FindFirstChild("Remote") or ReplicatedStorage:FindFirstChild("Remotes")
-		
-		local indexBerubahRemote = remoteFolder and remoteFolder:FindFirstChild("IndexBerubah", true)
-			or ReplicatedStorage:FindFirstChild("IndexBerubah", true)
-			
-		if indexBerubahRemote and indexBerubahRemote:IsA("RemoteEvent") then
-			indexBerubahRemote.OnClientEvent:Connect(function(fishNameArg, fishDataArg, extraArg)
-				pcall(function()
-					local finalFishName = type(fishNameArg) == "string" and fishNameArg or "Unknown Fish"
-					local dataTable = type(fishDataArg) == "table" and fishDataArg or (type(extraArg) == "table" and extraArg or {})
-					
-					if type(dataTable.Fish) == "table" then dataTable = dataTable.Fish
-					elseif type(dataTable.Data) == "table" then dataTable = dataTable.Data
-					elseif type(dataTable.Info) == "table" then dataTable = dataTable.Info end
+		local function HookNotifyRemote(remote)
+			if remote and remote:IsA("RemoteEvent") then
+				remote.OnClientEvent:Connect(function(actionType, fishDataArg)
+					if actionType == "GotFish" and type(fishDataArg) == "table" then
+						pcall(function()
+							local rawName = fishDataArg.baseName or fishDataArg.originalName or fishDataArg.name or "Unknown Fish"
+							local rawRarity = fishDataArg.rarity or fishDataArg.Rarity or "Common"
+							local rawMutation = fishDataArg.mutation or fishDataArg.Mutation or "Normal"
 
-					local rawRarity = dataTable.Rarity 
-						or dataTable.rarity 
-						or dataTable.Raritas 
-						or dataTable.raritas 
-						or dataTable.Tier 
-						or dataTable.tier 
-						or dataTable[1] 
-						or dataTable[2] 
-						or "Common"
+							local finalFishName = tostring(rawName)
+							local finalRarity = tostring(rawRarity)
+							local finalMutation = tostring(rawMutation)
 
-					local rawMutation = dataTable.Mutation 
-						or dataTable.mutation 
-						or dataTable.Mutasi 
-						or dataTable.mutasi 
-						or dataTable.Variant 
-						or dataTable.variant 
-						or dataTable[2] 
-						or dataTable[3] 
-						or "Normal"
-
-					local finalRarity = tostring(rawRarity)
-					local finalMutation = tostring(rawMutation)
-
-					if finalFishName ~= "Unknown Fish" and finalFishName ~= "" then
-						SendFilteredWebhook(finalFishName, finalRarity, finalMutation)
+							if finalFishName ~= "Unknown Fish" and finalFishName ~= "" then
+								SendFilteredWebhook(finalFishName, finalRarity, finalMutation)
+							end
+						end)
 					end
 				end)
-			end)
+			end
+		end
+
+		local repStorage = game:GetService("ReplicatedStorage")
+		for _, desc in ipairs(repStorage:GetDescendants()) do
+			if desc:IsA("RemoteEvent") and desc.Name == "NotifyClient" then
+				HookNotifyRemote(desc)
+			end
+		end
+
+		local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		for _, tool in ipairs(character:GetChildren()) do
+			if tool:IsA("Tool") then
+				for _, desc in ipairs(tool:GetDescendants()) do
+					if desc:IsA("RemoteEvent") and desc.Name == "NotifyClient" then
+						HookNotifyRemote(desc)
+					end
+				end
+			end
 		end
 	end)
 end
 
 task.spawn(function()
+	task.wait(2)
+	ListenToFishCatch()
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
 	task.wait(2)
 	ListenToFishCatch()
 end)
