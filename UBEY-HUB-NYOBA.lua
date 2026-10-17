@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (NOTIFYCLIENT GOTFISH)
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (CASE MATCH FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -33,14 +33,14 @@ getgenv().UbeyConfig = {
 	WebhookEnabled = false,
 	WebhookUrl = "",
 	WebhookRarities = {
-		["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
+		["Common"] = true, ["UnCommon"] = true, ["Rare"] = true, ["Epic"] = true,
 		["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
 	},
 	WebhookMutations = {
 		["Galaxy"] = true, ["Corrupt"] = true, ["Gemstone"] = true, ["Ghost"] = true,
 		["Lightning"] = true, ["Fairy Dust"] = true, ["Gold"] = true, ["Midnight"] = true,
 		["Radioactive"] = true, ["Stone"] = true, ["Holographic"] = true, ["Albino"] = true,
-		["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = false, ["Elemental"] = true,
+		["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = true, ["Elemental"] = true,
 		["Festive"] = true, ["8-Bit"] = true, ["Bloodmoon"] = true, ["Abyssal"] = true,
 		["Strawberry"] = true, ["Void"] = true, ["Cupid"] = true
 	}
@@ -88,14 +88,14 @@ local function ResetConfig()
 			WebhookEnabled = false,
 			WebhookUrl = "",
 			WebhookRarities = {
-				["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
+				["Common"] = true, ["UnCommon"] = true, ["Rare"] = true, ["Epic"] = true,
 				["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
 			},
 			WebhookMutations = {
 				["Galaxy"] = true, ["Corrupt"] = true, ["Gemstone"] = true, ["Ghost"] = true,
 				["Lightning"] = true, ["Fairy Dust"] = true, ["Gold"] = true, ["Midnight"] = true,
 				["Radioactive"] = true, ["Stone"] = true, ["Holographic"] = true, ["Albino"] = true,
-				["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = false, ["Elemental"] = true,
+				["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = true, ["Elemental"] = true,
 				["Festive"] = true, ["8-Bit"] = true, ["Bloodmoon"] = true, ["Abyssal"] = true,
 				["Strawberry"] = true, ["Void"] = true, ["Cupid"] = true
 			}
@@ -130,7 +130,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM (REAL-TIME ENGINE)
+-- DISCORD FILTERED WEBHOOK SYSTEM (CASE-INSENSITIVE FIX)
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 	pcall(function()
@@ -138,20 +138,29 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 		local url = getgenv().UbeyConfig.WebhookUrl
 		if not url or url == "" or not string.find(url, "api/webhooks") then return end
 		
+		local targetRarityLower = string.lower(tostring(fishRarity or "Common"))
+		local targetMutationLower = string.lower(tostring(fishMutation or "Normal"))
+		
 		local matchRarity = false
 		local matchMutation = false
 		
 		for rName, active in pairs(getgenv().UbeyConfig.WebhookRarities) do
-			if active and string.find(string.lower(fishRarity), string.lower(rName)) then
-				matchRarity = true
-				break
+			if active then
+				local cfgRarityLower = string.lower(tostring(rName))
+				if string.find(targetRarityLower, cfgRarityLower) or cfgRarityLower == targetRarityLower then
+					matchRarity = true
+					break
+				end
 			end
 		end
 		
 		for mName, active in pairs(getgenv().UbeyConfig.WebhookMutations) do
-			if active and string.find(string.lower(fishMutation), string.lower(mName)) then
-				matchMutation = true
-				break
+			if active then
+				local cfgMutationLower = string.lower(tostring(mName))
+				if string.find(targetMutationLower, cfgMutationLower) or cfgMutationLower == targetMutationLower then
+					matchMutation = true
+					break
+				end
 			end
 		end
 		
@@ -188,7 +197,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (NOTIFYCLIENT - GOTFISH)
+-- REAL-TIME CATCH MONITOR (EXACT MATCH NOTIFYCLIENT GOTFISH)
 ------------------------------------------------------------------
 local function ListenToFishCatch()
 	pcall(function()
@@ -198,8 +207,8 @@ local function ListenToFishCatch()
 					if actionType == "GotFish" and type(fishDataArg) == "table" then
 						pcall(function()
 							local rawName = fishDataArg.baseName or fishDataArg.originalName or fishDataArg.name or "Unknown Fish"
-							local rawRarity = fishDataArg.rarity or fishDataArg.Rarity or "Common"
-							local rawMutation = fishDataArg.mutation or fishDataArg.Mutation or "Normal"
+							local rawRarity = fishDataArg.rarity or fishDataArg.Rarity or fishDataArg.raritas or "Common"
+							local rawMutation = fishDataArg.mutation or fishDataArg.Mutation or fishDataArg.mutasi or "Normal"
 
 							local finalFishName = tostring(rawName)
 							local finalRarity = tostring(rawRarity)
