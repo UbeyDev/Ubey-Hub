@@ -188,7 +188,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (SADAP LANGSUNG PANCINGAN)
+-- REAL-TIME CATCH MONITOR (SADAP LANGSUNG PANCINGAN + FIX NAMA)
 ------------------------------------------------------------------
 local function ListenToFishCatch()
 	pcall(function()
@@ -197,14 +197,44 @@ local function ListenToFishCatch()
 		if rod and rod:FindFirstChild("Mechanics") then
 			local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 			if remoteFolder and remoteFolder:FindFirstChild("NotifyClient") then
-				remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType, fishData)
-					if actionType == "Success" or actionType == "Catch" or type(fishData) == "table" then
+				remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType, fishData, extraData)
+					if actionType == "Success" or actionType == "Catch" or type(fishData) == "table" or type(extraData) == "table" then
 						pcall(function()
-							local fName = fishData.name or fishData.Name or fishData[1] or "Ikan Tangkapan"
-							local fRarity = fishData.rarity or fishData.Rarity or fishData[2] or "Legendary"
-							local fMutation = fishData.mutation or fishData.Mutasi or fishData[3] or "Normal"
+							local targetTable = type(fishData) == "table" and fishData or (type(extraData) == "table" and extraData or {})
 							
-							SendFilteredWebhook(tostring(fName), tostring(fRarity), tostring(fMutation))
+							local rawName = targetTable.nama 
+								or targetTable.Nama 
+								or targetTable.name 
+								or targetTable.Name 
+								or targetTable.fishName 
+								or targetTable.FishName 
+								or targetTable[1] 
+								or targetTable[2]
+							
+							local rawRarity = targetTable.rarity 
+								or targetTable.Rarity 
+								or targetTable.raritas 
+								or targetTable[2] 
+								or "Common"
+							
+							local rawMutation = targetTable.mutasi 
+								or targetTable.Mutasi 
+								or targetTable.mutation 
+								or targetTable.Mutation 
+								or targetTable[3] 
+								or "Normal"
+
+							if not rawName and type(targetTable.Fish) == "table" then
+								rawName = targetTable.Fish.Name or targetTable.Fish.nama
+								rawRarity = targetTable.Fish.Rarity or targetTable.Fish.rarity or rawRarity
+								rawMutation = targetTable.Fish.Mutation or targetTable.Fish.mutasi or rawMutation
+							end
+							
+							local finalFishName = tostring(rawName or "Ikan Tangkapan")
+							local finalRarity = tostring(rawRarity or "Common")
+							local finalMutation = tostring(rawMutation or "Normal")
+
+							SendFilteredWebhook(finalFishName, finalRarity, finalMutation)
 						end)
 					end
 				end)
