@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME WEBHOOK (EXACT MATCH) + CORE EVENT
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (SECRET & FORGOTTEN WEBHOOK ONLY)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -31,19 +31,7 @@ getgenv().UbeyConfig = {
 	AntiAdminEnabled = false,
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
-	WebhookUrl = "",
-	WebhookRarities = {
-		["Common"] = true, ["UnCommon"] = true, ["Rare"] = true, ["Epic"] = true,
-		["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
-	},
-	WebhookMutations = {
-		["Galaxy"] = true, ["Corrupt"] = true, ["Gemstone"] = true, ["Ghost"] = true,
-		["Lightning"] = true, ["Fairy Dust"] = true, ["Gold"] = true, ["Midnight"] = true,
-		["Radioactive"] = true, ["Stone"] = true, ["Holographic"] = true, ["Albino"] = true,
-		["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = true, ["Elemental"] = true,
-		["Festive"] = true, ["8-Bit"] = true, ["Bloodmoon"] = true, ["Abyssal"] = true,
-		["Strawberry"] = true, ["Void"] = true, ["Cupid"] = true
-	}
+	WebhookUrl = ""
 }
 
 local function SaveConfig()
@@ -69,8 +57,6 @@ local function LoadConfig()
 				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
 				if data.WebhookEnabled ~= nil then getgenv().UbeyConfig.WebhookEnabled = data.WebhookEnabled end
 				if data.WebhookUrl then getgenv().UbeyConfig.WebhookUrl = data.WebhookUrl end
-				if data.WebhookRarities then getgenv().UbeyConfig.WebhookRarities = data.WebhookRarities end
-				if data.WebhookMutations then getgenv().UbeyConfig.WebhookMutations = data.WebhookMutations end
 			end
 		end
 	end)
@@ -86,19 +72,7 @@ local function ResetConfig()
 			AntiAdminEnabled = false,
 			TargetGroupId = 7019573,
 			WebhookEnabled = false,
-			WebhookUrl = "",
-			WebhookRarities = {
-				["Common"] = true, ["UnCommon"] = true, ["Rare"] = true, ["Epic"] = true,
-				["Legendary"] = true, ["Mythical"] = true, ["Secret"] = true, ["Forgotten"] = true
-			},
-			WebhookMutations = {
-				["Galaxy"] = true, ["Corrupt"] = true, ["Gemstone"] = true, ["Ghost"] = true,
-				["Lightning"] = true, ["Fairy Dust"] = true, ["Gold"] = true, ["Midnight"] = true,
-				["Radioactive"] = true, ["Stone"] = true, ["Holographic"] = true, ["Albino"] = true,
-				["Sandy"] = true, ["Cosmic"] = true, ["Normal"] = true, ["Elemental"] = true,
-				["Festive"] = true, ["8-Bit"] = true, ["Bloodmoon"] = true, ["Abyssal"] = true,
-				["Strawberry"] = true, ["Void"] = true, ["Cupid"] = true
-			}
+			WebhookUrl = ""
 		}
 		if delfile and isfile then
 			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
@@ -130,61 +104,44 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM (EXACT MATCH FIX)
+-- DISCORD WEBHOOK SYSTEM (STRICT SECRET & FORGOTTEN ONLY)
 ------------------------------------------------------------------
-local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
+local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade, fishWeight, fishChance)
 	pcall(function()
 		if not getgenv().UbeyConfig.WebhookEnabled then return end
 		local url = getgenv().UbeyConfig.WebhookUrl
 		if not url or url == "" or not string.find(url, "api/webhooks") then return end
 		
+		local targetName = tostring(fishName or "Unknown Fish")
 		local targetRarity = tostring(fishRarity or "Common")
 		local targetMutation = tostring(fishMutation or "Normal")
+		local targetGrade = tostring(fishGrade or "N/A")
+		local targetWeight = tostring(fishWeight or "0") .. " kg"
+		local targetChance = tostring(fishChance or "N/A")
 		
 		local targetRarityLower = string.lower(targetRarity)
-		local targetMutationLower = string.lower(targetMutation)
 		
-		local matchRarity = false
-		local matchMutation = false
-		
-		-- Exact Match untuk Rarity agar tidak bocor ke rarity lain
-		for rName, active in pairs(getgenv().UbeyConfig.WebhookRarities) do
-			if active then
-				local cfgRarityLower = string.lower(tostring(rName))
-				if cfgRarityLower == targetRarityLower then
-					matchRarity = true
-					break
-				end
-			end
-		end
-		
-		for mName, active in pairs(getgenv().UbeyConfig.WebhookMutations) do
-			if active then
-				local cfgMutationLower = string.lower(tostring(mName))
-				if string.find(targetMutationLower, cfgMutationLower) or cfgMutationLower == targetMutationLower then
-					matchMutation = true
-					break
-				end
-			end
-		end
-		
-		if matchRarity or matchMutation then
+		-- KUNCI FILTER: Hanya Secret dan Forgotten yang dikirim ke Discord
+		if targetRarityLower == "secret" or targetRarityLower == "forgotten" then
 			local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
 			if not requestFunc then return end
 			
 			local data = {
-				["content"] = "",
+				["content"] = "@everyone 🚨 **FISH SECRET / FORGOTTEN CATCH!**",
 				["embeds"] = {
 					{
-						["title"] = "🚨 Ubey Hub V3 - Tangkapan Ikan Real-Time!",
-						["description"] = "Pemain **" .. LocalPlayer.Name .. "** baru saja mendapatkan ikan!",
-						["color"] = 16766720,
+						["title"] = "👑 Ubey Hub V3 - Secret & Forgotten Tracker!",
+						["description"] = "Pemain **" .. LocalPlayer.Name .. "** baru saja mendapatkan ikan langka!",
+						["color"] = 16711935,
 						["fields"] = {
-							{ ["name"] = "Nama Ikan", ["value"] = fishName, ["inline"] = true },
-							{ ["name"] = "Rarity", ["value"] = targetRarity, ["inline"] = true },
-							{ ["name"] = "Mutasi", ["value"] = targetMutation, ["inline"] = true }
+							{ ["name"] = "🐟 Nama Ikan", ["value"] = targetName, ["inline"] = true },
+							{ ["name"] = "⭐ Rarity", ["value"] = targetRarity, ["inline"] = true },
+							{ ["name"] = "🧬 Mutasi", ["value"] = targetMutation, ["inline"] = true },
+							{ ["name"] = "🏆 Grade", ["value"] = targetGrade, ["inline"] = true },
+							{ ["name"] = "⚖️ Berat (Weight)", ["value"] = targetWeight, ["inline"] = true },
+							{ ["name"] = "🎲 Chance", ["value"] = targetChance, ["inline"] = true }
 						},
-						["footer"] = { ["text"] = "Ubey Hub V3 Auto Catch Tracker" },
+						["footer"] = { ["text"] = "Ubey Hub V3 • Secret & Forgotten Notification" },
 						["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
 					}
 				}
@@ -201,7 +158,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (NOTIFYCLIENT COBALT EXACT FIX)
+-- REAL-TIME CATCH MONITOR (EXTRACT FULL DATA FROM COBALT LOGS)
 ------------------------------------------------------------------
 local hookedRemotes = {}
 
@@ -211,9 +168,12 @@ local function ProcessNotifyClient(actionType, fishDataArg)
 			local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
 			local rarity = fishDataArg.rarity or "Common"
 			local mutation = fishDataArg.mutation or "Normal"
+			local grade = fishDataArg.grade or "N/A"
+			local weight = fishDataArg.weight or "0"
+			local chance = fishDataArg.chance or "N/A"
 			
 			if name ~= "Unknown Fish" and name ~= "" then
-				SendFilteredWebhook(tostring(name), tostring(rarity), tostring(mutation))
+				SendFilteredWebhook(name, rarity, mutation, grade, weight, chance)
 			end
 		end)
 	end
@@ -591,7 +551,7 @@ StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
 ----------------------------------------------------
--- MAIN HUB
+-- MAIN HUB UI
 ----------------------------------------------------
 local Main = Instance.new("Frame")
 Main.Parent = Gui
@@ -1230,7 +1190,7 @@ Instance.new("UICorner", UnfavBtn)
 UnfavBtn.MouseButton1Click:Connect(function() UnfavoriteAllFish() end)
 
 ----------------------------------------------------
--- 3. GALATAMA PAGE (DIPERBARUI DENGAN AUTO DETEKSI CORE EVENT)
+-- 3. GALATAMA PAGE (DENGAN AUTO DETEKSI CORE EVENT)
 ----------------------------------------------------
 local TitleGal = Instance.new("TextLabel") TitleGal.Parent = GalatamaPage TitleGal.Size = UDim2.new(1,0,0,30) TitleGal.BackgroundTransparency = 1
 TitleGal.Text = "🏆 GALATAMA & CORE EVENT UTILITIES" TitleGal.TextColor3 = Color3.fromRGB(0,170,255) TitleGal.Font = Enum.Font.GothamBold TitleGal.TextSize = 13
@@ -1605,10 +1565,10 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE
+-- 10. SETTINGS & WEBHOOK PAGE (SECRET & FORGOTTEN EXCLUSIVE)
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel") TitleSet.Parent = SettingsPage TitleSet.Size = UDim2.new(1,0,0,30) TitleSet.BackgroundTransparency = 1
-TitleSet.Text = "⚙️ SETTINGS & WEBHOOK" TitleSet.TextColor3 = Color3.fromRGB(0,170,255) TitleSet.Font = Enum.Font.GothamBold TitleSet.TextSize = 13
+TitleSet.Text = "⚙️ SETTINGS & WEBHOOK SECRET / FORGOTTEN" TitleSet.TextColor3 = Color3.fromRGB(0,170,255) TitleSet.Font = Enum.Font.GothamBold TitleSet.TextSize = 13
 
 local AntiLagBtn = Instance.new("TextButton")
 AntiLagBtn.Parent = SettingsPage AntiLagBtn.Size = UDim2.new(1,0,0,35) AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
@@ -1626,13 +1586,13 @@ end)
 local WebhookToggleBtn = Instance.new("TextButton")
 WebhookToggleBtn.Parent = SettingsPage WebhookToggleBtn.Size = UDim2.new(1,0,0,35)
 WebhookToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.WebhookEnabled and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
-WebhookToggleBtn.Text = "  Discord Webhook Tracker: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
+WebhookToggleBtn.Text = "  Webhook Secret & Forgotten: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
 WebhookToggleBtn.TextColor3 = Color3.new(1,1,1) WebhookToggleBtn.Font = Enum.Font.Gotham WebhookToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
 Instance.new("UICorner", WebhookToggleBtn)
 
 WebhookToggleBtn.MouseButton1Click:Connect(function()
 	getgenv().UbeyConfig.WebhookEnabled = not getgenv().UbeyConfig.WebhookEnabled
-	WebhookToggleBtn.Text = "  Discord Webhook Tracker: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
+	WebhookToggleBtn.Text = "  Webhook Secret & Forgotten: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
 	WebhookToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.WebhookEnabled and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
 	SaveConfig()
 end)
@@ -1680,9 +1640,6 @@ TestWebhookBtn.MouseButton1Click:Connect(function()
 		TestWebhookBtn.Text = "🧪 Test Kirim Webhook ke Discord"
 	end)
 end)
-
-CreateMultiSelectDropdown(SettingsPage, "⚙️ Webhook Filter Rarity", rarityList, getgenv().UbeyConfig.WebhookRarities)
-CreateMultiSelectDropdown(SettingsPage, "⚙️ Webhook Filter Mutasi", mutationList, getgenv().UbeyConfig.WebhookMutations)
 
 local SaveConfigBtn = Instance.new("TextButton")
 SaveConfigBtn.Parent = SettingsPage SaveConfigBtn.Size = UDim2.new(1,0,0,35) SaveConfigBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
