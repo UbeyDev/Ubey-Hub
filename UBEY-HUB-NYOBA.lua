@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO FIX & FULL STABLE VERSION)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (HIGH ALTITUDE & TYPO CLEANED)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1457,45 +1457,46 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIXED SPEED & CHECKPOINT DELAY)
+-- 5. SUMMIT PAGE (HIGHER ALTITUDE & CHECKPOINT DELAY)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (FIXED DELAY)"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (HIGH ALTITUDE)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint presisi 1 sampai 20 sebagai pemicu (trigger)
+-- Daftar CFrame Checkpoint 1 sampai 20 dengan Ketinggian (Y) yang dinaikkan (+25) agar jauh lebih tinggi
 local CheckpointPath = {
-	CFrame.new(464.5757, 444.6314, -8944.9775),
-	CFrame.new(450.3757, 488.9970, -9572.0254),
-	CFrame.new(394.5212, 628.9980, -10113.1602),
-	CFrame.new(487.2241, 636.9980, -10685.8164),
-	CFrame.new(1084.3728, 724.9941, -11160.0850),
-	CFrame.new(970.9746, 732.9639, -11810.7012),
-	CFrame.new(389.8508, 884.9980, -11839.1611),
-	CFrame.new(-325.3976, 848.9980, -11735.5684),
-	CFrame.new(-870.3784, 852.9980, -11735.9463),
-	CFrame.new(-1280.0693, 856.9980, -12095.6299),
-	CFrame.new(-1309.8514, 888.9980, -12831.5947),
-	CFrame.new(-2315.5291, 912.9980, -12673.0791),
-	CFrame.new(-2314.9072, 916.9980, -11851.2207),
-	CFrame.new(-2444.2737, 960.9980, -11056.3330),
-	CFrame.new(-3480.8328, 980.7667, -11012.4834),
-	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
-	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
-	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
-	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
-	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
+	CFrame.new(464.5757, 469.6314, -8944.9775),
+	CFrame.new(450.3757, 513.9970, -9572.0254),
+	CFrame.new(394.5212, 653.9980, -10113.1602),
+	CFrame.new(487.2241, 661.9980, -10685.8164),
+	CFrame.new(1084.3728, 749.9941, -11160.0850),
+	CFrame.new(970.9746, 757.9639, -11810.7012),
+	CFrame.new(389.8508, 909.9980, -11839.1611),
+	CFrame.new(-325.3976, 873.9980, -11735.5684),
+	CFrame.new(-870.3784, 877.9980, -11735.9463),
+	CFrame.new(-1280.0693, 881.9980, -12095.6299),
+	CFrame.new(-1309.8514, 913.9980, -12831.5947),
+	CFrame.new(-2315.5291, 937.9980, -12673.0791),
+	CFrame.new(-2314.9072, 941.9980, -11851.2207),
+	CFrame.new(-2444.2737, 985.9980, -11056.3330),
+	CFrame.new(-3480.8328, 1005.7667, -11012.4834),
+	CFrame.new(-4226.6689, 1025.9980, -11014.9834),
+	CFrame.new(-4654.7871, 1105.9979, -11664.6084),
+	CFrame.new(-5544.4336, 1125.9979, -11648.8525),
+	CFrame.new(-6764.3345, 1121.9979, -11507.0557),
+	CFrame.new(-6745.1304, 1127.5760, -10796.0947)
 }
 
-local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
-local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
+-- Ketinggian Puncak & BaseCamp juga dinaikkan agar berada di udara aman
+local SummitPuncakVector = Vector3.new(-6766.44629, 1360, -10083.8037)
+local BaseCampVector = Vector3.new(-6834.84912, 1350, -9902.42285)
 
 -- Sistem NoClip anti nyangkut total di udara
 local RunService = game:GetService("RunService")
@@ -1514,7 +1515,7 @@ RunService.Stepped:Connect(function()
 	end)
 end)
 
--- Fungsi Tween CFrame diperlambat sedikit agar stabil
+-- Fungsi Tween CFrame dengan kecepatan aman
 local function TweenToPosition(targetCFrame, duration)
 	pcall(function()
 		local character = LocalPlayer.Character
@@ -1565,25 +1566,25 @@ task.spawn(function()
 							end
 							
 							if targetPos then
-								-- Kecepatan tween diatur 1.0 detik & ditambah jeda diam 0.5 detik di titiknya
-								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 3, 0)), 1.0)
+								-- Posisi Y dinaikkan +15 di atas objek checkpoint asli
+								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)), 1.0)
 								task.wait(0.5) 
 								currentTargetIndex = currentTargetIndex + 1
 							else
 								currentTargetIndex = currentTargetIndex + 1
 							end
 						else
-							-- Jika pakai pancingan CFrame, durasi diperlambat dan diberi jeda juga
+							-- Jalur pancingan CFrame ditambah offset tinggi +15
 							local fallbackCFrame = CheckpointPath[currentTargetIndex]
 							if fallbackCFrame then
-								TweenToPosition(fallbackCFrame + Vector3.new(0, 3, 0), 1.2)
+								TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0), 1.2)
 								task.wait(0.5)
 							end
 							currentTargetIndex = currentTargetIndex + 1
 						end
 					end
 					
-					-- Finishing ke Puncak & BaseCamp dengan durasi aman
+					-- Finishing ke Puncak & BaseCamp dengan posisi tinggi yang aman
 					if getgenv().AutoSummitRunning then
 						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
 						task.wait(3.0)
