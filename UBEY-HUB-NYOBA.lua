@@ -1458,18 +1458,18 @@ AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.6
 
 ----------------------------------------------------
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FAST TWEEN + HEIGHT OFFSET + NOCLIP)
+-- 5. SUMMIT PAGE (STRAIGHT LEVEL TWEEN FIX)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (NOCLIP & HIGH TWEEN)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (STRAIGHT TWEEN)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (Noclipping)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (Straight)", function(v) getgenv().AutoSummitRunning = v end)
 
 -- Daftar CFrame Checkpoint 1 sampai 20
 local SummitCheckpoints = {
@@ -1498,8 +1498,8 @@ local SummitCheckpoints = {
 local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
 
--- Sistem NoClip otomatis yang aktif selama Auto Summit berjalan
-RunService = game:GetService("RunService")
+-- Sistem NoClip otomatis
+local RunService = game:GetService("RunService")
 RunService.Stepped:Connect(function()
 	pcall(function()
 		if getgenv().AutoSummitRunning then
@@ -1526,26 +1526,35 @@ task.spawn(function()
 					for i, targetCF in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						local distance = (hrp.Position - targetCF.Position).Magnitude
+						-- Mengambil posisi tujuan, namun tinggi Y dibuat minimal rata atau sedikit di atas titik target agar tidak menukik ke bawah
+						local currentPos = hrp.Position
+						local targetPos = targetCF.Position
+						
+						-- Menjaga jalur tetap lurus secara horizontal dengan tinggi yang aman (Y + 6)
+						local safeY = math.max(currentPos.Y, targetPos.Y) + 6
+						local straightTargetCF = CFrame.new(targetPos.X, safeY, targetPos.Z)
+						
+						local distance = (currentPos - straightTargetCF.Position).Magnitude
 						local speed = 700 
 						local tweenTime = math.clamp(distance / speed, 0.05, 0.4)
 						
 						local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
-						-- Ketinggian dinaikkan (Vector3.new(0, 6, 0)) agar karakter tidak mentok atau masuk ke dalam tanah
-						local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCF + Vector3.new(0, 6, 0)})
+						local tween = TweenService:Create(hrp, tweenInfo, {CFrame = straightTargetCF})
 						tween:Play()
 						
 						task.wait(tweenTime + 0.05)
 					end
 					
-					-- Menuju Puncak
+					-- Menuju Puncak secara lurus
 					if getgenv().AutoSummitRunning then
-						local summitTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = SummitPuncakCFrame + Vector3.new(0, 6, 0)})
+						local summitTarget = CFrame.new(SummitPuncakCFrame.X, SummitPuncakCFrame.Y + 6, SummitPuncakCFrame.Z)
+						local summitTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = summitTarget})
 						summitTween:Play()
 						task.wait(1.0)
 						
 						-- Kembali ke BaseCamp
-						local baseTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = BaseCampCFrame + Vector3.new(0, 6, 0)})
+						local baseTarget = CFrame.new(BaseCampCFrame.X, BaseCampCFrame.Y + 6, BaseCampCFrame.Z)
+						local baseTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = baseTarget})
 						baseTween:Play()
 						task.wait(0.8)
 					end
