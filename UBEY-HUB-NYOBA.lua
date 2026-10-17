@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (NATURAL WALK SUMMIT VERSION)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (UPDATED CP 2 CFrame)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1457,23 +1457,23 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIX CP 2 MUNDUR / GESER POSISI)
+-- 5. SUMMIT PAGE (FIX: TP & WALK WITH UPDATED CP 2)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (CP 2 ADJUSTED)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TP & WALK)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop (TP & Walk)", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint 1 sampai 20 (CP 2 disesuaikan sedikit mundur)
+-- Daftar CFrame Checkpoint 1 sampai 20 (CP 2 telah diperbarui menggunakan CFrame baru)
 local SummitCheckpoints = {
 	CFrame.new(464.5757, 444.6314, -8944.9775), -- CP 1
-	CFrame.new(450.3757, 488.9970, -9578.0254), -- CP 2 (Digeser sedikit mundur pada sumbu Z agar tidak terlewat)
+	CFrame.new(451.756012, 488.997986, -9563.31348, 0.993951559, 7.51748885e-09, 0.109819196, -1.04630005e-09, 1, -5.89834706e-08, -0.109819196, 5.85118087e-08, 0.993951559), -- CP 2 (Updated)
 	CFrame.new(394.5212, 628.9980, -10113.1602), -- CP 3
 	CFrame.new(487.2241, 636.9980, -10685.8164), -- CP 4
 	CFrame.new(1084.3728, 724.9941, -11160.0850), -- CP 5
@@ -1509,11 +1509,11 @@ task.spawn(function()
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						-- Teleport ke CP
+						-- Teleport pas di atas titik Checkpoint
 						hrp.CFrame = cpCFrame + Vector3.new(0, 2, 0)
 						task.wait(0.3)
 						
-						-- Jalan maju agar game mendeteksi pergerakan fisik/analog
+						-- Berjalan maju sedikit agar game membaca pergerakan fisik/analog
 						humanoid.WalkSpeed = 25
 						humanoid:MoveTo(hrp.Position + (hrp.CFrame.LookVector * 6))
 						task.wait(0.6)
@@ -1536,8 +1536,6 @@ task.spawn(function()
 		end
 	end
 end)
-
-
 
 ----------------------------------------------------
 -- 6. PLAYER PAGE
