@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (UPDATED CP 2 CFrame)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% CLEAN & READY TO EXECUTE)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -13,7 +13,6 @@ local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -48,7 +47,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONEncode(content)
+			local data = HttpService:JSONDecode(content)
 			if data then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
@@ -1457,104 +1456,18 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
-----------------------------------------------------
--- 5. SUMMIT PAGE (FORWARD WALKING & DYNAMIC TRIGGER)
-----------------------------------------------------
-local TitleSum = Instance.new("TextLabel")
-TitleSum.Parent = SummitPage
-TitleSum.Size = UDim2.new(1,0,0,30)
-TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (WALK TRIGGER)"
-TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
-TitleSum.Font = Enum.Font.GothamBold
-TitleSum.TextSize = 13
-
-AddToggle(SummitPage, "Auto Summit Loop (Walk Trigger)", function(v) getgenv().AutoSummitRunning = v end)
-
-local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
-local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
-
--- Sistem NoClip anti nyangkut selama berjalan/teleport
-local RunService = game:GetService("RunService")
-RunService.Stepped:Connect(function()
-	pcall(function()
-		if getgenv().AutoSummitRunning then
-			local character = LocalPlayer.Character
-			if character then
-				for _, part in ipairs(character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = false
-					end
-				end
-			end
-		end
-	end)
-end)
-
-task.spawn(function()
-	while true do
-		if getgenv().AutoSummitRunning then
-			pcall(function()
-				local character = LocalPlayer.Character
-				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-				local hrp = character and character:FindFirstChild("HumanoidRootPart")
-				
-				if hrp and humanoid then
-					local currentTargetIndex = 1
-					local maxCheckpoint = 20
-					
-					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
-						local cpFolder = workspace:FindFirstChild("Checkpoint")
-						local targetObj = nil
-						
-						if cpFolder then
-							for _, obj in ipairs(cpFolder:GetChildren()) do
-								local num = tonumber(obj.Name:match("%d+"))
-								if num == currentTargetIndex then
-									targetObj = obj
-									break
-								end
-							end
-						end
-						
-						if targetObj then
-							local targetPos = nil
-							if targetObj:IsA("BasePart") then
-								targetPos = targetObj.Position
-							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
-								targetPos = targetObj.PrimaryPart.Position
-							elseif targetObj:IsA("Model") then
-								local cf, _ = targetObj:GetBoundingBox()
-								targetPos = cf.Position
-							end
-							
-							if targetPos then
-								-- 1. Teleport mendekati checkpoint target
-								hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 4, 0))
-								task.wait(0.1)
-								
-								-- 2. Berjalan maju ke depan (memicu render/spawn checkpoint berikutnya)
-								local startTime = tick()
-								while tick() - startTime < 1.2 and getgenv().AutoSummitRunning do
-									humanoid:Move(Vector3.new(0, 0, -1)) -- Berjalan lurus ke depan
-									task.wait(0.1)
-								end
-								
-								-- Hentikan gerakan sebentar
-								humanoid:Move(Vector3.new(0, 0, 0))
-----------------------------------------------------
--- 5. SUMMIT PAGE (FLYING FORWARD & DYNAMIC TRIGGER)
+-- 5. SUMMIT PAGE (FULL SCRIPT - FLY TRIGGER & DYNAMIC)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (FLY TRIGGER)"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (Fly)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
 
 local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
 local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
@@ -1601,12 +1514,12 @@ task.spawn(function()
 							end
 						end
 						
-						-- Jika checkpoint tujuan belum muncul, buat karakter TERBANG MAJU PERLAHAN ke arah depan
-						-- untuk memicu game men-spawn checkpoint berikutnya tanpa takut jatuh
+						-- Jika checkpoint tujuan belum muncul, buat karakter TERBANG MAJU PERLAHAN
+						-- untuk memicu game men-spawn checkpoint berikutnya tanpa takut jatuh ke jurang/rintangan
 						if not targetObj then
 							local flyStartTime = tick()
 							while not targetObj and tick() - flyStartTime < 3.5 and getgenv().AutoSummitRunning do
-								-- Terbang maju perlahan searah pandangan karakter (Z sumbu depan)
+								-- Terbang maju perlahan searah pandangan karakter (Sumbu Z depan)
 								hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 1.5)
 								task.wait(0.1)
 								
@@ -2141,7 +2054,6 @@ ResetConfigBtn.MouseButton1Click:Connect(function()
 	ResetConfigBtn.Text = "🔄 Reset Konfigurasi & Clear Key"
 end)
 
--- Credits Page
 local CredLbl = Instance.new("TextLabel")
 CredLbl.Parent = CreditsPage
 CredLbl.Size = UDim2.new(1,0,1,0)
