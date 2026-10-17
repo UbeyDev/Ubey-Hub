@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (COBALT EXACT FIX)
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME WEBHOOK + CORE EVENT DI GALATAMA
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -130,7 +130,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM (DIRECT MATCH FIX)
+-- DISCORD FILTERED WEBHOOK SYSTEM
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 	pcall(function()
@@ -897,7 +897,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	if v then
 		pcall(function()
 			local hrp = LocalPlayer.Character and LocalPlayer.Character:WaitForChild("HumanoidRootPart", 5)
-			if hrp then hrp.CFrame = FishingSpots[getgenv().SelectedFishingSpot] end
+			if hrp then hrp.CFrame = FishingSpots[getgenv().SelectedFishingSpot] + Vector3.new(0, 5, 0) end
 		end)
 		OptimizeRodSettings()
 		task.spawn(function()
@@ -1015,67 +1015,6 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- SYSTEM AUTO DETEKSI EVENT CORE (PEMINDAI PAPAN MAP)
-----------------------------------------------------
-local TitleCoreEvent = Instance.new("TextLabel")
-TitleCoreEvent.Parent = FishingPage TitleCoreEvent.Size = UDim2.new(1,0,0,25) TitleCoreEvent.BackgroundTransparency = 1
-TitleCoreEvent.Text = "💎 AUTO DETECT WITHERING CORE EVENT (PAPAN)" TitleCoreEvent.TextColor3 = Color3.fromRGB(255,200,0) TitleCoreEvent.Font = Enum.Font.GothamBold TitleCoreEvent.TextSize = 13
-
-AddToggle(FishingPage, "Auto Teleport Saat Event Core Berlangsung", function(v) getgenv().AutoDetectCoreEvent = v end)
-
-local SavedPreviousSpot = nil
-local IsAtCoreEvent = false
-
-task.spawn(function()
-	while true do
-		if getgenv().AutoDetectCoreEvent then
-			pcall(function()
-				local foundEventActive = false
-				for _, descendant in ipairs(Workspace:GetDescendants()) do
-					if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
-						local textLower = string.lower(descendant.Text)
-						if string.find(textLower, "sedang berlangsung") or string.find(textLower, "berlangsung") or string.find(textLower, "active") then
-							if descendant:FindFirstAncestor("SurfaceGui") or descendant:FindFirstAncestor("BillboardGui") then
-								foundEventActive = true
-								break
-							end
-						end
-					end
-				end
-				
-				if foundEventActive then
-					if not IsAtCoreEvent then
-						SavedPreviousSpot = getgenv().SelectedFishingSpot
-						IsAtCoreEvent = true
-					end
-					getgenv().SelectedFishingSpot = "Spot Mancing Core"
-					if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ EVENT DI PAPAN AKTIFF!)" end
-					local character = LocalPlayer.Character
-					local hrp = character and character:FindFirstChild("HumanoidRootPart")
-					local targetCFrame = FishingSpots["Spot Mancing Core"]
-					if hrp and targetCFrame then
-						if (hrp.Position - targetCFrame.Position).Magnitude > 20 then hrp.CFrame = targetCFrame end
-					end
-				else
-					if IsAtCoreEvent then
-						IsAtCoreEvent = false
-						if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
-							getgenv().SelectedFishingSpot = SavedPreviousSpot
-							if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Return)" end
-							local character = LocalPlayer.Character
-							local hrp = character and character:FindFirstChild("HumanoidRootPart")
-							local prevCFrame = FishingSpots[SavedPreviousSpot]
-							if hrp and prevCFrame then hrp.CFrame = prevCFrame end
-						end
-					end
-				end
-			end)
-		end
-		task.wait(2)
-	end
-end)
-
-----------------------------------------------------
 -- SYSTEM ROTASI / LOOP SPOT MANCING
 ----------------------------------------------------
 local TitleLoop = Instance.new("TextLabel")
@@ -1126,7 +1065,7 @@ task.spawn(function()
 						local character = LocalPlayer.Character
 						local hrp = character and character:FindFirstChild("HumanoidRootPart")
 						local targetCFrame = FishingSpots[name]
-						if hrp and targetCFrame then hrp.CFrame = targetCFrame end
+						if hrp and targetCFrame then hrp.CFrame = targetCFrame + Vector3.new(0, 5, 0) end
 					end)
 					local duration = (tonumber(cfg.Timer) or 10) * 60
 					local timerStart = tick()
@@ -1284,17 +1223,17 @@ Instance.new("UICorner", UnfavBtn)
 UnfavBtn.MouseButton1Click:Connect(function() UnfavoriteAllFish() end)
 
 ----------------------------------------------------
--- 3. GALATAMA PAGE
+-- 3. GALATAMA PAGE (DIPERBARUI DENGAN AUTO DETEKSI CORE EVENT)
 ----------------------------------------------------
 local TitleGal = Instance.new("TextLabel") TitleGal.Parent = GalatamaPage TitleGal.Size = UDim2.new(1,0,0,30) TitleGal.BackgroundTransparency = 1
-TitleGal.Text = "🏆 GALATAMA AUTO JOIN & TELEPORT" TitleGal.TextColor3 = Color3.fromRGB(0,170,255) TitleGal.Font = Enum.Font.GothamBold TitleGal.TextSize = 13
+TitleGal.Text = "🏆 GALATAMA & CORE EVENT UTILITIES" TitleGal.TextColor3 = Color3.fromRGB(0,170,255) TitleGal.Font = Enum.Font.GothamBold TitleGal.TextSize = 13
 
 local TeleportGalatamaBtn = Instance.new("TextButton")
 TeleportGalatamaBtn.Parent = GalatamaPage TeleportGalatamaBtn.Size = UDim2.new(1,0,0,35) TeleportGalatamaBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
 TeleportGalatamaBtn.Text = "📍 Teleport ke Galatama" TeleportGalatamaBtn.TextColor3 = Color3.new(1,1,1) TeleportGalatamaBtn.Font = Enum.Font.GothamBold TeleportGalatamaBtn.TextSize = 13
 Instance.new("UICorner", TeleportGalatamaBtn)
 TeleportGalatamaBtn.MouseButton1Click:Connect(function()
-	pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-8008.12744, 1227.96838, -6091.92627) end)
+	pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-8008.12744, 1227.96838, -6091.92627) + Vector3.new(0, 5, 0) end)
 end)
 
 AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
@@ -1309,6 +1248,60 @@ AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 	end
 end)
 
+local TitleCoreEvent = Instance.new("TextLabel")
+TitleCoreEvent.Parent = GalatamaPage TitleCoreEvent.Size = UDim2.new(1,0,0,25) TitleCoreEvent.BackgroundTransparency = 1
+TitleCoreEvent.Text = "💎 AUTO DETECT WITHERING CORE EVENT" TitleCoreEvent.TextColor3 = Color3.fromRGB(255,200,0) TitleCoreEvent.Font = Enum.Font.GothamBold TitleCoreEvent.TextSize = 13
+
+AddToggle(GalatamaPage, "Auto Teleport Saat Event Core Berlangsung", function(v) getgenv().AutoDetectCoreEvent = v end)
+
+local SavedPreviousSpot = nil
+local IsAtCoreEvent = false
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoDetectCoreEvent then
+			pcall(function()
+				local currentMinute = tonumber(os.date("%M"))
+				local isEventTime = (currentMinute >= 0 and currentMinute <= 10)
+				
+				if isEventTime then
+					if not IsAtCoreEvent then
+						SavedPreviousSpot = getgenv().SelectedFishingSpot
+						IsAtCoreEvent = true
+					end
+					getgenv().SelectedFishingSpot = "Spot Mancing Core"
+					if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ JADWAL EVENT CORE AKTIF!)" end
+					
+					local character = LocalPlayer.Character
+					local hrp = character and character:FindFirstChild("HumanoidRootPart")
+					local targetCFrame = FishingSpots["Spot Mancing Core"]
+					if hrp and targetCFrame then
+						if (hrp.Position - targetCFrame.Position).Magnitude > 20 then
+							hrp.CFrame = targetCFrame + Vector3.new(0, 5, 0) -- Lebih tinggi sedikit agar tidak tenggelam
+						end
+					end
+				else
+					if IsAtCoreEvent then
+						IsAtCoreEvent = false
+						if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
+							getgenv().SelectedFishingSpot = SavedPreviousSpot
+							if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Kembali)" end
+							
+							local character = LocalPlayer.Character
+							local hrp = character and character:FindFirstChild("HumanoidRootPart")
+							local prevCFrame = FishingSpots[SavedPreviousSpot]
+							if hrp and prevCFrame then
+								hrp.CFrame = prevCFrame + Vector3.new(0, 5, 0) -- Naik sedikit saat kembali ke spot awal
+							end
+						end
+					end
+				end
+			end)
+		end
+		task.wait(5)
+	end
+end)
+
 ----------------------------------------------------
 -- 4. TELEPORT SHOP PAGE
 ----------------------------------------------------
@@ -1320,7 +1313,7 @@ local function AddShopTeleportBtn(parent, name, cf)
 	btn.Parent = parent btn.Size = UDim2.new(1,0,0,35) btn.BackgroundColor3 = Color3.fromRGB(35,35,45)
 	btn.Text = "📍 Teleport ke " .. name btn.TextColor3 = Color3.new(1,1,1) btn.Font = Enum.Font.GothamMedium btn.TextSize = 12
 	Instance.new("UICorner", btn)
-	btn.MouseButton1Click:Connect(function() pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = cf end) end)
+	btn.MouseButton1Click:Connect(function() pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = cf + Vector3.new(0, 5, 0) end) end)
 end
 
 AddShopTeleportBtn(TeleportShopPage, "Tempat Jual Ikan", CFrame.new(-6668.79785, 1312.69983, -9964.06152))
@@ -1349,9 +1342,9 @@ task.spawn(function()
 						ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(i)
 						task.wait(0.2)
 					end
-					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
+					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
 					task.wait(3)
-					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
+					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
 				end
 			end)
 			task.wait(0.5)
@@ -1528,7 +1521,7 @@ local function ScanAndDisplayPlayers()
 				pcall(function()
 					local hrpTarget = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 					local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if hrpTarget and myHrp then myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 3, 0) end
+					if hrpTarget and myHrp then myHrp.CFrame = hrpTarget.CFrame + Vector3.new(0, 5, 0) end
 				end)
 			end)
 		end
