@@ -47,7 +47,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
+			local data = HttpService:JSONEncode(content)
 			if data then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
@@ -1456,42 +1456,45 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (INSTANT PHYSICAL CHECKPOINT FINDER)
+-- 5. SUMMIT PAGE (DIRECT CFrame CHECKPOINT SYSTEM)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (INSTANT TP)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (DIRECT CFrame TP)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (CFrame)", function(v) getgenv().AutoSummitRunning = v end)
+
+-- Daftar CFrame Checkpoint 1 sampai 20
+local SummitCheckpoints = {
+	CFrame.new(464.5757, 444.6314, -8944.9775),
+	CFrame.new(450.3757, 488.9970, -9572.0254),
+	CFrame.new(394.5212, 628.9980, -10113.1602),
+	CFrame.new(487.2241, 636.9980, -10685.8164),
+	CFrame.new(1084.3728, 724.9941, -11160.0850),
+	CFrame.new(970.9746, 732.9639, -11810.7012),
+	CFrame.new(389.8508, 884.9980, -11839.1611),
+	CFrame.new(-325.3976, 848.9980, -11735.5684),
+	CFrame.new(-870.3784, 852.9980, -11735.9463),
+	CFrame.new(-1280.0693, 856.9980, -12095.6299),
+	CFrame.new(-1309.8514, 888.9980, -12831.5947),
+	CFrame.new(-2315.5291, 912.9980, -12673.0791),
+	CFrame.new(-2314.9072, 916.9980, -11851.2207),
+	CFrame.new(-2444.2737, 960.9980, -11056.3330),
+	CFrame.new(-3480.8328, 980.7667, -11012.4834),
+	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
+	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
+	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
+	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
+	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
+}
 
 local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
-
-local function FindCPObject(index)
-	local targetNames = {
-		"cp" .. tostring(index),
-		"CP" .. tostring(index),
-		"Checkpoint" .. tostring(index),
-		"Checkpoint " .. tostring(index)
-	}
-	for _, name in ipairs(targetNames) do
-		local obj = Workspace:FindFirstChild(name)
-		if obj then return obj end
-	end
-	local mainCPFolder = Workspace:FindFirstChild("Checkpoint")
-	if mainCPFolder then
-		for _, name in ipairs(targetNames) do
-			local obj = mainCPFolder:FindFirstChild(name)
-			if obj then return obj end
-		end
-	end
-	return nil
-end
 
 task.spawn(function()
 	while true do
@@ -1501,21 +1504,20 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					for i = 1, 20 do
+					-- Teleport berurutan dari Cp1 sampai Cp20 menggunakan CFrame
+					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
-						local cpObj = FindCPObject(i)
-						if cpObj then
-							local targetPart = cpObj:IsA("BasePart") and cpObj or cpObj:FindFirstChildWhichIsA("BasePart", true)
-							if targetPart then
-								hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
-								task.wait(0.25)
-							end
-						end
+						hrp.CFrame = cpCFrame + Vector3.new(0, 3, 0)
+						task.wait(0.25)
 					end
 					
-					hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 3, 0)
-					task.wait(2.5)
-					hrp.CFrame = BaseCampCFrame + Vector3.new(0, 3, 0)
+					-- Teleport ke Puncak setelah melewati semua checkpoint
+					if getgenv().AutoSummitRunning then
+						hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 3, 0)
+						task.wait(2.5)
+						-- Kembali ke BaseCamp
+						hrp.CFrame = BaseCampCFrame + Vector3.new(0, 3, 0)
+					end
 				end
 			end)
 			task.wait(1)
