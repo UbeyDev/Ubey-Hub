@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TWEEN SUMMIT FIX)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (PRECISE TWEEN SUMMIT)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1457,18 +1457,42 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (TWEEN FLYING + SEQUENTIAL DYNAMIC TRIGGER)
+-- 5. SUMMIT PAGE (PRECISE TWEEN CFRAME PATHWAY)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (TWEEN FIX)"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (PRECISE TWEEN)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
+
+-- Daftar CFrame Checkpoint 1 sampai 20 sesuai data presisi Anda
+local CheckpointPath = {
+	CFrame.new(464.5757, 444.6314, -8944.9775),
+	CFrame.new(450.3757, 488.9970, -9572.0254),
+	CFrame.new(394.5212, 628.9980, -10113.1602),
+	CFrame.new(487.2241, 636.9980, -10685.8164),
+	CFrame.new(1084.3728, 724.9941, -11160.0850),
+	CFrame.new(970.9746, 732.9639, -11810.7012),
+	CFrame.new(389.8508, 884.9980, -11839.1611),
+	CFrame.new(-325.3976, 848.9980, -11735.5684),
+	CFrame.new(-870.3784, 852.9980, -11735.9463),
+	CFrame.new(-1280.0693, 856.9980, -12095.6299),
+	CFrame.new(-1309.8514, 888.9980, -12831.5947),
+	CFrame.new(-2315.5291, 912.9980, -12673.0791),
+	CFrame.new(-2314.9072, 916.9980, -11851.2207),
+	CFrame.new(-2444.2737, 960.9980, -11056.3330),
+	CFrame.new(-3480.8328, 980.7667, -11012.4834),
+	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
+	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
+	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
+	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
+	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
+}
 
 local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
 local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
@@ -1490,16 +1514,16 @@ RunService.Stepped:Connect(function()
 	end)
 end)
 
--- Fungsi Bantu Tween CFrame agar karakter terbang mulus ke depan
-local function TweenFlyTo(targetCFrame, duration)
+-- Fungsi Tween CFrame terbang mulus
+local function TweenToPosition(targetCFrame, duration)
 	pcall(function()
 		local character = LocalPlayer.Character
 		local hrp = character and character:FindFirstChild("HumanoidRootPart")
 		if hrp then
-			local tweenInfo = TweenInfo.new(duration or 1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+			local tweenInfo = TweenInfo.new(duration or 0.8, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
 			local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
 			tween:Play()
-			task.wait(duration or 1.5)
+			task.wait(duration or 0.8)
 		end
 	end)
 end
@@ -1512,84 +1536,21 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					local currentTargetIndex = 1
-					local maxCheckpoint = 20
-					
-					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
-						local cpFolder = workspace:FindFirstChild("Checkpoint")
-						local targetObj = nil
+					-- Terbang berurutan lewat setiap CFrame checkpoint yang ditentukan
+					for _, cpCFrame in ipairs(CheckpointPath) do
+						if not getgenv().AutoSummitRunning then break end
 						
-						if cpFolder then
-							for _, obj in ipairs(cpFolder:GetChildren()) do
-								local num = tonumber(obj.Name:match("%d+"))
-								if num == currentTargetIndex then
-									targetObj = obj
-									break
-								end
-							end
-						end
-						
-						-- Jika checkpoint tujuan belum muncul, gunakan TWEEN TERBANG MAJU ke depan
-						-- untuk memicu game men-spawn checkpoint berikutnya secara aman tanpa jatuh
-						if not targetObj then
-							local flyStartTime = tick()
-							while not targetObj and tick() - flyStartTime < 4.0 and getgenv().AutoSummitRunning do
-								-- Tween terbang maju perlahan searah pandangan karakter
-								local forwardTarget = hrp.CFrame + (hrp.CFrame.LookVector * 15)
-								TweenFlyTo(forwardTarget, 0.5)
-								
-								-- Cek ulang apakah checkpoint sudah terpancing muncul di Workspace
-								cpFolder = workspace:FindFirstChild("Checkpoint")
-								if cpFolder then
-									for _, obj in ipairs(cpFolder:GetChildren()) do
-										local num = tonumber(obj.Name:match("%d+"))
-										if num == currentTargetIndex then
-											targetObj = obj
-											break
-										end
-									end
-								end
-							end
-						end
-						
-						-- Jika objek checkpoint sudah berhasil dimunculkan
-						if targetObj then
-							local targetPos = nil
-							if targetObj:IsA("BasePart") then
-								targetPos = targetObj.Position
-							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
-								targetPos = targetObj.PrimaryPart.Position
-							elseif targetObj:IsA("Model") then
-								local cf, _ = targetObj:GetBoundingBox()
-								targetPos = cf.Position
-							end
-							
-							if targetPos then
-								-- Gunakan Tween melayang mulus ke posisi checkpoint tersebut
-								local destCFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
-								TweenFlyTo(destCFrame, 0.4)
-								task.wait(0.2)
-								
-								-- Sentuhan ekstra maju-mundur melayang
-								local nudgeForward = destCFrame + (destCFrame.LookVector * 3)
-								TweenFlyTo(nudgeForward, 0.2)
-								task.wait(0.1)
-								
-								currentTargetIndex = currentTargetIndex + 1
-							else
-								task.wait(0.3)
-							end
-						else
-							currentTargetIndex = currentTargetIndex + 1
-						end
+						-- Tween terbang mulus ke titik checkpoint tersebut (diberi sedikit tinggi Y aman)
+						TweenToPosition(cpCFrame + Vector3.new(0, 3, 0), 0.6)
+						task.wait(0.15)
 					end
 					
-					-- Setelah selesai melewati checkpoint berurutan, meluncur mulus ke Puncak
+					-- Setelah semua 20 checkpoint terlewati, meluncur mulus ke Puncak
 					if getgenv().AutoSummitRunning then
-						TweenFlyTo(CFrame.new(SummitPuncakVector), 2.0)
+						TweenToPosition(CFrame.new(SummitPuncakVector), 2.0)
 						task.wait(2.5)
 						
-						TweenFlyTo(CFrame.new(BaseCampVector), 1.5)
+						TweenToPosition(CFrame.new(BaseCampVector), 1.5)
 						task.wait(1.0)
 					end
 				end
@@ -2094,7 +2055,7 @@ MakeDraggable(Float)
 
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
-		KeyFrame.Visible = not KeyFrame.Visible
+-		KeyFrame.Visible = not KeyFrame.Visible
 		Main.Visible = false
 	else
 		Main.Visible = not Main.Visible
