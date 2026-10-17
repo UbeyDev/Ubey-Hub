@@ -1458,88 +1458,89 @@ AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.6
 
 ----------------------------------------------------
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIX ROTASI & ARAH JALAN LURUS)
+-- 5. SUMMIT PAGE (FAST TWEEN SPEED FIX)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (STABLE PATH)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (FAST TWEEN)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (TP & Walk)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (Fast Tween)", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar posisi Checkpoint (Hanya menggunakan koordinat posisi X, Y, Z agar arah hadap diatur otomatis lurus ke titik berikutnya)
+-- Daftar CFrame Checkpoint 1 sampai 20
 local SummitCheckpoints = {
-	Vector3.new(464.5757, 444.6314, -8944.9775),
-	Vector3.new(451.7560, 488.9980, -9563.3134), -- CP 2 (Sesuai koordinat Anda)
-	Vector3.new(394.5212, 628.9980, -10113.1602),
-	Vector3.new(487.2241, 636.9980, -10685.8164),
-	Vector3.new(1085.2194, 724.9980, -11151.3574), -- CP 5 (Sesuai koordinat Anda)
-	Vector3.new(970.9746, 732.9639, -11810.7012),
-	Vector3.new(389.8508, 884.9980, -11839.1611),
-	Vector3.new(-325.3976, 848.9980, -11735.5684),
-	Vector3.new(-870.3784, 852.9980, -11735.9463),
-	Vector3.new(-1280.0693, 856.9980, -12095.6299),
-	Vector3.new(-1309.8514, 888.9980, -12831.5947),
-	Vector3.new(-2315.5291, 912.9980, -12673.0791),
-	Vector3.new(-2314.9072, 916.9980, -11851.2207),
-	Vector3.new(-2444.2737, 960.9980, -11056.3330),
-	Vector3.new(-3480.8328, 980.7667, -11012.4834),
-	Vector3.new(-4226.6689, 1000.9980, -11014.9834),
-	Vector3.new(-4654.7871, 1080.9979, -11664.6084),
-	Vector3.new(-5544.4336, 1100.9979, -11648.8525),
-	Vector3.new(-6764.3345, 1096.9979, -11507.0557),
-	Vector3.new(-6745.1304, 1102.5760, -10796.0947)
+	CFrame.new(464.5757, 444.6314, -8944.9775),
+	CFrame.new(451.756012, 488.997986, -9563.31348),
+	CFrame.new(394.5212, 628.9980, -10113.1602),
+	CFrame.new(487.2241, 636.9980, -10685.8164),
+	CFrame.new(1085.21948, 724.997986, -11151.3574),
+	CFrame.new(970.9746, 732.9639, -11810.7012),
+	CFrame.new(389.8508, 884.9980, -11839.1611),
+	CFrame.new(-325.3976, 848.9980, -11735.5684),
+	CFrame.new(-870.3784, 852.9980, -11735.9463),
+	CFrame.new(-1280.0693, 856.9980, -12095.6299),
+	CFrame.new(-1309.8514, 888.9980, -12831.5947),
+	CFrame.new(-2315.5291, 912.9980, -12673.0791),
+	CFrame.new(-2314.9072, 916.9980, -11851.2207),
+	CFrame.new(-2444.2737, 960.9980, -11056.3330),
+	CFrame.new(-3480.8328, 980.7667, -11012.4834),
+	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
+	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
+	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
+	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
+	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
 }
 
-local SummitPuncakVector = Vector3.new(-6766.44629, 1320.69983, -10083.8037)
-local BaseCampVector = Vector3.new(-6834.84912, 1313.24744, -9902.42285)
+local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
+local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
 
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
 				local character = LocalPlayer.Character
-				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
-				if humanoid and hrp then
-					for i = 1, #SummitCheckpoints do
+				if hrp then
+					for i, targetCF in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						local currentPos = SummitCheckpoints[i]
-						local nextPos = SummitCheckpoints[i + 1] or SummitPuncakVector
+						local distance = (hrp.Position - targetCF.Position).Magnitude
+						-- Kecepatan ditingkatkan (angka pembagi diperbesar menjadi 700 agar durasi jauh lebih singkat)
+						local speed = 700 
+						local tweenTime = math.clamp(distance / speed, 0.05, 0.4)
 						
-						-- Membuat karakter berteleportasi dan otomatis menghadap lurus ke arah checkpoint berikutnya
-						hrp.CFrame = CFrame.new(currentPos + Vector3.new(0, 2, 0), Vector3.new(nextPos.X, currentPos.Y, nextPos.Z))
-						task.wait(0.3)
+						local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
+						local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCF + Vector3.new(0, 3, 0)})
+						tween:Play()
 						
-						-- Berjalan maju secara mulus
-						humanoid.WalkSpeed = 25
-						humanoid:MoveTo(hrp.Position + (hrp.CFrame.LookVector * 6))
-						task.wait(0.6)
+						task.wait(tweenTime + 0.05)
 					end
 					
-					-- Teleport ke Puncak
+					-- Menuju Puncak dengan cepat
 					if getgenv().AutoSummitRunning then
-						hrp.CFrame = CFrame.new(SummitPuncakVector + Vector3.new(0, 2, 0))
-						task.wait(3.0)
-						
-						-- Kembali ke BaseCamp
-						hrp.CFrame = CFrame.new(BaseCampVector + Vector3.new(0, 2, 0))
+						local summitTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = SummitPuncakCFrame + Vector3.new(0, 3, 0)})
+						summitTween:Play()
 						task.wait(1.0)
+						
+						-- Kembali ke BaseCamp dengan cepat
+						local baseTween = TweenService:Create(hrp, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {CFrame = BaseCampCFrame + Vector3.new(0, 3, 0)})
+						baseTween:Play()
+						task.wait(0.8)
 					end
 				end
 			end)
-			task.wait(2)
+			task.wait(1)
 		else
 			task.wait(0.5)
 		end
 	end
 end)
+
 
 
 
