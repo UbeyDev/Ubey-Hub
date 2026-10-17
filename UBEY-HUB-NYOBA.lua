@@ -1458,23 +1458,23 @@ AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.6
 
 ----------------------------------------------------
 ----------------------------------------------------
--- 5. SUMMIT PAGE (DYNAMIC WORKSPACE SCANNER FIX)
+-- 5. SUMMIT PAGE (FORWARD WALKING & DYNAMIC TRIGGER)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (DYNAMIC)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (WALK TRIGGER)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (Dynamic)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (Walk Trigger)", function(v) getgenv().AutoSummitRunning = v end)
 
 local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
 local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
 
--- Sistem NoClip anti nyangkut
+-- Sistem NoClip anti nyangkut selama berjalan/teleport
 local RunService = game:GetService("RunService")
 RunService.Stepped:Connect(function()
 	pcall(function()
@@ -1500,57 +1500,68 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp and humanoid then
-					local cpFolder = workspace:FindFirstChild("Checkpoint")
-					if cpFolder then
-						-- Cari dan urutkan checkpoint berdasarkan angka namanya (Checkpoint 1, Checkpoint 2, dst)
-						local checkpoints = {}
-						for _, obj in ipairs(cpFolder:GetChildren()) do
-							if obj:IsA("BasePart") or obj:IsA("Model") then
+					local currentTargetIndex = 1
+					local maxCheckpoint = 20
+					
+					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
+						local cpFolder = workspace:FindFirstChild("Checkpoint")
+						local targetObj = nil
+						
+						if cpFolder then
+							for _, obj in ipairs(cpFolder:GetChildren()) do
 								local num = tonumber(obj.Name:match("%d+"))
-								if num then
-									table.insert(checkpoints, {index = num, part = obj})
+								if num == currentTargetIndex then
+									targetObj = obj
+									break
 								end
 							end
 						end
 						
-						-- Urutkan dari angka terkecil ke terbesar
-						table.sort(checkpoints, function(a, b)
-							return a.index < b.index
-						end)
-						
-						-- Lewati satu per satu sesuai checkpoint yang dimuat game
-						for _, cpData in ipairs(checkpoints) do
-							if not getgenv().AutoSummitRunning then break end
-							
-							local targetPart = cpData.part
+						if targetObj then
 							local targetPos = nil
-							
-							if targetPart:IsA("BasePart") then
-								targetPos = targetPart.Position
-							elseif targetPart:IsA("Model") and targetPart.PrimaryPart then
-								targetPos = targetPart.PrimaryPart.Position
-							elseif targetPart:IsA("Model") then
-								local cf, size = targetPart:GetBoundingBox()
+							if targetObj:IsA("BasePart") then
+								targetPos = targetObj.Position
+							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
+								targetPos = targetObj.PrimaryPart.Position
+							elseif targetObj:IsA("Model") then
+								local cf, _ = targetObj:GetBoundingBox()
 								targetPos = cf.Position
 							end
 							
 							if targetPos then
-								-- Teleport sedikit di atas posisi checkpoint aktif
-								hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 5, 0))
-								task.wait(0.15)
-								
-								-- Gerakan Maju-Mundur tipis agar sentuhan/touch terdeteksi game
-								humanoid:Move(Vector3.new(0, 0, -1))
-								task.wait(0.2)
-								humanoid:Move(Vector3.new(0, 0, 1))
-								task.wait(0.15)
-								humanoid:Move(Vector3.new(0, 0, 0))
+								-- 1. Teleport mendekati checkpoint target
+								hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 4, 0))
 								task.wait(0.1)
+								
+								-- 2. Berjalan maju ke depan (memicu render/spawn checkpoint berikutnya)
+								local startTime = tick()
+								while tick() - startTime < 1.2 and getgenv().AutoSummitRunning do
+									humanoid:Move(Vector3.new(0, 0, -1)) -- Berjalan lurus ke depan
+									task.wait(0.1)
+								end
+								
+								-- Hentikan gerakan sebentar
+								humanoid:Move(Vector3.new(0, 0, 0))
+								task.wait(0.2)
+								
+								currentTargetIndex = currentTargetIndex + 1
+							else
+								task.wait(0.2)
+							end
+						else
+							-- Jika checkpoint belum muncul, dorong karakter berjalan maju sedikit demi sedikit agar game men-spawn objeknya
+							humanoid:Move(Vector3.new(0, 0, -1))
+							task.wait(0.3)
+							humanoid:Move(Vector3.new(0, 0, 0))
+							
+							-- Pengaman jika sampai indeks belasan tidak ditemukan
+							if currentTargetIndex > 15 then 
+								break 
 							end
 						end
 					end
 					
-					-- Jika sudah mencapai ujung atau ingin langsung ke Puncak
+					-- Setelah sampai ujung, meluncur ke Puncak
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = CFrame.new(SummitPuncakVector)
 						task.wait(2.5)
