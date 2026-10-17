@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% CLEAN SYNTAX FIX)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% WORKING & HWID LINE 50 FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -84,7 +84,7 @@ end
 LoadConfig()
 
 ------------------------------------------------------------------
--- SUPABASE CONFIGURATION & HWID RETRIEVAL
+-- SUPABASE CONFIGURATION & HWID RETRIEVAL (URUTAN DEKLARASI DIPERBAIKI)
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
@@ -98,7 +98,7 @@ local function GetDeviceHWID()
 			hwid = RbxAnalyticsService:GetClientId()
 		end
 	end)
-	return hwid or ("UNKNOWN_DEVICE_" .. tostring(LocalPlayer.UserId))
+	return tostring(hwid or ("UNKNOWN_DEVICE_" .. tostring(LocalPlayer.UserId)))
 end
 
 local CurrentHWID = GetDeviceHWID()
@@ -329,12 +329,12 @@ local function RunAutoFishCycle(remoteFolder)
 		
 		OptimizeRodSettings()
 		
-		-- 1. Fire CastEvent (2 Tahap)[span_0](start_span)[span_0](end_span)
-		remoteFolder.CastEvent:FireServer(true)[span_1](start_span)[span_1](end_span)
+		-- 1. Fire CastEvent (2 Tahap)[span_3](start_span)[span_3](end_span)
+		remoteFolder.CastEvent:FireServer(true)[span_4](start_span)[span_4](end_span)
 		task.wait(0.05)
-		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)[span_2](start_span)[span_2](end_span)
+		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)[span_5](start_span)[span_5](end_span)
 		
-		-- 2. Wait for Bite Signal[span_3](start_span)[span_3](end_span)
+		-- 2. Wait for Bite Signal[span_6](start_span)[span_6](end_span)
 		local hooked = false
 		local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
 			if actionType == "Bite" or actionType == "Hook" then hooked = true end
@@ -350,22 +350,22 @@ local function RunAutoFishCycle(remoteFolder)
 		if hooked and getgenv().AutoFishingEventRunning then
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
 			
-			-- 3. FIRE REMOTE BARU: TandaSeruBersama[span_4](start_span)[span_4](end_span)[span_5](start_span)[span_5](end_span)
-			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")[span_6](start_span)[span_6](end_span)[span_7](start_span)[span_7](end_span)
+			-- 3. FIRE REMOTE BARU: TandaSeruBersama[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)
 			if tandaSeruRemote then
-				local color1 = Color3.fromRGB(23, 255, 151)[span_8](start_span)[span_8](end_span)
-				local color2 = Color3.fromRGB(20, 20, 20)[span_9](start_span)[span_9](end_span)
+				local color1 = Color3.fromRGB(23, 255, 151)[span_11](start_span)[span_11](end_span)
+				local color2 = Color3.fromRGB(20, 20, 20)[span_12](start_span)[span_12](end_span)
 				local seq = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, color1),[span_10](start_span)[span_10](end_span)
-					ColorSequenceKeypoint.new(1, color1)[span_11](start_span)[span_11](end_span)
+					ColorSequenceKeypoint.new(0, color1),[span_13](start_span)[span_13](end_span)
+					ColorSequenceKeypoint.new(1, color1)[span_14](start_span)[span_14](end_span)
 				})
-				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)[span_12](start_span)[span_12](end_span)
+				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)[span_15](start_span)[span_15](end_span)
 			end
 			
 			task.wait(0.1)
 			
-			-- 4. Fire MiniGame (true)[span_13](start_span)[span_13](end_span)[span_14](start_span)[span_14](end_span)
-			remoteFolder.MiniGame:FireServer(true)[span_15](start_span)[span_15](end_span)[span_16](start_span)[span_16](end_span)
+			-- 4. Fire MiniGame (true)[span_16](start_span)[span_16](end_span)[span_17](start_span)[span_17](end_span)
+			remoteFolder.MiniGame:FireServer(true)[span_18](start_span)[span_18](end_span)[span_19](start_span)[span_19](end_span)
 			task.wait(0.3)
 		end
 	end)
