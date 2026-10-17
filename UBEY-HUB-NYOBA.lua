@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (COBALT EXACT FIX)
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK + SCHEDULE CORE EVENT
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -130,7 +130,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM (DIRECT MATCH FIX)
+-- DISCORD FILTERED WEBHOOK SYSTEM
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 	pcall(function()
@@ -1015,11 +1015,11 @@ SellTimerBox.FocusLost:Connect(function()
 end)
 
 ----------------------------------------------------
--- SYSTEM AUTO DETEKSI EVENT CORE (PEMINDAI PAPAN MAP)
+-- SYSTEM AUTO DETEKSI EVENT CORE (BERDASARKAN JADWAL JAM)
 ----------------------------------------------------
 local TitleCoreEvent = Instance.new("TextLabel")
 TitleCoreEvent.Parent = FishingPage TitleCoreEvent.Size = UDim2.new(1,0,0,25) TitleCoreEvent.BackgroundTransparency = 1
-TitleCoreEvent.Text = "💎 AUTO DETECT WITHERING CORE EVENT (PAPAN)" TitleCoreEvent.TextColor3 = Color3.fromRGB(255,200,0) TitleCoreEvent.Font = Enum.Font.GothamBold TitleCoreEvent.TextSize = 13
+TitleCoreEvent.Text = "💎 AUTO DETECT WITHERING CORE EVENT (SCHEDULE)" TitleCoreEvent.TextColor3 = Color3.fromRGB(255,200,0) TitleCoreEvent.Font = Enum.Font.GothamBold TitleCoreEvent.TextSize = 13
 
 AddToggle(FishingPage, "Auto Teleport Saat Event Core Berlangsung", function(v) getgenv().AutoDetectCoreEvent = v end)
 
@@ -1030,48 +1030,44 @@ task.spawn(function()
 	while true do
 		if getgenv().AutoDetectCoreEvent then
 			pcall(function()
-				local foundEventActive = false
-				for _, descendant in ipairs(Workspace:GetDescendants()) do
-					if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
-						local textLower = string.lower(descendant.Text)
-						if string.find(textLower, "sedang berlangsung") or string.find(textLower, "berlangsung") or string.find(textLower, "active") then
-							if descendant:FindFirstAncestor("SurfaceGui") or descendant:FindFirstAncestor("BillboardGui") then
-								foundEventActive = true
-								break
-							end
-						end
-					end
-				end
+				local currentMinute = tonumber(os.date("%M"))
+				local isEventTime = (currentMinute >= 0 and currentMinute <= 10)
 				
-				if foundEventActive then
+				if isEventTime then
 					if not IsAtCoreEvent then
 						SavedPreviousSpot = getgenv().SelectedFishingSpot
 						IsAtCoreEvent = true
 					end
 					getgenv().SelectedFishingSpot = "Spot Mancing Core"
-					if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ EVENT DI PAPAN AKTIFF!)" end
+					if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ JADWAL EVENT CORE AKTIF!)" end
+					
 					local character = LocalPlayer.Character
 					local hrp = character and character:FindFirstChild("HumanoidRootPart")
 					local targetCFrame = FishingSpots["Spot Mancing Core"]
 					if hrp and targetCFrame then
-						if (hrp.Position - targetCFrame.Position).Magnitude > 20 then hrp.CFrame = targetCFrame end
+						if (hrp.Position - targetCFrame.Position).Magnitude > 20 then
+							hrp.CFrame = targetCFrame
+						end
 					end
 				else
 					if IsAtCoreEvent then
 						IsAtCoreEvent = false
 						if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
 							getgenv().SelectedFishingSpot = SavedPreviousSpot
-							if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Return)" end
+							if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Kembali)" end
+							
 							local character = LocalPlayer.Character
 							local hrp = character and character:FindFirstChild("HumanoidRootPart")
 							local prevCFrame = FishingSpots[SavedPreviousSpot]
-							if hrp and prevCFrame then hrp.CFrame = prevCFrame end
+							if hrp and prevCFrame then
+								hrp.CFrame = prevCFrame
+							end
 						end
 					end
 				end
 			end)
 		end
-		task.wait(2)
+		task.wait(5)
 	end
 end)
 
