@@ -1456,18 +1456,18 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (DIRECT CFrame CHECKPOINT SYSTEM)
+-- 5. SUMMIT PAGE (FIX: TOUCH INTEREST & CFrame ORDER)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (DIRECT CFrame TP)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TOUCH FIXED)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (CFrame)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (Touch CFrame)", function(v) getgenv().AutoSummitRunning = v end)
 
 -- Daftar CFrame Checkpoint 1 sampai 20
 local SummitCheckpoints = {
@@ -1496,6 +1496,27 @@ local SummitCheckpoints = {
 local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
 
+-- Fungsi Pemicu Touch Interest Fisik
+local function TouchCP(hrp, index, targetCFrame)
+	hrp.CFrame = targetCFrame
+	
+	local cpNames = {"cp" .. index, "CP" .. index, "Checkpoint" .. index, "Checkpoint " .. index}
+	local foundPart = nil
+	for _, name in ipairs(cpNames) do
+		local obj = workspace:FindFirstChild(name, true)
+		if obj then
+			foundPart = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart", true)
+			if foundPart then break end
+		end
+	end
+	
+	if foundPart and firetouchinterest then
+		firetouchinterest(hrp, foundPart, 0)
+		task.wait(0.1)
+		firetouchinterest(hrp, foundPart, 1)
+	end
+end
+
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
@@ -1504,23 +1525,26 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					-- Teleport berurutan dari Cp1 sampai Cp20 menggunakan CFrame
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
-						hrp.CFrame = cpCFrame + Vector3.new(0, 3, 0)
-						task.wait(1)
+						
+						-- Teleport & Trigger Touch
+						TouchCP(hrp, i, cpCFrame)
+						
+						-- Jeda antar CP
+						task.wait(0.8)
 					end
 					
-					-- Teleport ke Puncak setelah melewati semua checkpoint
+					-- Teleport ke Puncak
 					if getgenv().AutoSummitRunning then
-						hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 3, 0)
-						task.wait(2.5)
+						hrp.CFrame = SummitPuncakCFrame
+						task.wait(3)
 						-- Kembali ke BaseCamp
-						hrp.CFrame = BaseCampCFrame + Vector3.new(0, 3, 0)
+						hrp.CFrame = BaseCampCFrame
 					end
 				end
 			end)
-			task.wait(1)
+			task.wait(2)
 		else
 			task.wait(0.5)
 		end
