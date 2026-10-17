@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% CLEAN & READY TO EXECUTE)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% FIXED AUTO SUMMIT & ALL TYPOS)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1456,7 +1456,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE
+-- 5. SUMMIT PAGE (PATH DENGAN SESUAI DEX++ DISESUAIKAN)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1473,19 +1473,31 @@ task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
-				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				local character = LocalPlayer.Character
+				local hrp = character and character:FindFirstChild("HumanoidRootPart")
+				
 				if hrp then
-					for i = 1, 20 do
-						if not getgenv().AutoSummitRunning then break end
-						ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(i)
-						task.wait(0.2)
+					-- Mengambil Remote TpToCheckpoint langsung dari Workspace.Checkpoint (Sesuai Dex++)
+					local cpFolder = Workspace:FindFirstChild("Checkpoint")
+					local cpRemote = cpFolder and cpFolder:FindFirstChild("TpToCheckpoint")
+					
+					if cpRemote then
+						for i = 1, 20 do
+							if not getgenv().AutoSummitRunning then break end
+							
+							cpRemote:FireServer(i)
+							task.wait(0.35)
+						end
 					end
+					
+					-- Teleport ke puncak & kembali ke area awal
 					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
-					task.wait(3)
+					task.wait(2.5)
+					
 					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
 				end
 			end)
-			task.wait(0.5)
+			task.wait(1)
 		else
 			task.wait(0.5)
 		end
