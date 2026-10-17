@@ -1535,7 +1535,7 @@ task.spawn(function()
 						local straightTargetCF = CFrame.new(targetPos.X, safeY, targetPos.Z)
 						
 						local distance = (currentPos - straightTargetCF.Position).Magnitude
-						local speed = 700 
+						local speed = 300 
 						local tweenTime = math.clamp(distance / speed, 0.05, 0.4)
 						
 						local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
