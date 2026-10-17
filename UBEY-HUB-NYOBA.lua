@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (INDEXBERUBAH) + CORE DETECTOR
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (INDEXBERUBAH FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -188,7 +188,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (MENGGUNAKAN REMOTE INDEXBERUBAH)
+-- REAL-TIME CATCH MONITOR (FIX RARITY & MUTASI INDEXBERUBAH)
 ------------------------------------------------------------------
 local function ListenToFishCatch()
 	pcall(function()
@@ -198,14 +198,35 @@ local function ListenToFishCatch()
 			or ReplicatedStorage:FindFirstChild("IndexBerubah", true)
 			
 		if indexBerubahRemote and indexBerubahRemote:IsA("RemoteEvent") then
-			indexBerubahRemote.OnClientEvent:Connect(function(fishNameArg, fishDataArg)
+			indexBerubahRemote.OnClientEvent:Connect(function(fishNameArg, fishDataArg, extraArg)
 				pcall(function()
 					local finalFishName = type(fishNameArg) == "string" and fishNameArg or "Unknown Fish"
-					local dataTable = type(fishDataArg) == "table" and fishDataArg or {}
+					local dataTable = type(fishDataArg) == "table" and fishDataArg or (type(extraArg) == "table" and extraArg or {})
 					
-					local rawRarity = dataTable.Rarity or dataTable.rarity or dataTable.Raritas or dataTable[1] or "Common"
-					local rawMutation = dataTable.Mutation or dataTable.mutation or dataTable.Mutasi or dataTable[2] or "Normal"
-					
+					if type(dataTable.Fish) == "table" then dataTable = dataTable.Fish
+					elseif type(dataTable.Data) == "table" then dataTable = dataTable.Data
+					elseif type(dataTable.Info) == "table" then dataTable = dataTable.Info end
+
+					local rawRarity = dataTable.Rarity 
+						or dataTable.rarity 
+						or dataTable.Raritas 
+						or dataTable.raritas 
+						or dataTable.Tier 
+						or dataTable.tier 
+						or dataTable[1] 
+						or dataTable[2] 
+						or "Common"
+
+					local rawMutation = dataTable.Mutation 
+						or dataTable.mutation 
+						or dataTable.Mutasi 
+						or dataTable.mutasi 
+						or dataTable.Variant 
+						or dataTable.variant 
+						or dataTable[2] 
+						or dataTable[3] 
+						or "Normal"
+
 					local finalRarity = tostring(rawRarity)
 					local finalMutation = tostring(rawMutation)
 
