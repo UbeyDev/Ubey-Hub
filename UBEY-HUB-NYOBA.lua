@@ -1457,18 +1457,18 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIX: NATURAL WALKING SIMULATION)
+-- 5. SUMMIT PAGE (TELEPORT & WALK FORWARD FIX)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (NATURAL WALK)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TP & WALK)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-AddToggle(SummitPage, "Auto Summit Loop (Walk)", function(v) getgenv().AutoSummitRunning = v end)
+AddToggle(SummitPage, "Auto Summit Loop (TP & Walk)", function(v) getgenv().AutoSummitRunning = v end)
 
 -- Daftar CFrame Checkpoint 1 sampai 20
 local SummitCheckpoints = {
@@ -1497,23 +1497,6 @@ local SummitCheckpoints = {
 local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 local BaseCampCFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285)
 
-local function WalkToPosition(humanoid, targetPos)
-	humanoid:MoveTo(targetPos)
-	local reached = false
-	local conn
-	conn = humanoid.MoveToFinished:Connect(function(isReached)
-		reached = true
-		if conn then conn:Disconnect() end
-	end)
-	
-	local startTick = tick()
-	while not reached and getgenv().AutoSummitRunning do
-		if (tick() - startTick) > 4 then break end
-		task.wait(0.1)
-	end
-	if conn then conn:Disconnect() end
-end
-
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
@@ -1526,15 +1509,26 @@ task.spawn(function()
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						humanoid.WalkSpeed = 35
-						WalkToPosition(humanoid, cpCFrame.Position)
-						task.wait(0.4)
+						-- 1. Teleport pas di atas titik Checkpoint
+						hrp.CFrame = cpCFrame + Vector3.new(0, 2, 0)
+						task.wait(0.3)
+						
+						-- 2. Perintah karakter berjalan maju beberapa langkah kedepan agar game membaca pergerakan analog/fisik
+						humanoid.WalkSpeed = 25
+						humanoid:MoveTo(hrp.Position + (hrp.CFrame.LookVector * 6))
+						
+						-- Tunggu sebentar sambil berjalan maju
+						task.wait(0.6)
 					end
 					
+					-- Teleport ke Puncak setelah semua CP selesai
 					if getgenv().AutoSummitRunning then
-						WalkToPosition(humanoid, SummitPuncakCFrame.Position)
-						task.wait(2.0)
-						WalkToPosition(humanoid, BaseCampCFrame.Position)
+						hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 2, 0)
+						task.wait(3.0)
+						
+						-- Kembali ke BaseCamp
+						hrp.CFrame = BaseCampCFrame + Vector3.new(0, 2, 0)
+						task.wait(1.0)
 					end
 				end
 			end)
@@ -1544,6 +1538,7 @@ task.spawn(function()
 		end
 	end
 end)
+
 
 ----------------------------------------------------
 -- 6. PLAYER PAGE
