@@ -1542,26 +1542,121 @@ task.spawn(function()
 								
 								-- Hentikan gerakan sebentar
 								humanoid:Move(Vector3.new(0, 0, 0))
+----------------------------------------------------
+-- 5. SUMMIT PAGE (FLYING FORWARD & DYNAMIC TRIGGER)
+----------------------------------------------------
+local TitleSum = Instance.new("TextLabel")
+TitleSum.Parent = SummitPage
+TitleSum.Size = UDim2.new(1,0,0,30)
+TitleSum.BackgroundTransparency = 1
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (FLY TRIGGER)"
+TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
+TitleSum.Font = Enum.Font.GothamBold
+TitleSum.TextSize = 13
+
+AddToggle(SummitPage, "Auto Summit Loop (Fly)", function(v) getgenv().AutoSummitRunning = v end)
+
+local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
+local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
+
+-- Sistem NoClip anti nyangkut total di udara
+local RunService = game:GetService("RunService")
+RunService.Stepped:Connect(function()
+	pcall(function()
+		if getgenv().AutoSummitRunning then
+			local character = LocalPlayer.Character
+			if character then
+				for _, part in ipairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
+				end
+			end
+		end
+	end)
+end)
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoSummitRunning then
+			pcall(function()
+				local character = LocalPlayer.Character
+				local hrp = character and character:FindFirstChild("HumanoidRootPart")
+				
+				if hrp then
+					local currentTargetIndex = 1
+					local maxCheckpoint = 20
+					
+					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
+						local cpFolder = workspace:FindFirstChild("Checkpoint")
+						local targetObj = nil
+						
+						if cpFolder then
+							for _, obj in ipairs(cpFolder:GetChildren()) do
+								local num = tonumber(obj.Name:match("%d+"))
+								if num == currentTargetIndex then
+									targetObj = obj
+									break
+								end
+							end
+						end
+						
+						-- Jika checkpoint tujuan belum muncul, buat karakter TERBANG MAJU PERLAHAN ke arah depan
+						-- untuk memicu game men-spawn checkpoint berikutnya tanpa takut jatuh
+						if not targetObj then
+							local flyStartTime = tick()
+							while not targetObj and tick() - flyStartTime < 3.5 and getgenv().AutoSummitRunning do
+								-- Terbang maju perlahan searah pandangan karakter (Z sumbu depan)
+								hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 1.5)
+								task.wait(0.1)
+								
+								-- Cek ulang apakah checkpoint sudah terpancing muncul di Workspace
+								cpFolder = workspace:FindFirstChild("Checkpoint")
+								if cpFolder then
+									for _, obj in ipairs(cpFolder:GetChildren()) do
+										local num = tonumber(obj.Name:match("%d+"))
+										if num == currentTargetIndex then
+											targetObj = obj
+											break
+										end
+									end
+								end
+							end
+						end
+						
+						-- Jika objek checkpoint sudah berhasil dimunculkan
+						if targetObj then
+							local targetPos = nil
+							if targetObj:IsA("BasePart") then
+								targetPos = targetObj.Position
+							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
+								targetPos = targetObj.PrimaryPart.Position
+							elseif targetObj:IsA("Model") then
+								local cf, _ = targetObj:GetBoundingBox()
+								targetPos = cf.Position
+							end
+							
+							if targetPos then
+								-- Teleport tepat di atas posisi checkpoint tersebut secara melayang aman
+								hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 4, 0))
 								task.wait(0.2)
+								
+								-- Geser sedikit maju-mundur melayang untuk memastikan sentuhan terdaftar
+								hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 2)
+								task.wait(0.15)
+								hrp.CFrame = hrp.CFrame - (hrp.CFrame.LookVector * 2)
+								task.wait(0.15)
 								
 								currentTargetIndex = currentTargetIndex + 1
 							else
-								task.wait(0.2)
+								task.wait(0.3)
 							end
 						else
-							-- Jika checkpoint belum muncul, dorong karakter berjalan maju sedikit demi sedikit agar game men-spawn objeknya
-							humanoid:Move(Vector3.new(0, 0, -1))
-							task.wait(0.3)
-							humanoid:Move(Vector3.new(0, 0, 0))
-							
-							-- Pengaman jika sampai indeks belasan tidak ditemukan
-							if currentTargetIndex > 15 then 
-								break 
-							end
+							currentTargetIndex = currentTargetIndex + 1
 						end
 					end
 					
-					-- Setelah sampai ujung, meluncur ke Puncak
+					-- Setelah selesai melewati checkpoint berurutan, meluncur ke Puncak
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = CFrame.new(SummitPuncakVector)
 						task.wait(2.5)
@@ -1577,11 +1672,6 @@ task.spawn(function()
 		end
 	end
 end)
-
-
-
-
-
 
 ----------------------------------------------------
 -- 6. PLAYER PAGE
