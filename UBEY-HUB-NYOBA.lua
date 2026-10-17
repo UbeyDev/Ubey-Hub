@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (HYBRID AUTO SUMMIT WITH CHECKPOINT DELAY)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO FIX & FULL STABLE VERSION)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -473,7 +473,7 @@ local function UnfavoriteByFilter()
 	task.spawn(function()
 		pcall(function()
 			local tandaiRemote = GetInventoryRemote()
-			if not tandaiRemote me then return end
+			if not tandaiRemote then return end
 			local serverData = GetServerFishData()
 			for _, fish in ipairs(serverData) do
 				local shouldUnfav = false
