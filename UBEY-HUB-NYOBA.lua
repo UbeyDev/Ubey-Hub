@@ -1457,41 +1457,41 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (TELEPORT & WALK FORWARD FIX)
+-- 5. SUMMIT PAGE (FIX CP 2 MUNDUR / GESER POSISI)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TP & WALK)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (CP 2 ADJUSTED)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop (TP & Walk)", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint 1 sampai 20
+-- Daftar CFrame Checkpoint 1 sampai 20 (CP 2 disesuaikan sedikit mundur)
 local SummitCheckpoints = {
-	CFrame.new(464.5757, 444.6314, -8944.9775),
-	CFrame.new(450.3757, 488.9970, -9572.0254),
-	CFrame.new(394.5212, 628.9980, -10113.1602),
-	CFrame.new(487.2241, 636.9980, -10685.8164),
-	CFrame.new(1084.3728, 724.9941, -11160.0850),
-	CFrame.new(970.9746, 732.9639, -11810.7012),
-	CFrame.new(389.8508, 884.9980, -11839.1611),
-	CFrame.new(-325.3976, 848.9980, -11735.5684),
-	CFrame.new(-870.3784, 852.9980, -11735.9463),
-	CFrame.new(-1280.0693, 856.9980, -12095.6299),
-	CFrame.new(-1309.8514, 888.9980, -12831.5947),
-	CFrame.new(-2315.5291, 912.9980, -12673.0791),
-	CFrame.new(-2314.9072, 916.9980, -11851.2207),
-	CFrame.new(-2444.2737, 960.9980, -11056.3330),
-	CFrame.new(-3480.8328, 980.7667, -11012.4834),
-	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
-	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
-	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
-	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
-	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
+	CFrame.new(464.5757, 444.6314, -8944.9775), -- CP 1
+	CFrame.new(450.3757, 488.9970, -9578.0254), -- CP 2 (Digeser sedikit mundur pada sumbu Z agar tidak terlewat)
+	CFrame.new(394.5212, 628.9980, -10113.1602), -- CP 3
+	CFrame.new(487.2241, 636.9980, -10685.8164), -- CP 4
+	CFrame.new(1084.3728, 724.9941, -11160.0850), -- CP 5
+	CFrame.new(970.9746, 732.9639, -11810.7012), -- CP 6
+	CFrame.new(389.8508, 884.9980, -11839.1611), -- CP 7
+	CFrame.new(-325.3976, 848.9980, -11735.5684), -- CP 8
+	CFrame.new(-870.3784, 852.9980, -11735.9463), -- CP 9
+	CFrame.new(-1280.0693, 856.9980, -12095.6299), -- CP 10
+	CFrame.new(-1309.8514, 888.9980, -12831.5947), -- CP 11
+	CFrame.new(-2315.5291, 912.9980, -12673.0791), -- CP 12
+	CFrame.new(-2314.9072, 916.9980, -11851.2207), -- CP 13
+	CFrame.new(-2444.2737, 960.9980, -11056.3330), -- CP 14
+	CFrame.new(-3480.8328, 980.7667, -11012.4834), -- CP 15
+	CFrame.new(-4226.6689, 1000.9980, -11014.9834), -- CP 16
+	CFrame.new(-4654.7871, 1080.9979, -11664.6084), -- CP 17
+	CFrame.new(-5544.4336, 1100.9979, -11648.8525), -- CP 18
+	CFrame.new(-6764.3345, 1096.9979, -11507.0557), -- CP 19
+	CFrame.new(-6745.1304, 1102.5760, -10796.0947)  -- CP 20
 }
 
 local SummitPuncakCFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
@@ -1509,19 +1509,17 @@ task.spawn(function()
 					for i, cpCFrame in ipairs(SummitCheckpoints) do
 						if not getgenv().AutoSummitRunning then break end
 						
-						-- 1. Teleport pas di atas titik Checkpoint
+						-- Teleport ke CP
 						hrp.CFrame = cpCFrame + Vector3.new(0, 2, 0)
 						task.wait(0.3)
 						
-						-- 2. Perintah karakter berjalan maju beberapa langkah kedepan agar game membaca pergerakan analog/fisik
+						-- Jalan maju agar game mendeteksi pergerakan fisik/analog
 						humanoid.WalkSpeed = 25
 						humanoid:MoveTo(hrp.Position + (hrp.CFrame.LookVector * 6))
-						
-						-- Tunggu sebentar sambil berjalan maju
 						task.wait(0.6)
 					end
 					
-					-- Teleport ke Puncak setelah semua CP selesai
+					-- Teleport ke Puncak
 					if getgenv().AutoSummitRunning then
 						hrp.CFrame = SummitPuncakCFrame + Vector3.new(0, 2, 0)
 						task.wait(3.0)
@@ -1538,6 +1536,7 @@ task.spawn(function()
 		end
 	end
 end)
+
 
 
 ----------------------------------------------------
