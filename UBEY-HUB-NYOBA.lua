@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (LONGER CHECKPOINT WAIT TIME)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (CUSTOM TWEEN & CP DELAY SETTINGS)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -32,7 +32,9 @@ getgenv().UbeyConfig = {
 	AntiAdminEnabled = false,
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
-	WebhookUrl = ""
+	WebhookUrl = "",
+	SummitTweenSpeed = "1.0", -- Konfigurasi Kecepatan Tween Baru
+	SummitCPDelay = "1.5"     -- Konfigurasi Jeda Delay Checkpoint Baru
 }
 
 local function SaveConfig()
@@ -48,7 +50,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONEncode(content)
+			local data = HttpService:JSONDecode(content)
 			if data then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
@@ -58,6 +60,8 @@ local function LoadConfig()
 				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
 				if data.WebhookEnabled ~= nil then getgenv().UbeyConfig.WebhookEnabled = data.WebhookEnabled end
 				if data.WebhookUrl then getgenv().UbeyConfig.WebhookUrl = data.WebhookUrl end
+				if data.SummitTweenSpeed then getgenv().UbeyConfig.SummitTweenSpeed = data.SummitTweenSpeed end
+				if data.SummitCPDelay then getgenv().UbeyConfig.SummitCPDelay = data.SummitCPDelay end
 			end
 		end
 	end)
@@ -73,7 +77,9 @@ local function ResetConfig()
 			AntiAdminEnabled = false,
 			TargetGroupId = 7019573,
 			WebhookEnabled = false,
-			WebhookUrl = ""
+			WebhookUrl = "",
+			SummitTweenSpeed = "1.0",
+			SummitCPDelay = "1.5"
 		}
 		if delfile and isfile then
 			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
@@ -1457,20 +1463,56 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (EXTENDED CHECKPOINT DELAY)
+-- 5. SUMMIT PAGE (CUSTOMIZABLE TWEEN & CP DELAY)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (EXTENDED DELAY)"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint 1 sampai 20 dengan ketinggian presisi
+-- BOX PENGATURAN KECEPATAN TWEEN
+local TweenSpeedBox = Instance.new("TextBox")
+TweenSpeedBox.Parent = SummitPage
+TweenSpeedBox.Size = UDim2.new(1,0,0,35)
+TweenSpeedBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+TweenSpeedBox.PlaceholderText = "Kecepatan Terbang / Tween (Detik, Cth: 1.0)"
+TweenSpeedBox.Text = tostring(getgenv().UbeyConfig.SummitTweenSpeed or "1.0")
+TweenSpeedBox.TextColor3 = Color3.new(1,1,1)
+TweenSpeedBox.Font = Enum.Font.Gotham
+TweenSpeedBox.TextSize = 12
+local tsbCorner = Instance.new("UICorner")
+tsbCorner.Parent = TweenSpeedBox
+
+TweenSpeedBox.FocusLost:Connect(function()
+	getgenv().UbeyConfig.SummitTweenSpeed = TweenSpeedBox.Text
+	SaveConfig()
+end)
+
+-- BOX PENGATURAN DELAY CHECKPOINT
+local CPDelayBox = Instance.new("TextBox")
+CPDelayBox.Parent = SummitPage
+CPDelayBox.Size = UDim2.new(1,0,0,35)
+CPDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+CPDelayBox.PlaceholderText = "Jeda Diam di Checkpoint (Detik, Cth: 1.5)"
+CPDelayBox.Text = tostring(getgenv().UbeyConfig.SummitCPDelay or "1.5")
+CPDelayBox.TextColor3 = Color3.new(1,1,1)
+CPDelayBox.Font = Enum.Font.Gotham
+CPDelayBox.TextSize = 12
+local cpbCorner = Instance.new("UICorner")
+cpbCorner.Parent = CPDelayBox
+
+CPDelayBox.FocusLost:Connect(function()
+	getgenv().UbeyConfig.SummitCPDelay = CPDelayBox.Text
+	SaveConfig()
+end)
+
+-- Daftar CFrame Checkpoint 1 sampai 20 dengan ketinggian presisi (+25 stud Y)
 local CheckpointPath = {
 	CFrame.new(464.5757, 469.6314, -8944.9775),
 	CFrame.new(450.3757, 513.9970, -9572.0254),
@@ -1514,16 +1556,19 @@ RunService.Stepped:Connect(function()
 	end)
 end)
 
--- Fungsi Tween CFrame dengan kecepatan stabil
-local function TweenToPosition(targetCFrame, duration)
+-- Fungsi Tween CFrame Dinamis Menggunakan Pengaturan User
+local function TweenToPosition(targetCFrame, customDuration)
 	pcall(function()
 		local character = LocalPlayer.Character
 		local hrp = character and character:FindFirstChild("HumanoidRootPart")
 		if hrp then
-			local tweenInfo = TweenInfo.new(duration or 1.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+			local userSpeed = tonumber(getgenv().UbeyConfig.SummitTweenSpeed) or 1.0
+			local finalDuration = customDuration or userSpeed
+			
+			local tweenInfo = TweenInfo.new(finalDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
 			local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
 			tween:Play()
-			task.wait(duration or 1.2)
+			task.wait(finalDuration)
 		end
 	end)
 end
@@ -1553,6 +1598,8 @@ task.spawn(function()
 							end
 						end
 						
+						local currentDelay = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 1.5
+						
 						if targetObj then
 							local targetPos = nil
 							if targetObj:IsA("BasePart") then
@@ -1565,8 +1612,8 @@ task.spawn(function()
 							end
 							
 							if targetPos then
-								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)), 1.0)
-								task.wait(1.5) -- JEDA DIAM DIPERLAMA (1.5 DETIK) AGAR TERDETEKSI SEMPURNA
+								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)))
+								task.wait(currentDelay)
 								currentTargetIndex = currentTargetIndex + 1
 							else
 								currentTargetIndex = currentTargetIndex + 1
@@ -1574,8 +1621,8 @@ task.spawn(function()
 						else
 							local fallbackCFrame = CheckpointPath[currentTargetIndex]
 							if fallbackCFrame then
-								TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0), 1.2)
-								task.wait(1.5) -- JEDA DIAM DIPERLAMA (1.5 DETIK)
+								TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0))
+								task.wait(currentDelay)
 							end
 							currentTargetIndex = currentTargetIndex + 1
 						end
@@ -1677,7 +1724,7 @@ FireRgbBtn.MouseButton1Click:Connect(function()
 				fire.Size = 5
 				fire.Heat = 15
 				fire.Parent = head
-			elseif not autoRgbActive and fire then
+			elseif not autoRgbActive and fire me then
 				fire:Destroy()
 			end
 		end
