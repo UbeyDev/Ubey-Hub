@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (CHECKED & TYPO CLEANED)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (HYBRID: TP CHECKPOINT + TWEEN CFRAME)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1457,20 +1457,20 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (PRECISE TWEEN CFRAME PATHWAY)
+-- 5. SUMMIT PAGE (HYBRID: WORKSPACE CHECKPOINT TP + TWEEN CFRAME PATHWAY)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (PRECISE TWEEN)"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (HYBRID FIX)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
 
--- Daftar CFrame Checkpoint 1 sampai 20 sesuai data presisi Anda
+-- Daftar CFrame Checkpoint presisi 1 sampai 20 sebagai jalur cadangan (Tween)
 local CheckpointPath = {
 	CFrame.new(464.5757, 444.6314, -8944.9775),
 	CFrame.new(450.3757, 488.9970, -9572.0254),
@@ -1520,10 +1520,10 @@ local function TweenToPosition(targetCFrame, duration)
 		local character = LocalPlayer.Character
 		local hrp = character and character:FindFirstChild("HumanoidRootPart")
 		if hrp then
-			local tweenInfo = TweenInfo.new(duration or 0.8, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+			local tweenInfo = TweenInfo.new(duration or 0.6, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
 			local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
 			tween:Play()
-			task.wait(duration or 0.8)
+			task.wait(duration or 0.6)
 		end
 	end)
 end
@@ -1536,16 +1536,55 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					-- Terbang berurutan lewat setiap CFrame checkpoint yang ditentukan
-					for _, cpCFrame in ipairs(CheckpointPath) do
-						if not getgenv().AutoSummitRunning then break end
+					local currentTargetIndex = 1
+					local maxCheckpoint = 20
+					
+					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
+						local cpFolder = workspace:FindFirstChild("Checkpoint")
+						local targetObj = nil
 						
-						-- Tween terbang mulus ke titik checkpoint tersebut (diberi sedikit tinggi Y aman)
-						TweenToPosition(cpCFrame + Vector3.new(0, 3, 0), 0.6)
-						task.wait(0.15)
+						-- Cari objek checkpoint asli yang muncul di Workspace (Sistem TP Lama)
+						if cpFolder then
+							for _, obj in ipairs(cpFolder:GetChildren()) do
+								local num = tonumber(obj.Name:match("%d+"))
+								if num == currentTargetIndex then
+									targetObj = obj
+									break
+								end
+							end
+						end
+						
+						-- Jika checkpoint asli muncul di game, langsung TP/Tween ke posisi objek tersebut
+						if targetObj then
+							local targetPos = nil
+							if targetObj:IsA("BasePart") then
+								targetPos = targetObj.Position
+							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
+								targetPos = targetObj.PrimaryPart.Position
+							elseif targetObj:IsA("Model") then
+								local cf, _ = targetObj:GetBoundingBox()
+								targetPos = cf.Position
+							end
+							
+							if targetPos then
+								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 3, 0)), 0.3)
+								task.wait(0.1)
+								currentTargetIndex = currentTargetIndex + 1
+							else
+								currentTargetIndex = currentTargetIndex + 1
+							end
+						else
+							-- CADANGAN: Jika checkpoint belum muncul di game, gunakan jalur CFrame presisi Anda via Tween
+							local fallbackCFrame = CheckpointPath[currentTargetIndex]
+							if fallbackCFrame then
+								TweenToPosition(fallbackCFrame + Vector3.new(0, 3, 0), 0.5)
+								task.wait(0.15)
+							end
+							currentTargetIndex = currentTargetIndex + 1
+						end
 					end
 					
-					-- Setelah semua 20 checkpoint terlewati, meluncur mulus ke Puncak
+					-- Setelah semua 20 checkpoint terlewati, meluncur mulus ke Puncak & kembali ke BaseCamp
 					if getgenv().AutoSummitRunning then
 						TweenToPosition(CFrame.new(SummitPuncakVector), 2.0)
 						task.wait(2.5)
