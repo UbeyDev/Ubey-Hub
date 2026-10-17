@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (CASE MATCH FIX)
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (COBALT EXACT FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -130,7 +130,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD FILTERED WEBHOOK SYSTEM (CASE-INSENSITIVE FIX)
+-- DISCORD FILTERED WEBHOOK SYSTEM (DIRECT MATCH FIX)
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 	pcall(function()
@@ -138,29 +138,26 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 		local url = getgenv().UbeyConfig.WebhookUrl
 		if not url or url == "" or not string.find(url, "api/webhooks") then return end
 		
-		local targetRarityLower = string.lower(tostring(fishRarity or "Common"))
-		local targetMutationLower = string.lower(tostring(fishMutation or "Normal"))
+		local targetRarity = tostring(fishRarity or "Common")
+		local targetMutation = tostring(fishMutation or "Normal")
+		
+		local targetRarityLower = string.lower(targetRarity)
+		local targetMutationLower = string.lower(targetMutation)
 		
 		local matchRarity = false
 		local matchMutation = false
 		
 		for rName, active in pairs(getgenv().UbeyConfig.WebhookRarities) do
-			if active then
-				local cfgRarityLower = string.lower(tostring(rName))
-				if string.find(targetRarityLower, cfgRarityLower) or cfgRarityLower == targetRarityLower then
-					matchRarity = true
-					break
-				end
+			if active and string.find(targetRarityLower, string.lower(rName)) then
+				matchRarity = true
+				break
 			end
 		end
 		
 		for mName, active in pairs(getgenv().UbeyConfig.WebhookMutations) do
-			if active then
-				local cfgMutationLower = string.lower(tostring(mName))
-				if string.find(targetMutationLower, cfgMutationLower) or cfgMutationLower == targetMutationLower then
-					matchMutation = true
-					break
-				end
+			if active and string.find(targetMutationLower, string.lower(mName)) then
+				matchMutation = true
+				break
 			end
 		end
 		
@@ -176,9 +173,9 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 						["description"] = "Pemain **" .. LocalPlayer.Name .. "** baru saja mendapatkan ikan!",
 						["color"] = 16766720,
 						["fields"] = {
-							{ ["name"] = "Nama Ikan", ["value"] = (fishName ~= "" and fishName or "Unknown Fish"), ["inline"] = true },
-							{ ["name"] = "Rarity", ["value"] = (fishRarity ~= "" and fishRarity or "Common"), ["inline"] = true },
-							{ ["name"] = "Mutasi", ["value"] = (fishMutation ~= "" and fishMutation or "Normal"), ["inline"] = true }
+							{ ["name"] = "Nama Ikan", ["value"] = fishName, ["inline"] = true },
+							{ ["name"] = "Rarity", ["value"] = targetRarity, ["inline"] = true },
+							{ ["name"] = "Mutasi", ["value"] = targetMutation, ["inline"] = true }
 						},
 						["footer"] = { ["text"] = "Ubey Hub V3 Auto Catch Tracker" },
 						["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -197,59 +194,66 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (EXACT MATCH NOTIFYCLIENT GOTFISH)
+-- REAL-TIME CATCH MONITOR (NOTIFYCLIENT COBALT EXACT FIX)
 ------------------------------------------------------------------
+local hookedRemotes = {}
+
+local function ProcessNotifyClient(actionType, fishDataArg)
+	if actionType == "GotFish" and type(fishDataArg) == "table" then
+		pcall(function()
+			local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
+			local rarity = fishDataArg.rarity or "Common"
+			local mutation = fishDataArg.mutation or "Normal"
+			
+			if name ~= "Unknown Fish" and name ~= "" then
+				SendFilteredWebhook(tostring(name), tostring(rarity), tostring(mutation))
+			end
+		end)
+	end
+end
+
+local function AttachNotifyHook(remote)
+	if remote and remote:IsA("RemoteEvent") and not hookedRemotes[remote] then
+		hookedRemotes[remote] = true
+		remote.OnClientEvent:Connect(ProcessNotifyClient)
+	end
+end
+
 local function ListenToFishCatch()
 	pcall(function()
-		local function HookNotifyRemote(remote)
-			if remote and remote:IsA("RemoteEvent") then
-				remote.OnClientEvent:Connect(function(actionType, fishDataArg)
-					if actionType == "GotFish" and type(fishDataArg) == "table" then
-						pcall(function()
-							local rawName = fishDataArg.baseName or fishDataArg.originalName or fishDataArg.name or "Unknown Fish"
-							local rawRarity = fishDataArg.rarity or fishDataArg.Rarity or fishDataArg.raritas or "Common"
-							local rawMutation = fishDataArg.mutation or fishDataArg.Mutation or fishDataArg.mutasi or "Normal"
-
-							local finalFishName = tostring(rawName)
-							local finalRarity = tostring(rawRarity)
-							local finalMutation = tostring(rawMutation)
-
-							if finalFishName ~= "Unknown Fish" and finalFishName ~= "" then
-								SendFilteredWebhook(finalFishName, finalRarity, finalMutation)
-							end
-						end)
-					end
-				end)
+		for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+			if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
+				AttachNotifyHook(v)
 			end
 		end
 
-		local repStorage = game:GetService("ReplicatedStorage")
-		for _, desc in ipairs(repStorage:GetDescendants()) do
-			if desc:IsA("RemoteEvent") and desc.Name == "NotifyClient" then
-				HookNotifyRemote(desc)
-			end
-		end
-
-		local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-		for _, tool in ipairs(character:GetChildren()) do
-			if tool:IsA("Tool") then
-				for _, desc in ipairs(tool:GetDescendants()) do
-					if desc:IsA("RemoteEvent") and desc.Name == "NotifyClient" then
-						HookNotifyRemote(desc)
-					end
+		local function ScanCharacter(char)
+			if not char then return end
+			for _, v in ipairs(char:GetDescendants()) do
+				if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
+					AttachNotifyHook(v)
 				end
 			end
+			char.DescendantAdded:Connect(function(v)
+				if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
+					AttachNotifyHook(v)
+				end
+			end)
 		end
+
+		if LocalPlayer.Character then ScanCharacter(LocalPlayer.Character) end
+		LocalPlayer.CharacterAdded:Connect(ScanCharacter)
+		
+		ReplicatedStorage.DescendantAdded:Connect(function(v)
+			if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
+				AttachNotifyHook(v)
+			end
+		end)
 	end)
 end
 
 task.spawn(function()
-	task.wait(2)
-	ListenToFishCatch()
-end)
-
-LocalPlayer.CharacterAdded:Connect(function()
-	task.wait(2)
+	task.wait(1)
 	ListenToFishCatch()
 end)
 
