@@ -1567,30 +1567,140 @@ task.spawn(function()
 							end
 							
 							if targetPos then
-								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 3, 0)), 0.3)
-								task.wait(0.1)
+----------------------------------------------------
+-- 5. SUMMIT PAGE (FIXED SPEED & CHECKPOINT DELAY)
+----------------------------------------------------
+local TitleSum = Instance.new("TextLabel")
+TitleSum.Parent = SummitPage
+TitleSum.Size = UDim2.new(1,0,0,30)
+TitleSum.BackgroundTransparency = 1
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (FIXED DELAY)"
+TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
+TitleSum.Font = Enum.Font.GothamBold
+TitleSum.TextSize = 13
+
+AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
+
+-- Daftar CFrame Checkpoint presisi 1 sampai 20 sebagai jalur cadangan (Tween)
+local CheckpointPath = {
+	CFrame.new(464.5757, 444.6314, -8944.9775),
+	CFrame.new(450.3757, 488.9970, -9572.0254),
+	CFrame.new(394.5212, 628.9980, -10113.1602),
+	CFrame.new(487.2241, 636.9980, -10685.8164),
+	CFrame.new(1084.3728, 724.9941, -11160.0850),
+	CFrame.new(970.9746, 732.9639, -11810.7012),
+	CFrame.new(389.8508, 884.9980, -11839.1611),
+	CFrame.new(-325.3976, 848.9980, -11735.5684),
+	CFrame.new(-870.3784, 852.9980, -11735.9463),
+	CFrame.new(-1280.0693, 856.9980, -12095.6299),
+	CFrame.new(-1309.8514, 888.9980, -12831.5947),
+	CFrame.new(-2315.5291, 912.9980, -12673.0791),
+	CFrame.new(-2314.9072, 916.9980, -11851.2207),
+	CFrame.new(-2444.2737, 960.9980, -11056.3330),
+	CFrame.new(-3480.8328, 980.7667, -11012.4834),
+	CFrame.new(-4226.6689, 1000.9980, -11014.9834),
+	CFrame.new(-4654.7871, 1080.9979, -11664.6084),
+	CFrame.new(-5544.4336, 1100.9979, -11648.8525),
+	CFrame.new(-6764.3345, 1096.9979, -11507.0557),
+	CFrame.new(-6745.1304, 1102.5760, -10796.0947)
+}
+
+local SummitPuncakVector = Vector3.new(-6766.44629, 1326, -10083.8037)
+local BaseCampVector = Vector3.new(-6834.84912, 1318, -9902.42285)
+
+-- Sistem NoClip anti nyangkut total di udara
+local RunService = game:GetService("RunService")
+RunService.Stepped:Connect(function()
+	pcall(function()
+		if getgenv().AutoSummitRunning then
+			local character = LocalPlayer.Character
+			if character then
+				for _, part in ipairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
+				end
+			end
+		end
+	end)
+end)
+
+-- Fungsi Tween CFrame diperlambat sedikit agar stabil
+local function TweenToPosition(targetCFrame, duration)
+	pcall(function()
+		local character = LocalPlayer.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			local tweenInfo = TweenInfo.new(duration or 1.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+			local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+			tween:Play()
+			task.wait(duration or 1.2)
+		end
+	end)
+end
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoSummitRunning then
+			pcall(function()
+				local character = LocalPlayer.Character
+				local hrp = character and character:FindFirstChild("HumanoidRootPart")
+				
+				if hrp then
+					local currentTargetIndex = 1
+					local maxCheckpoint = 20
+					
+					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
+						local cpFolder = workspace:FindFirstChild("Checkpoint")
+						local targetObj = nil
+						
+						if cpFolder then
+							for _, obj in ipairs(cpFolder:GetChildren()) do
+								local num = tonumber(obj.Name:match("%d+"))
+								if num == currentTargetIndex then
+									targetObj = obj
+									break
+								end
+							end
+						end
+						
+						if targetObj then
+							local targetPos = nil
+							if targetObj:IsA("BasePart") then
+								targetPos = targetObj.Position
+							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
+								targetPos = targetObj.PrimaryPart.Position
+							elseif targetObj:IsA("Model") then
+								local cf, _ = targetObj:GetBoundingBox()
+								targetPos = cf.Position
+							end
+							
+							if targetPos then
+								-- Kecepatan tween diatur 1.0 detik & ditambah jeda diam 0.5 detik di titiknya
+								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 3, 0)), 1.0)
+								task.wait(0.5) 
 								currentTargetIndex = currentTargetIndex + 1
 							else
 								currentTargetIndex = currentTargetIndex + 1
 							end
 						else
-							-- CADANGAN: Jika checkpoint belum muncul di game, gunakan jalur CFrame presisi Anda via Tween
+							-- Jika pakai jalur cadangan CFrame, durasi diperlambat dan diberi jeda juga
 							local fallbackCFrame = CheckpointPath[currentTargetIndex]
 							if fallbackCFrame then
-								TweenToPosition(fallbackCFrame + Vector3.new(0, 3, 0), 0.5)
-								task.wait(0.15)
+								TweenToPosition(fallbackCFrame + Vector3.new(0, 3, 0), 1.2)
+								task.wait(0.5)
 							end
 							currentTargetIndex = currentTargetIndex + 1
 						end
 					end
 					
-					-- Setelah semua 20 checkpoint terlewati, meluncur mulus ke Puncak & kembali ke BaseCamp
+					-- Finishing ke Puncak & BaseCamp dengan durasi aman
 					if getgenv().AutoSummitRunning then
-						TweenToPosition(CFrame.new(SummitPuncakVector), 2.0)
-						task.wait(2.5)
+						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
+						task.wait(3.0)
 						
-						TweenToPosition(CFrame.new(BaseCampVector), 1.5)
-						task.wait(1.0)
+						TweenToPosition(CFrame.new(BaseCampVector), 2.0)
+						task.wait(1.5)
 					end
 				end
 			end)
@@ -1600,6 +1710,7 @@ task.spawn(function()
 		end
 	end
 end)
+
 
 ----------------------------------------------------
 -- 6. PLAYER PAGE
