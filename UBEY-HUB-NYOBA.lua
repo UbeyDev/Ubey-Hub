@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK + CORE BOARD DETECTOR
+-- UBEY HUB V3 | FULL FEATURES + REAL-TIME FISH WEBHOOK (INDEXBERUBAH) + CORE DETECTOR
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -188,69 +188,37 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation)
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR (SADAP LANGSUNG PANCINGAN + FIX NAMA)
+-- REAL-TIME CATCH MONITOR (MENGGUNAKAN REMOTE INDEXBERUBAH)
 ------------------------------------------------------------------
 local function ListenToFishCatch()
 	pcall(function()
-		local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-		local rod = character:FindFirstChild("Withering Rod") or character:WaitForChild("Withering Rod", 5)
-		if rod and rod:FindFirstChild("Mechanics") then
-			local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-			if remoteFolder and remoteFolder:FindFirstChild("NotifyClient") then
-				remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType, fishData, extraData)
-					if actionType == "Success" or actionType == "Catch" or type(fishData) == "table" or type(extraData) == "table" then
-						pcall(function()
-							local targetTable = type(fishData) == "table" and fishData or (type(extraData) == "table" and extraData or {})
-							
-							local rawName = targetTable.nama 
-								or targetTable.Nama 
-								or targetTable.name 
-								or targetTable.Name 
-								or targetTable.fishName 
-								or targetTable.FishName 
-								or targetTable[1] 
-								or targetTable[2]
-							
-							local rawRarity = targetTable.rarity 
-								or targetTable.Rarity 
-								or targetTable.raritas 
-								or targetTable[2] 
-								or "Common"
-							
-							local rawMutation = targetTable.mutasi 
-								or targetTable.Mutasi 
-								or targetTable.mutation 
-								or targetTable.Mutation 
-								or targetTable[3] 
-								or "Normal"
+		local remoteFolder = ReplicatedStorage:FindFirstChild("Remote") or ReplicatedStorage:FindFirstChild("Remotes")
+		
+		local indexBerubahRemote = remoteFolder and remoteFolder:FindFirstChild("IndexBerubah", true)
+			or ReplicatedStorage:FindFirstChild("IndexBerubah", true)
+			
+		if indexBerubahRemote and indexBerubahRemote:IsA("RemoteEvent") then
+			indexBerubahRemote.OnClientEvent:Connect(function(fishNameArg, fishDataArg)
+				pcall(function()
+					local finalFishName = type(fishNameArg) == "string" and fishNameArg or "Unknown Fish"
+					local dataTable = type(fishDataArg) == "table" and fishDataArg or {}
+					
+					local rawRarity = dataTable.Rarity or dataTable.rarity or dataTable.Raritas or dataTable[1] or "Common"
+					local rawMutation = dataTable.Mutation or dataTable.mutation or dataTable.Mutasi or dataTable[2] or "Normal"
+					
+					local finalRarity = tostring(rawRarity)
+					local finalMutation = tostring(rawMutation)
 
-							if not rawName and type(targetTable.Fish) == "table" then
-								rawName = targetTable.Fish.Name or targetTable.Fish.nama
-								rawRarity = targetTable.Fish.Rarity or targetTable.Fish.rarity or rawRarity
-								rawMutation = targetTable.Fish.Mutation or targetTable.Fish.mutasi or rawMutation
-							end
-							
-							local finalFishName = tostring(rawName or "Ikan Tangkapan")
-							local finalRarity = tostring(rawRarity or "Common")
-							local finalMutation = tostring(rawMutation or "Normal")
-
-							SendFilteredWebhook(finalFishName, finalRarity, finalMutation)
-						end)
+					if finalFishName ~= "Unknown Fish" and finalFishName ~= "" then
+						SendFilteredWebhook(finalFishName, finalRarity, finalMutation)
 					end
 				end)
-			end
+			end)
 		end
 	end)
 end
 
 task.spawn(function()
-	while true do
-		ListenToFishCatch()
-		task.wait(10)
-	end
-end)
-
-LocalPlayer.CharacterAdded:Connect(function()
 	task.wait(2)
 	ListenToFishCatch()
 end)
