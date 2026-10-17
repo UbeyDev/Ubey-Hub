@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% CLEAN & READY TO EXECUTE)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TWEEN SUMMIT FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -13,6 +13,7 @@ local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -1456,13 +1457,13 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FULL SCRIPT - FLY TRIGGER & DYNAMIC)
+-- 5. SUMMIT PAGE (TWEEN FLYING + SEQUENTIAL DYNAMIC TRIGGER)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM"
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM (TWEEN FIX)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
@@ -1489,6 +1490,20 @@ RunService.Stepped:Connect(function()
 	end)
 end)
 
+-- Fungsi Bantu Tween CFrame agar karakter terbang mulus ke depan
+local function TweenFlyTo(targetCFrame, duration)
+	pcall(function()
+		local character = LocalPlayer.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			local tweenInfo = TweenInfo.new(duration or 1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+			local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+			tween:Play()
+			task.wait(duration or 1.5)
+		end
+	end)
+end
+
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
@@ -1514,14 +1529,14 @@ task.spawn(function()
 							end
 						end
 						
-						-- Jika checkpoint tujuan belum muncul, buat karakter TERBANG MAJU PERLAHAN
-						-- untuk memicu game men-spawn checkpoint berikutnya tanpa takut jatuh ke jurang/rintangan
+						-- Jika checkpoint tujuan belum muncul, gunakan TWEEN TERBANG MAJU ke depan
+						-- untuk memicu game men-spawn checkpoint berikutnya secara aman tanpa jatuh
 						if not targetObj then
 							local flyStartTime = tick()
-							while not targetObj and tick() - flyStartTime < 3.5 and getgenv().AutoSummitRunning do
-								-- Terbang maju perlahan searah pandangan karakter (Sumbu Z depan)
-								hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 1.5)
-								task.wait(0.1)
+							while not targetObj and tick() - flyStartTime < 4.0 and getgenv().AutoSummitRunning do
+								-- Tween terbang maju perlahan searah pandangan karakter
+								local forwardTarget = hrp.CFrame + (hrp.CFrame.LookVector * 15)
+								TweenFlyTo(forwardTarget, 0.5)
 								
 								-- Cek ulang apakah checkpoint sudah terpancing muncul di Workspace
 								cpFolder = workspace:FindFirstChild("Checkpoint")
@@ -1550,15 +1565,15 @@ task.spawn(function()
 							end
 							
 							if targetPos then
-								-- Teleport tepat di atas posisi checkpoint tersebut secara melayang aman
-								hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 4, 0))
+								-- Gunakan Tween melayang mulus ke posisi checkpoint tersebut
+								local destCFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+								TweenFlyTo(destCFrame, 0.4)
 								task.wait(0.2)
 								
-								-- Geser sedikit maju-mundur melayang untuk memastikan sentuhan terdaftar
-								hrp.CFrame = hrp.CFrame + (hrp.CFrame.LookVector * 2)
-								task.wait(0.15)
-								hrp.CFrame = hrp.CFrame - (hrp.CFrame.LookVector * 2)
-								task.wait(0.15)
+								-- Sentuhan ekstra maju-mundur melayang
+								local nudgeForward = destCFrame + (destCFrame.LookVector * 3)
+								TweenFlyTo(nudgeForward, 0.2)
+								task.wait(0.1)
 								
 								currentTargetIndex = currentTargetIndex + 1
 							else
@@ -1569,12 +1584,12 @@ task.spawn(function()
 						end
 					end
 					
-					-- Setelah selesai melewati checkpoint berurutan, meluncur ke Puncak
+					-- Setelah selesai melewati checkpoint berurutan, meluncur mulus ke Puncak
 					if getgenv().AutoSummitRunning then
-						hrp.CFrame = CFrame.new(SummitPuncakVector)
+						TweenFlyTo(CFrame.new(SummitPuncakVector), 2.0)
 						task.wait(2.5)
 						
-						hrp.CFrame = CFrame.new(BaseCampVector)
+						TweenFlyTo(CFrame.new(BaseCampVector), 1.5)
 						task.wait(1.0)
 					end
 				end
