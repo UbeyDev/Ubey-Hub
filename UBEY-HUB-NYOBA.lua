@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (PRECISE TWEEN SUMMIT)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO FIXED & PRECISE TWEEN SUMMIT)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -2055,7 +2055,7 @@ MakeDraggable(Float)
 
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
--		KeyFrame.Visible = not KeyFrame.Visible
+		KeyFrame.Visible = not KeyFrame.Visible
 		Main.Visible = false
 	else
 		Main.Visible = not Main.Visible
