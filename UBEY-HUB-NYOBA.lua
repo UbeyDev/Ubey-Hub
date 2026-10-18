@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (CUSTOM TWEEN & CP DELAY SETTINGS)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO & SYNTAX FIXED)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -33,8 +33,8 @@ getgenv().UbeyConfig = {
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
 	WebhookUrl = "",
-	SummitTweenSpeed = "1.0", -- Konfigurasi Kecepatan Tween Baru
-	SummitCPDelay = "1.5"     -- Konfigurasi Jeda Delay Checkpoint Baru
+	SummitTweenSpeed = "1.0",
+	SummitCPDelay = "1.5"
 }
 
 local function SaveConfig()
@@ -1476,7 +1476,6 @@ TitleSum.TextSize = 13
 
 AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
 
--- BOX PENGATURAN KECEPATAN TWEEN
 local TweenSpeedBox = Instance.new("TextBox")
 TweenSpeedBox.Parent = SummitPage
 TweenSpeedBox.Size = UDim2.new(1,0,0,35)
@@ -1494,7 +1493,6 @@ TweenSpeedBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
--- BOX PENGATURAN DELAY CHECKPOINT
 local CPDelayBox = Instance.new("TextBox")
 CPDelayBox.Parent = SummitPage
 CPDelayBox.Size = UDim2.new(1,0,0,35)
@@ -1512,7 +1510,6 @@ CPDelayBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
--- Daftar CFrame Checkpoint 1 sampai 20 dengan ketinggian presisi (+25 stud Y)
 local CheckpointPath = {
 	CFrame.new(464.5757, 469.6314, -8944.9775),
 	CFrame.new(450.3757, 513.9970, -9572.0254),
@@ -1539,7 +1536,6 @@ local CheckpointPath = {
 local SummitPuncakVector = Vector3.new(-6766.44629, 1360, -10083.8037)
 local BaseCampVector = Vector3.new(-6834.84912, 1350, -9902.42285)
 
--- Sistem NoClip anti nyangkut total di udara
 local RunService = game:GetService("RunService")
 RunService.Stepped:Connect(function()
 	pcall(function()
@@ -1556,7 +1552,6 @@ RunService.Stepped:Connect(function()
 	end)
 end)
 
--- Fungsi Tween CFrame Dinamis Menggunakan Pengaturan User
 local function TweenToPosition(targetCFrame, customDuration)
 	pcall(function()
 		local character = LocalPlayer.Character
@@ -1628,7 +1623,6 @@ task.spawn(function()
 						end
 					end
 					
-					-- Finishing ke Puncak & BaseCamp
 					if getgenv().AutoSummitRunning then
 						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
 						task.wait(3.0)
@@ -1724,7 +1718,7 @@ FireRgbBtn.MouseButton1Click:Connect(function()
 				fire.Size = 5
 				fire.Heat = 15
 				fire.Parent = head
-			elseif not autoRgbActive and fire me then
+			elseif not autoRgbActive and fire then
 				fire:Destroy()
 			end
 		end
