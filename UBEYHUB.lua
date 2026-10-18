@@ -27,7 +27,6 @@ getgenv().UbeyConfig = {
 	BiteDelay = "0.5",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
-	AutoExecuteEnabled = true,
 	AntiAdminEnabled = false,
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
@@ -52,7 +51,6 @@ local function LoadConfig()
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
 				if data.AutoSellTimer then getgenv().UbeyConfig.AutoSellTimer = data.AutoSellTimer end
-				if data.AutoExecuteEnabled ~= nil then getgenv().UbeyConfig.AutoExecuteEnabled = data.AutoExecuteEnabled end
 				if data.AntiAdminEnabled ~= nil then getgenv().UbeyConfig.AntiAdminEnabled = data.AntiAdminEnabled end
 				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
 				if data.WebhookEnabled ~= nil then getgenv().UbeyConfig.WebhookEnabled = data.WebhookEnabled end
@@ -68,7 +66,6 @@ local function ResetConfig()
 			BiteDelay = "0.5",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
-			AutoExecuteEnabled = true,
 			AntiAdminEnabled = false,
 			TargetGroupId = 7019573,
 			WebhookEnabled = false,
@@ -224,7 +221,7 @@ task.spawn(function()
 end)
 
 ------------------------------------------------------------------
--- AUTO RECONNECT & AUTO EXECUTE
+-- AUTO RECONNECT
 ------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
@@ -235,15 +232,6 @@ task.spawn(function()
 			end
 		end)
 	end)
-end)
-
-pcall(function()
-	if queue_on_teleport and getgenv().UbeyConfig.AutoExecuteEnabled then
-		queue_on_teleport([[
-			task.wait(3)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/UbeyDev/Ubey-Hub/refs/heads/main/UBEY-HUB-NYOBA.lua?v=" .. math.random(1, 100000)))()
-		]])
-	end
 end)
 
 -- GLOBAL STATES
@@ -1456,18 +1444,23 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (TELEPORT CFRAME)
+-- 5. SUMMIT PAGE (TWEEN CFRAME)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (CFRAME)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TWEEN)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-getgenv().SummitDelay = 0.5
+getgenv().SummitDelay = 1
+getgenv().SummitCpHeight = 1.5
+getgenv().SummitUseRemote = false
+getgenv().SummitSpeed = 150
+getgenv().SummitHeight = 6
+local TweenService = game:GetService("TweenService")
 
 local SummitPoints = {
 	{"Cp1", CFrame.new(464.845001, 452.719116, -8948.57227, 0.997986674, 0.00330765732, -0.063337639, 5.851164e-10, 0.998639166, 0.0521515608, 0.0634239465, -0.0520465635, 0.996628582)},
@@ -1476,7 +1469,7 @@ local SummitPoints = {
 	{"Tengah 2", CFrame.new(445.483307, 621.606934, -9778.32324, 0.997986615, -0.0062114615, 0.0631198436, 2.39959358e-10, 0.995192885, 0.0979343653, -0.0634247363, -0.0977371857, 0.993189156)},
 	{"Cp3", CFrame.new(397.967834, 639.463623, -10116.7002, 0.999716818, -0.000510056969, -0.02379141, 4.97792363e-11, 0.999770284, -0.0214337762, 0.0237968769, 0.0214277059, 0.999487162)},
 	{"Tengah 3", CFrame.new(395.853546, 635.549683, -10386.791, 0.999716818, 0.00315287593, -0.0235871132, 5.91942884e-10, 0.991184175, 0.132491052, 0.0237969011, -0.132453531, 0.990903497)},
-	{"Cp4", CFrame.new(-115.00399780273438, -83.56999969482422, -115.14199829101562)},
+	{"Cp4", CFrame.new(489.159821, 642.277039, -10681.7002, -0.0475802682, 0.0602015518, -0.997051597, 1.55177843e-10, 0.998182118, 0.060269814, 0.998867393, 0.00286765373, -0.0474937744)},
 	{"Tengah 4", CFrame.new(956.084595, 697.091187, -10802.7363, 0.795761228, -0.0310973153, -0.604811549, -1.72196937e-10, 0.99868077, -0.0513487086, 0.60561049, 0.0408613123, 0.794711471)},
 	{"Cp5", CFrame.new(1086.91284, 731.401855, -11160.585, 0.998458445, 0.000272808335, 0.0555039383, 3.18766229e-11, 0.9999879, -0.00491505768, -0.0555046089, 0.00490748091, 0.998446345)},
 	{"Tengah 5", CFrame.new(1057.28174, 733.071716, -11465.1123, 0.986154497, 0.0050284788, -0.165753007, 1.63842329e-09, 0.99954015, 0.030323239, 0.165829256, -0.0299033988, 0.985700965)},
@@ -1511,43 +1504,144 @@ local SummitPoints = {
 	{"Cp20", CFrame.new(-6746.04248, 1108.37537, -10794.8271, -0.993840754, 0.0067165764, -0.11061395, -6.0127392e-10, 0.998161554, 0.060609255, 0.110817678, 0.0602359474, -0.992013633)}
 }
 
-AddToggle(SummitPage, "Auto Summit Loop (CFrame)", function(v) getgenv().AutoSummitRunning = v end)
+local function SetPlatformStand(state)
+	pcall(function()
+		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if hum then hum.PlatformStand = state end
+	end)
+end
 
-local SummitDelayBox = Instance.new("TextBox")
-SummitDelayBox.Parent = SummitPage
-SummitDelayBox.Size = UDim2.new(1,0,0,35)
-SummitDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-SummitDelayBox.PlaceholderText = "Jeda tiap titik (detik, Cth: 0.5)"
-SummitDelayBox.Text = "0.5"
-SummitDelayBox.TextColor3 = Color3.new(1,1,1)
-SummitDelayBox.Font = Enum.Font.Gotham
-SummitDelayBox.TextSize = 12
-local sdc = Instance.new("UICorner")
-sdc.Parent = SummitDelayBox
-SummitDelayBox.FocusLost:Connect(function()
-	getgenv().SummitDelay = tonumber(SummitDelayBox.Text) or 0.5
+AddToggle(SummitPage, "Auto Summit Loop (Tween)", function(v)
+	getgenv().AutoSummitRunning = v
+	if not v then SetPlatformStand(false) end
 end)
+
+local function AddSummitBox(placeholder, default, onChange)
+	local box = Instance.new("TextBox")
+	box.Parent = SummitPage
+	box.Size = UDim2.new(1,0,0,35)
+	box.BackgroundColor3 = Color3.fromRGB(35,35,45)
+	box.PlaceholderText = placeholder
+	box.Text = tostring(default)
+	box.TextColor3 = Color3.new(1,1,1)
+	box.Font = Enum.Font.Gotham
+	box.TextSize = 12
+	local bc = Instance.new("UICorner")
+	bc.Parent = box
+	box.FocusLost:Connect(function()
+		local n = tonumber(box.Text)
+		if n then onChange(n) end
+	end)
+end
+
+AddSummitBox("Kecepatan Tween (studs/detik, Cth: 150)", 150, function(n) getgenv().SummitSpeed = math.max(n, 20) end)
+AddSummitBox("Tinggi di titik Tengah (Cth: 6)", 6, function(n) getgenv().SummitHeight = n end)
+AddSummitBox("Tinggi di titik Cp (Cth: 1.5)", 1.5, function(n) getgenv().SummitCpHeight = n end)
+AddToggle(SummitPage, "Pakai Remote Checkpoint (opsional)", function(v) getgenv().SummitUseRemote = v end)
+AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitDelay = math.max(n, 0) end)
+
+local function TweenTo(hrp, targetCF)
+	local dist = (hrp.Position - targetCF.Position).Magnitude
+	local speed = math.max(tonumber(getgenv().SummitSpeed) or 150, 20)
+	local tween = TweenService:Create(hrp, TweenInfo.new(dist / speed, Enum.EasingStyle.Linear), {CFrame = targetCF})
+	local done = false
+	local conn = tween.Completed:Connect(function() done = true end)
+	tween:Play()
+	while not done and getgenv().AutoSummitRunning do
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+		task.wait()
+	end
+	if not done then tween:Cancel() end
+	conn:Disconnect()
+end
+
+-- Cari part checkpoint asli (Workspace.Checkpoint["Checkpoint N"]) lalu sentuh dengan benar
+local function TouchCheckpoint(cpNumber, approxCF)
+	local part
+	local waited = 0
+	while getgenv().AutoSummitRunning and waited < 4 do
+		local folder = workspace:FindFirstChild("Checkpoint")
+		part = folder and folder:FindFirstChild("Checkpoint " .. tostring(cpNumber))
+		if part and part:IsA("BasePart") then break end
+		part = nil
+		-- paksa area dimuat lagi sambil menunggu checkpoint muncul
+		pcall(function() LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 1) end)
+		task.wait(0.5)
+		waited = waited + 0.5
+	end
+	if not part then return end
+
+	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	-- posisi tepat di atas checkpoint
+	local standPos = part.Position + Vector3.new(0, (part.Size.Y / 2) + 3, 0)
+
+	-- naik sedikit lalu jatuh ke checkpoint supaya event sentuhan terpicu
+	hrp.CFrame = CFrame.new(standPos + Vector3.new(0, 6, 0))
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	task.wait(0.2)
+	hrp.CFrame = CFrame.new(standPos)
+
+	-- cadangan: picu sentuhan langsung bila executor mendukung
+	if firetouchinterest then
+		pcall(function()
+			firetouchinterest(hrp, part, 0)
+			task.wait(0.1)
+			firetouchinterest(hrp, part, 1)
+		end)
+	end
+end
 
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
+				SetPlatformStand(true)
+				local midHeight = tonumber(getgenv().SummitHeight) or 6
+				local cpHeight = tonumber(getgenv().SummitCpHeight) or 1.5
 				for _, point in ipairs(SummitPoints) do
 					if not getgenv().AutoSummitRunning then break end
 					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 					if not hrp then break end
-					hrp.CFrame = point[2] + Vector3.new(0, 3, 0)
-					task.wait(getgenv().SummitDelay or 0.5)
+
+					local name = point[1]
+					local cpIndex = string.match(name, "^Cp(%d+)$")
+					local height = cpIndex and cpHeight or midHeight
+
+					-- paksa game memuat (stream) area di sekitar titik tujuan agar checkpoint muncul
+					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 3) end)
+
+					SetPlatformStand(true)
+					TweenTo(hrp, point[2] + Vector3.new(0, height, 0))
+
+					if cpIndex then
+						-- di titik Cp: lepas PlatformStand supaya karakter turun & menginjak checkpoint
+						SetPlatformStand(false)
+						TouchCheckpoint(tonumber(cpIndex), point[2])
+						task.wait(getgenv().SummitDelay or 1)
+						-- (opsional) panggil remote lama kalau toggle Remote diaktifkan
+						if getgenv().SummitUseRemote then
+							pcall(function()
+								ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(tonumber(cpIndex))
+							end)
+						end
+						task.wait(0.3)
+					else
+						task.wait(0.2)
+					end
 				end
 
-				-- setelah Cp20 selesai: balik ke titik awal seperti script lama
+				-- setelah Cp20: kembali ke titik awal seperti script lama
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp and getgenv().AutoSummitRunning then
-					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
+					TweenTo(hrp, CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0))
 					task.wait(3)
-					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
+					TweenTo(hrp, CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0))
 				end
 			end)
+			SetPlatformStand(false)
 			task.wait(0.5)
 		else
 			task.wait(0.5)
