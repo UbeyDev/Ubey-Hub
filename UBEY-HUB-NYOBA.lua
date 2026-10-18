@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL SCRIPT (SEQUENTIAL SUMMIT PATH & FIXED)
+-- UBEY HUB V3 | FULL SCRIPT (DELTA EXECUTOR FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -50,7 +50,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
+			local data = HttpService:JSONEncode(content)
 			if data then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
@@ -91,7 +91,7 @@ end
 LoadConfig()
 
 ------------------------------------------------------------------
--- SUPABASE CONFIGURATION & HWID RETRIEVAL
+-- SUPABASE CONFIGURATION & HWID RETRIEVAL (DELTA COMPATIBLE)
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
@@ -99,16 +99,27 @@ local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
 local function GetDeviceHWID()
 	local hwid = nil
 	pcall(function()
-		if gethwid then
+		if gethwid and type(gethwid) == "function" then
 			hwid = gethwid()
+		elseif getgenv().gethwid and type(getgenv().gethwid) == "function" then
+			hwid = getgenv().gethwid()
 		elseif RbxAnalyticsService then
 			hwid = RbxAnalyticsService:GetClientId()
 		end
 	end)
-	return tostring(hwid or ("UNKNOWN_DEVICE_" .. tostring(LocalPlayer.UserId)))
+	return tostring(hwid or ("DELTA_USER_" .. tostring(LocalPlayer.UserId)))
 end
 
 local CurrentHWID = GetDeviceHWID()
+
+-- Helper universal HTTP request
+local function HttpRequest(options)
+	local req = (http and http.request) or request or (http_request) or (syn and syn.request)
+	if req then
+		return req(options)
+	end
+	return nil
+end
 
 ------------------------------------------------------------------
 -- DISCORD WEBHOOK SYSTEM (STRICT SECRET & FORGOTTEN ONLY)
@@ -129,9 +140,6 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade
 		local targetRarityLower = string.lower(targetRarity)
 		
 		if targetRarityLower == "secret" or targetRarityLower == "forgotten" then
-			local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
-			if not requestFunc then return end
-			
 			local data = {
 				["content"] = "@everyone 🚨 **FISH SECRET / FORGOTTEN CATCH!**",
 				["embeds"] = {
@@ -153,7 +161,7 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade
 				}
 			}
 			
-			requestFunc({
+			HttpRequest({
 				Url = url,
 				Method = "POST",
 				Headers = { ["Content-Type"] = "application/json" },
@@ -869,22 +877,14 @@ local function ValidateKey(enteredKey, isAutoLogin)
 	end
 	
 	task.spawn(function()
-		local requestFunc = syn and syn.request or http and http.request or request
-		local success, response = pcall(function()
-			if requestFunc then
-				local res = requestFunc({
-					Url = SUPABASE_URL .. enteredKey,
-					Method = "GET",
-					Headers = { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, ["Content-Type"] = "application/json" }
-				})
-				return res.Body
-			else
-				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY })
-			end
-		end)
+		local res = HttpRequest({
+			Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
+			Method = "GET",
+			Headers = { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, ["Content-Type"] = "application/json" }
+		})
 		
-		if success and response then
-			local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(response) end)
+		if res and res.Body then
+			local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
 			if decodeSuccess and data and #data > 0 then
 				local record = data[1]
 				if record.status == false or record.status == "inactive" or record.status == "used" then
@@ -1512,7 +1512,7 @@ CPDelayBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
--- Daftar Jalur Berurutan (CP & Tengah CP berselang-seling sesuai data kamu)
+-- Daftar Jalur Berurutan (CP & Tengah CP berselang-seling)
 local SequentialSummitPath = {
 	CFrame.new(464.845001, 452.719116, -8948.57227, 0.997986674, 0.00330765732, -0.063337639, 5.851164e-10, 0.998639166, 0.0521515608, 0.0634239465, -0.0520465635, 0.996628582), -- CP1
 	CFrame.new(474.590057, 447.956573, -9159.24023, 0.999968529, -0.000852574885, -0.00788716134, -1.21188393e-10, 0.994208276, -0.107470497, 0.0079331072, 0.107467115, 0.994176984), -- Tengah CP 1-2
@@ -2042,16 +2042,16 @@ TestWebhookBtn.MouseButton1Click:Connect(function()
 			return
 		end
 		
-		local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
-		if requestFunc then
-			requestFunc({
-				Url = url,
-				Method = "POST",
-				Headers = { ["Content-Type"] = "application/json" },
-				Body = HttpService:JSONEncode({
-					["content"] = "✅ **Ubey Hub V3 Webhook Test Berhasil!** Koneksi ke Discord normal."
-				})
+		local res = HttpRequest({
+			Url = url,
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+			Body = HttpService:JSONEncode({
+				["content"] = "✅ **Ubey Hub V3 Webhook Test Berhasil!** Koneksi ke Discord normal."
 			})
+		})
+		
+		if res then
 			TestWebhookBtn.Text = "✅ Pesan Test Berhasil Dikirim!"
 		else
 			TestWebhookBtn.Text = "❌ Executor Tidak Mendukung Request!"
