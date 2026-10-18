@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (FULLY AUDITED & BUG FREE)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (HYBRID CHECKPOINT FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1463,7 +1463,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (AUTO-SORT CHECKPOINTS BY HEIGHT)
+-- 5. SUMMIT PAGE (HYBRID: FIND FIRST CHILD + CFRAME FALLBACK)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1510,27 +1510,28 @@ CPDelayBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
-local CheckpointPath = {
-	CFrame.new(464.5757, 469.6314, -8944.9775),
-	CFrame.new(450.3757, 513.9970, -9572.0254),
-	CFrame.new(394.5212, 653.9980, -10113.1602),
-	CFrame.new(487.2241, 661.9980, -10685.8164),
-	CFrame.new(1084.3728, 749.9941, -11160.0850),
-	CFrame.new(970.9746, 757.9639, -11810.7012),
-	CFrame.new(389.8508, 909.9980, -11839.1611),
-	CFrame.new(-325.3976, 873.9980, -11735.5684),
-	CFrame.new(-870.3784, 877.9980, -11735.9463),
-	CFrame.new(-1280.0693, 881.9980, -12095.6299),
-	CFrame.new(-1309.8514, 913.9980, -12831.5947),
-	CFrame.new(-2315.5291, 937.9980, -12673.0791),
-	CFrame.new(-2314.9072, 941.9980, -11851.2207),
-	CFrame.new(-2444.2737, 985.9980, -11056.3330),
-	CFrame.new(-3480.8328, 1005.7667, -11012.4834),
-	CFrame.new(-4226.6689, 1025.9980, -11014.9834),
-	CFrame.new(-4654.7871, 1105.9979, -11664.6084),
-	CFrame.new(-5544.4336, 1125.9979, -11648.8525),
-	CFrame.new(-6764.3345, 1121.9979, -11507.0557),
-	CFrame.new(-6745.1304, 1127.5760, -10796.0947)
+-- Daftar CFrame Koordinat Pasti (CP 1 sampai CP 20)
+local FixedCheckpointList = {
+	[1]  = CFrame.new(464.5757, 444.6314, -8944.9775),
+	[2]  = CFrame.new(450.3757, 488.9970, -9572.0254),
+	[3]  = CFrame.new(394.5212, 628.9980, -10113.1602),
+	[4]  = CFrame.new(487.2241, 636.9980, -10685.8164),
+	[5]  = CFrame.new(1084.3728, 724.9941, -11160.0850),
+	[6]  = CFrame.new(970.9746, 732.9639, -11810.7012),
+	[7]  = CFrame.new(389.8508, 884.9980, -11839.1611),
+	[8]  = CFrame.new(-325.3976, 848.9980, -11735.5684),
+	[9]  = CFrame.new(-870.3784, 852.9980, -11735.9463),
+	[10] = CFrame.new(-1280.0693, 856.9980, -12095.6299),
+	[11] = CFrame.new(-1309.8514, 888.9980, -12831.5947),
+	[12] = CFrame.new(-2315.5291, 912.9980, -12673.0791),
+	[13] = CFrame.new(-2314.9072, 916.9980, -11851.2207),
+	[14] = CFrame.new(-2444.2737, 960.9980, -11056.3330),
+	[15] = CFrame.new(-3480.8328, 980.7667, -11012.4834),
+	[16] = CFrame.new(-4226.6689, 1000.9980, -11014.9834),
+	[17] = CFrame.new(-4654.7871, 1080.9979, -11664.6084),
+	[18] = CFrame.new(-5544.4336, 1100.9979, -11648.8525),
+	[19] = CFrame.new(-6764.3345, 1096.9979, -11507.0557),
+	[20] = CFrame.new(-6745.1304, 1102.5760, -10796.0947)
 }
 
 local SummitPuncakVector = Vector3.new(-6766.44629, 1360, -10083.8037)
@@ -1568,6 +1569,31 @@ local function TweenToPosition(targetCFrame, customDuration)
 	end)
 end
 
+-- Fungsi Pencari Posisi Checkpoint (FindFirstChild + Fallback CFrame)
+local function GetCheckpointTargetCFrame(index)
+	local fallbackCFrame = FixedCheckpointList[index]
+	local cpFolder = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Checkpoints")
+	
+	if cpFolder then
+		local targetObj = cpFolder:FindFirstChild(tostring(index)) 
+			or cpFolder:FindFirstChild("Checkpoint" .. tostring(index))
+			or cpFolder:FindFirstChild("CP" .. tostring(index))
+			
+		if targetObj then
+			if targetObj:IsA("BasePart") then
+				return targetObj.CFrame
+			elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
+				return targetObj.PrimaryPart.CFrame
+			elseif targetObj:IsA("Model") then
+				local cf, _ = targetObj:GetBoundingBox()
+				return cf
+			end
+		end
+	end
+	
+	return fallbackCFrame
+end
+
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
@@ -1576,41 +1602,15 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					local sortedCheckpoints = {}
-					local cpFolder = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Checkpoints")
-					
-					if cpFolder then
-						for _, obj in ipairs(cpFolder:GetChildren()) do
-							local pos = nil
-							if obj:IsA("BasePart") then
-								pos = obj.Position
-							elseif obj:IsA("Model") and obj.PrimaryPart then
-								pos = obj.PrimaryPart.Position
-							elseif obj:IsA("Model") then
-								local cf, _ = obj:GetBoundingBox()
-								pos = cf.Position
-							end
-							if pos then
-								table.insert(sortedCheckpoints, pos)
-							end
-						end
-						table.sort(sortedCheckpoints, function(a, b)
-							return a.Y < b.Y
-						end)
-					end
-					
 					local currentDelay = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 1.5
 					
-					if #sortedCheckpoints > 0 then
-						for _, targetPos in ipairs(sortedCheckpoints) do
-							if not getgenv().AutoSummitRunning then break end
-							TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)))
-							task.wait(currentDelay)
-						end
-					else
-						for _, fallbackCFrame in ipairs(CheckpointPath) do
-							if not getgenv().AutoSummitRunning then break end
-							TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0))
+					for cpIndex = 1, #FixedCheckpointList do
+						if not getgenv().AutoSummitRunning then break end
+						
+						local targetCFrame = GetCheckpointTargetCFrame(cpIndex)
+						
+						if targetCFrame then
+							TweenToPosition(targetCFrame + Vector3.new(0, 5, 0))
 							task.wait(currentDelay)
 						end
 					end
