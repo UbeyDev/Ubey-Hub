@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (AUTO-SORT CHECKPOINT FIX)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO & SYNTAX ALL FIXED)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1510,7 +1510,6 @@ CPDelayBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
--- Jalur Fallback cadangan jika folder game kosong
 local CheckpointPath = {
 	CFrame.new(464.5757, 469.6314, -8944.9775),
 	CFrame.new(450.3757, 513.9970, -9572.0254),
@@ -1577,7 +1576,6 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					-- Kumpulkan dan urutkan semua checkpoint di game secara otomatis berdasarkan ketinggian (sumbu Y)
 					local sortedCheckpoints = {}
 					local cpFolder = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Checkpoints")
 					
@@ -1596,7 +1594,6 @@ task.spawn(function()
 								table.insert(sortedCheckpoints, pos)
 							end
 						end
-						-- Urutkan dari bawah ke atas (Y terkecil ke terbesar)
 						table.sort(sortedCheckpoints, function(a, b)
 							return a.Y < b.Y
 						end)
@@ -1604,7 +1601,6 @@ task.spawn(function()
 					
 					local currentDelay = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 1.5
 					
-					-- Jalankan berdasarkan checkpoint game yang terdeteksi secara dinamis
 					if #sortedCheckpoints > 0 then
 						for _, targetPos in ipairs(sortedCheckpoints) do
 							if not getgenv().AutoSummitRunning then break end
@@ -1612,7 +1608,6 @@ task.spawn(function()
 							task.wait(currentDelay)
 						end
 					else
-						-- Jika folder game tidak ada, gunakan jalur fallback manual
 						for _, fallbackCFrame in ipairs(CheckpointPath) do
 							if not getgenv().AutoSummitRunning then break end
 							TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0))
@@ -1620,7 +1615,6 @@ task.spawn(function()
 						end
 					end
 					
-					-- Finishing ke Puncak & BaseCamp
 					if getgenv().AutoSummitRunning then
 						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
 						task.wait(3.0)
@@ -2130,7 +2124,7 @@ MakeDraggable(Float)
 
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
--		KeyFrame.Visible = not KeyFrame.Visible
+		KeyFrame.Visible = not KeyFrame.Visible
 		Main.Visible = false
 	else
 		Main.Visible = not Main.Visible
