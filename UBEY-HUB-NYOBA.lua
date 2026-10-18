@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO & SYNTAX FIXED)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (AUTO-SORT CHECKPOINT FIX)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1463,7 +1463,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (CUSTOMIZABLE TWEEN & CP DELAY)
+-- 5. SUMMIT PAGE (AUTO-SORT CHECKPOINTS BY HEIGHT)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1510,6 +1510,7 @@ CPDelayBox.FocusLost:Connect(function()
 	SaveConfig()
 end)
 
+-- Jalur Fallback cadangan jika folder game kosong
 local CheckpointPath = {
 	CFrame.new(464.5757, 469.6314, -8944.9775),
 	CFrame.new(450.3757, 513.9970, -9572.0254),
@@ -1576,53 +1577,50 @@ task.spawn(function()
 				local hrp = character and character:FindFirstChild("HumanoidRootPart")
 				
 				if hrp then
-					local currentTargetIndex = 1
-					local maxCheckpoint = 20
+					-- Kumpulkan dan urutkan semua checkpoint di game secara otomatis berdasarkan ketinggian (sumbu Y)
+					local sortedCheckpoints = {}
+					local cpFolder = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Checkpoints")
 					
-					while getgenv().AutoSummitRunning and currentTargetIndex <= maxCheckpoint do
-						local cpFolder = workspace:FindFirstChild("Checkpoint")
-						local targetObj = nil
-						
-						if cpFolder then
-							for _, obj in ipairs(cpFolder:GetChildren()) do
-								local num = tonumber(obj.Name:match("%d+"))
-								if num == currentTargetIndex then
-									targetObj = obj
-									break
-								end
+					if cpFolder then
+						for _, obj in ipairs(cpFolder:GetChildren()) do
+							local pos = nil
+							if obj:IsA("BasePart") then
+								pos = obj.Position
+							elseif obj:IsA("Model") and obj.PrimaryPart then
+								pos = obj.PrimaryPart.Position
+							elseif obj:IsA("Model") then
+								local cf, _ = obj:GetBoundingBox()
+								pos = cf.Position
+							end
+							if pos then
+								table.insert(sortedCheckpoints, pos)
 							end
 						end
-						
-						local currentDelay = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 1.5
-						
-						if targetObj then
-							local targetPos = nil
-							if targetObj:IsA("BasePart") then
-								targetPos = targetObj.Position
-							elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
-								targetPos = targetObj.PrimaryPart.Position
-							elseif targetObj:IsA("Model") then
-								local cf, _ = targetObj:GetBoundingBox()
-								targetPos = cf.Position
-							end
-							
-							if targetPos then
-								TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)))
-								task.wait(currentDelay)
-								currentTargetIndex = currentTargetIndex + 1
-							else
-								currentTargetIndex = currentTargetIndex + 1
-							end
-						else
-							local fallbackCFrame = CheckpointPath[currentTargetIndex]
-							if fallbackCFrame then
-								TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0))
-								task.wait(currentDelay)
-							end
-							currentTargetIndex = currentTargetIndex + 1
+						-- Urutkan dari bawah ke atas (Y terkecil ke terbesar)
+						table.sort(sortedCheckpoints, function(a, b)
+							return a.Y < b.Y
+						end)
+					end
+					
+					local currentDelay = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 1.5
+					
+					-- Jalankan berdasarkan checkpoint game yang terdeteksi secara dinamis
+					if #sortedCheckpoints > 0 then
+						for _, targetPos in ipairs(sortedCheckpoints) do
+							if not getgenv().AutoSummitRunning then break end
+							TweenToPosition(CFrame.new(targetPos + Vector3.new(0, 15, 0)))
+							task.wait(currentDelay)
+						end
+					else
+						-- Jika folder game tidak ada, gunakan jalur fallback manual
+						for _, fallbackCFrame in ipairs(CheckpointPath) do
+							if not getgenv().AutoSummitRunning then break end
+							TweenToPosition(fallbackCFrame + Vector3.new(0, 15, 0))
+							task.wait(currentDelay)
 						end
 					end
 					
+					-- Finishing ke Puncak & BaseCamp
 					if getgenv().AutoSummitRunning then
 						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
 						task.wait(3.0)
@@ -2132,7 +2130,7 @@ MakeDraggable(Float)
 
 Float.MouseButton1Click:Connect(function()
 	if not getgenv().KeyVerified then
-		KeyFrame.Visible = not KeyFrame.Visible
+-		KeyFrame.Visible = not KeyFrame.Visible
 		Main.Visible = false
 	else
 		Main.Visible = not Main.Visible
