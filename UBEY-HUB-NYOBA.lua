@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (STRICT AUDIT & FULLY FIXED)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% CLEAN & READY TO EXECUTE)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -13,7 +13,6 @@ local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -32,9 +31,7 @@ getgenv().UbeyConfig = {
 	AntiAdminEnabled = false,
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
-	WebhookUrl = "",
-	SummitTweenSpeed = "1.0",
-	SummitCPDelay = "1.5"
+	WebhookUrl = ""
 }
 
 local function SaveConfig()
@@ -60,8 +57,6 @@ local function LoadConfig()
 				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
 				if data.WebhookEnabled ~= nil then getgenv().UbeyConfig.WebhookEnabled = data.WebhookEnabled end
 				if data.WebhookUrl then getgenv().UbeyConfig.WebhookUrl = data.WebhookUrl end
-				if data.SummitTweenSpeed then getgenv().UbeyConfig.SummitTweenSpeed = data.SummitTweenSpeed end
-				if data.SummitCPDelay then getgenv().UbeyConfig.SummitCPDelay = data.SummitCPDelay end
 			end
 		end
 	end)
@@ -77,9 +72,7 @@ local function ResetConfig()
 			AntiAdminEnabled = false,
 			TargetGroupId = 7019573,
 			WebhookEnabled = false,
-			WebhookUrl = "",
-			SummitTweenSpeed = "1.0",
-			SummitCPDelay = "1.5"
+			WebhookUrl = ""
 		}
 		if delfile and isfile then
 			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
@@ -352,7 +345,7 @@ local function RunAutoFishCycle(remoteFolder)
 		end
 		if conn then conn:Disconnect() end
 		
-		if hooked and getgenv().AutoFishingEventRunning do
+		if hooked and getgenv().AutoFishingEventRunning then
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
@@ -1463,110 +1456,6 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (HYBRID: FIND FIRST CHILD + CFRAME FALLBACK)
-----------------------------------------------------
-local TitleSum = Instance.new("TextLabel")
-TitleSum.Parent = SummitPage
-TitleSum.Size = UDim2.new(1,0,0,30)
-TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO ACC / SUMMIT FARM"
-TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
-TitleSum.Font = Enum.Font.GothamBold
-TitleSum.TextSize = 13
-
-AddToggle(SummitPage, "Auto Summit Loop", function(v) getgenv().AutoSummitRunning = v end)
-
-local TweenSpeedBox = Instance.new("TextBox")
-TweenSpeedBox.Parent = SummitPage
-TweenSpeedBox.Size = UDim2.new(1,0,0,35)
-TweenSpeedBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-TweenSpeedBox.PlaceholderText = "Kecepatan Terbang / Tween (Detik, Cth: 1.0)"
-TweenSpeedBox.Text = tostring(getgenv().UbeyConfig.SummitTweenSpeed or "1.0")
-TweenSpeedBox.TextColor3 = Color3.new(1,1,1)
-TweenSpeedBox.Font = Enum.Font.Gotham
-TweenSpeedBox.TextSize = 12
-local tsbCorner = Instance.new("UICorner")
-tsbCorner.Parent = TweenSpeedBox
-
-TweenSpeedBox.FocusLost:Connect(function()
-	getgenv().UbeyConfig.SummitTweenSpeed = TweenSpeedBox.Text
-	SaveConfig()
-end)
-
-local CPDelayBox = Instance.new("TextBox")
-CPDelayBox.Parent = SummitPage
-CPDelayBox.Size = UDim2.new(1,0,0,35)
-CPDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-CPDelayBox.PlaceholderText = "Jeda Diam di Checkpoint (Detik, Cth: 1.5)"
-CPDelayBox.Text = tostring(getgenv().UbeyConfig.SummitCPDelay or "1.5")
-CPDelayBox.TextColor3 = Color3.new(1,1,1)
-CPDelayBox.Font = Enum.Font.Gotham
-CPDelayBox.TextSize = 12
-local cpbCorner = Instance.new("UICorner")
-cpbCorner.Parent = CPDelayBox
-
-CPDelayBox.FocusLost:Connect(function()
-	getgenv().UbeyConfig.SummitCPDelay = CPDelayBox.Text
-	SaveConfig()
-end)
-
--- Daftar CFrame Koordinat Pasti (CP 1 sampai CP 20)
-local FixedCheckpointList = {
-	[1]  = CFrame.new(464.5757, 444.6314, -8944.9775),
-	[2]  = CFrame.new(450.3757, 488.9970, -9572.0254),
-	[3]  = CFrame.new(394.5212, 628.9980, -10113.1602),
-	[4]  = CFrame.new(487.2241, 636.9980, -10685.8164),
-	[5]  = CFrame.new(1084.3728, 724.9941, -11160.0850),
-	[6]  = CFrame.new(970.9746, 732.9639, -11810.7012),
-	[7]  = CFrame.new(389.8508, 884.9980, -11839.1611),
-	[8]  = CFrame.new(-325.3976, 848.9980, -11735.5684),
-	[9]  = CFrame.new(-870.3784, 852.9980, -11735.9463),
-	[10] = CFrame.new(-1280.0693, 856.9980, -12095.6299),
-	[11] = CFrame.new(-1309.8514, 888.9980, -12831.5947),
-	[12] = CFrame.new(-2315.5291, 912.9980, -12673.0791),
-	[13] = CFrame.new(-2314.9072, 916.9980, -11851.2207),
-	[14] = CFrame.new(-2444.2737, 960.9980, -11056.3330),
-	[15] = CFrame.new(-3480.8328, 980.7667, -11012.4834),
-	[16] = CFrame.new(-4226.6689, 1000.9980, -11014.9834),
-	[17] = CFrame.new(-4654.7871, 1080.9979, -11664.6084),
-	[18] = CFrame.new(-5544.4336, 1100.9979, -11648.8525),
-	[19] = CFrame.new(-6764.3345, 1096.9979, -11507.0557),
-	[20] = CFrame.new(-6745.1304, 1102.5760, -10796.0947)
-}
-
-local SummitPuncakVector = Vector3.new(-6766.44629, 1360, -10083.8037)
-local BaseCampVector = Vector3.new(-6834.84912, 1350, -9902.42285)
-
-local RunService = game:GetService("RunService")
-RunService.Stepped:Connect(function()
-	pcall(function()
-		if getgenv().AutoSummitRunning then
-			local character = LocalPlayer.Character
-			if character then
-				for _, part in ipairs(character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = false
-					end
-				end
-			end
-		end
-	end)
-end)
-
-local function TweenToPosition(targetCFrame, customDuration)
-	pcall(function()
-		local character = LocalPlayer.Character
-		local hrp = character and character:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			local userSpeed = tonumber(getgenv().UbeyConfig.SummitTweenSpeed) or 1.0
-			local finalDuration = customDuration or userSpeed
-			
-			local tweenInfo = TweenInfo.new(finalDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
-			local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-			tween:Play()
-			task.wait(finalDuration)
-		end
-----------------------------------------------------
 -- 5. SUMMIT PAGE (SEQUENTIAL PATH WITH MIDPOINTS)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
@@ -1728,6 +1617,7 @@ task.spawn(function()
         end
     end
 end)
+
 
 ----------------------------------------------------
 -- 6. PLAYER PAGE
