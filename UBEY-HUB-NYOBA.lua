@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (HYBRID CHECKPOINT FIX)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (STRICT AUDIT & FULLY FIXED)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
