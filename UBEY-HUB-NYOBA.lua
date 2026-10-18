@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (TYPO & SYNTAX ALL FIXED)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (FULLY AUDITED & BUG FREE)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
