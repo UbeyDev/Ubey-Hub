@@ -1556,6 +1556,44 @@ local function TweenTo(hrp, targetCF)
 	conn:Disconnect()
 end
 
+-- Cari part checkpoint asli (Workspace.Checkpoint["Checkpoint N"]) lalu sentuh dengan benar
+local function TouchCheckpoint(cpNumber, approxCF)
+	local part
+	local waited = 0
+	while getgenv().AutoSummitRunning and waited < 4 do
+		local folder = workspace:FindFirstChild("Checkpoint")
+		part = folder and folder:FindFirstChild("Checkpoint " .. tostring(cpNumber))
+		if part and part:IsA("BasePart") then break end
+		part = nil
+		-- paksa area dimuat lagi sambil menunggu checkpoint muncul
+		pcall(function() LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 1) end)
+		task.wait(0.5)
+		waited = waited + 0.5
+	end
+	if not part then return end
+
+	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	-- posisi tepat di atas checkpoint
+	local standPos = part.Position + Vector3.new(0, (part.Size.Y / 2) + 3, 0)
+
+	-- naik sedikit lalu jatuh ke checkpoint supaya event sentuhan terpicu
+	hrp.CFrame = CFrame.new(standPos + Vector3.new(0, 6, 0))
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	task.wait(0.2)
+	hrp.CFrame = CFrame.new(standPos)
+
+	-- cadangan: picu sentuhan langsung bila executor mendukung
+	if firetouchinterest then
+		pcall(function()
+			firetouchinterest(hrp, part, 0)
+			task.wait(0.1)
+			firetouchinterest(hrp, part, 1)
+		end)
+	end
+end
+
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
@@ -1581,6 +1619,7 @@ task.spawn(function()
 					if cpIndex then
 						-- di titik Cp: lepas PlatformStand supaya karakter turun & menginjak checkpoint
 						SetPlatformStand(false)
+						TouchCheckpoint(tonumber(cpIndex), point[2])
 						task.wait(getgenv().SummitDelay or 1)
 						-- (opsional) panggil remote lama kalau toggle Remote diaktifkan
 						if getgenv().SummitUseRemote then
