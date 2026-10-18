@@ -1444,18 +1444,21 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (TELEPORT CFRAME)
+-- 5. SUMMIT PAGE (TWEEN CFRAME)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (CFRAME)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TWEEN)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-getgenv().SummitDelay = 0.5
+getgenv().SummitDelay = 0.4
+getgenv().SummitSpeed = 150
+getgenv().SummitHeight = 6
+local TweenService = game:GetService("TweenService")
 
 local SummitPoints = {
 	{"Cp1", CFrame.new(464.845001, 452.719116, -8948.57227, 0.997986674, 0.00330765732, -0.063337639, 5.851164e-10, 0.998639166, 0.0521515608, 0.0634239465, -0.0520465635, 0.996628582)},
@@ -1499,43 +1502,79 @@ local SummitPoints = {
 	{"Cp20", CFrame.new(-6746.04248, 1108.37537, -10794.8271, -0.993840754, 0.0067165764, -0.11061395, -6.0127392e-10, 0.998161554, 0.060609255, 0.110817678, 0.0602359474, -0.992013633)}
 }
 
-AddToggle(SummitPage, "Auto Summit Loop (CFrame)", function(v) getgenv().AutoSummitRunning = v end)
+local function SetPlatformStand(state)
+	pcall(function()
+		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if hum then hum.PlatformStand = state end
+	end)
+end
 
-local SummitDelayBox = Instance.new("TextBox")
-SummitDelayBox.Parent = SummitPage
-SummitDelayBox.Size = UDim2.new(1,0,0,35)
-SummitDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-SummitDelayBox.PlaceholderText = "Jeda tiap titik (detik, Cth: 0.5)"
-SummitDelayBox.Text = "0.5"
-SummitDelayBox.TextColor3 = Color3.new(1,1,1)
-SummitDelayBox.Font = Enum.Font.Gotham
-SummitDelayBox.TextSize = 12
-local sdc = Instance.new("UICorner")
-sdc.Parent = SummitDelayBox
-SummitDelayBox.FocusLost:Connect(function()
-	getgenv().SummitDelay = tonumber(SummitDelayBox.Text) or 0.5
+AddToggle(SummitPage, "Auto Summit Loop (Tween)", function(v)
+	getgenv().AutoSummitRunning = v
+	if not v then SetPlatformStand(false) end
 end)
+
+local function AddSummitBox(placeholder, default, onChange)
+	local box = Instance.new("TextBox")
+	box.Parent = SummitPage
+	box.Size = UDim2.new(1,0,0,35)
+	box.BackgroundColor3 = Color3.fromRGB(35,35,45)
+	box.PlaceholderText = placeholder
+	box.Text = tostring(default)
+	box.TextColor3 = Color3.new(1,1,1)
+	box.Font = Enum.Font.Gotham
+	box.TextSize = 12
+	local bc = Instance.new("UICorner")
+	bc.Parent = box
+	box.FocusLost:Connect(function()
+		local n = tonumber(box.Text)
+		if n then onChange(n) end
+	end)
+end
+
+AddSummitBox("Kecepatan Tween (studs/detik, Cth: 150)", 150, function(n) getgenv().SummitSpeed = math.max(n, 20) end)
+AddSummitBox("Tinggi Posisi (naik dari CFrame, Cth: 6)", 6, function(n) getgenv().SummitHeight = n end)
+AddSummitBox("Jeda di tiap titik (detik, Cth: 0.4)", 0.4, function(n) getgenv().SummitDelay = math.max(n, 0) end)
+
+local function TweenTo(hrp, targetCF)
+	local dist = (hrp.Position - targetCF.Position).Magnitude
+	local speed = math.max(tonumber(getgenv().SummitSpeed) or 150, 20)
+	local tween = TweenService:Create(hrp, TweenInfo.new(dist / speed, Enum.EasingStyle.Linear), {CFrame = targetCF})
+	local done = false
+	local conn = tween.Completed:Connect(function() done = true end)
+	tween:Play()
+	while not done and getgenv().AutoSummitRunning do
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+		task.wait()
+	end
+	if not done then tween:Cancel() end
+	conn:Disconnect()
+end
 
 task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
+				SetPlatformStand(true)
+				local height = tonumber(getgenv().SummitHeight) or 6
 				for _, point in ipairs(SummitPoints) do
 					if not getgenv().AutoSummitRunning then break end
 					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 					if not hrp then break end
-					hrp.CFrame = point[2] + Vector3.new(0, 3, 0)
-					task.wait(getgenv().SummitDelay or 0.5)
+					TweenTo(hrp, point[2] + Vector3.new(0, height, 0))
+					task.wait(getgenv().SummitDelay or 0.4)
 				end
 
-				-- setelah Cp20 selesai: balik ke titik awal seperti script lama
+				-- setelah Cp20: kembali ke titik awal seperti script lama
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp and getgenv().AutoSummitRunning then
-					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
+					TweenTo(hrp, CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0))
 					task.wait(3)
-					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
+					TweenTo(hrp, CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0))
 				end
 			end)
+			SetPlatformStand(false)
 			task.wait(0.5)
 		else
 			task.wait(0.5)
