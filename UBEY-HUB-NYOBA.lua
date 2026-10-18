@@ -1455,7 +1455,9 @@ TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
 
-getgenv().SummitDelay = 0.4
+getgenv().SummitDelay = 1
+getgenv().SummitCpHeight = 1.5
+getgenv().SummitUseRemote = false
 getgenv().SummitSpeed = 150
 getgenv().SummitHeight = 6
 local TweenService = game:GetService("TweenService")
@@ -1533,8 +1535,10 @@ local function AddSummitBox(placeholder, default, onChange)
 end
 
 AddSummitBox("Kecepatan Tween (studs/detik, Cth: 150)", 150, function(n) getgenv().SummitSpeed = math.max(n, 20) end)
-AddSummitBox("Tinggi Posisi (naik dari CFrame, Cth: 6)", 6, function(n) getgenv().SummitHeight = n end)
-AddSummitBox("Jeda di tiap titik (detik, Cth: 0.4)", 0.4, function(n) getgenv().SummitDelay = math.max(n, 0) end)
+AddSummitBox("Tinggi di titik Tengah (Cth: 6)", 6, function(n) getgenv().SummitHeight = n end)
+AddSummitBox("Tinggi di titik Cp (Cth: 1.5)", 1.5, function(n) getgenv().SummitCpHeight = n end)
+AddToggle(SummitPage, "Pakai Remote Checkpoint (opsional)", function(v) getgenv().SummitUseRemote = v end)
+AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitDelay = math.max(n, 0) end)
 
 local function TweenTo(hrp, targetCF)
 	local dist = (hrp.Position - targetCF.Position).Magnitude
@@ -1557,13 +1561,37 @@ task.spawn(function()
 		if getgenv().AutoSummitRunning then
 			pcall(function()
 				SetPlatformStand(true)
-				local height = tonumber(getgenv().SummitHeight) or 6
+				local midHeight = tonumber(getgenv().SummitHeight) or 6
+				local cpHeight = tonumber(getgenv().SummitCpHeight) or 1.5
 				for _, point in ipairs(SummitPoints) do
 					if not getgenv().AutoSummitRunning then break end
 					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 					if not hrp then break end
+
+					local name = point[1]
+					local cpIndex = string.match(name, "^Cp(%d+)$")
+					local height = cpIndex and cpHeight or midHeight
+
+					-- paksa game memuat (stream) area di sekitar titik tujuan agar checkpoint muncul
+					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 3) end)
+
+					SetPlatformStand(true)
 					TweenTo(hrp, point[2] + Vector3.new(0, height, 0))
-					task.wait(getgenv().SummitDelay or 0.4)
+
+					if cpIndex then
+						-- di titik Cp: lepas PlatformStand supaya karakter turun & menginjak checkpoint
+						SetPlatformStand(false)
+						task.wait(getgenv().SummitDelay or 1)
+						-- (opsional) panggil remote lama kalau toggle Remote diaktifkan
+						if getgenv().SummitUseRemote then
+							pcall(function()
+								ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(tonumber(cpIndex))
+							end)
+						end
+						task.wait(0.3)
+					else
+						task.wait(0.2)
+					end
 				end
 
 				-- setelah Cp20: kembali ke titik awal seperti script lama
