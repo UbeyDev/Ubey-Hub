@@ -1566,69 +1566,167 @@ local function TweenToPosition(targetCFrame, customDuration)
 			tween:Play()
 			task.wait(finalDuration)
 		end
-	end)
+----------------------------------------------------
+-- 5. SUMMIT PAGE (SEQUENTIAL PATH WITH MIDPOINTS)
+----------------------------------------------------
+local TitleSum = Instance.new("TextLabel")
+TitleSum.Parent = SummitPage
+TitleSum.Size = UDim2.new(1, 0, 0, 30)
+TitleSum.BackgroundTransparency = 1
+TitleSum.Text = "⛰️ AUTO ACC / SUMMIT PATH BERURUTAN"
+TitleSum.TextColor3 = Color3.fromRGB(0, 170, 255)
+TitleSum.Font = Enum.Font.GothamBold
+TitleSum.TextSize = 13
+
+AddToggle(SummitPage, "Auto Summit Loop", function(v) 
+    getgenv().AutoSummitRunning = v 
+end)
+
+local TweenSpeedBox = Instance.new("TextBox")
+TweenSpeedBox.Parent = SummitPage
+TweenSpeedBox.Size = UDim2.new(1, 0, 0, 35)
+TweenSpeedBox.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+TweenSpeedBox.PlaceholderText = "Kecepatan Tween (Detik, Contoh: 1.0)"
+TweenSpeedBox.Text = tostring(getgenv().UbeyConfig.SummitTweenSpeed or "1.0")
+TweenSpeedBox.TextColor3 = Color3.new(1, 1, 1)
+TweenSpeedBox.Font = Enum.Font.Gotham
+TweenSpeedBox.TextSize = 12
+local tsbCorner = Instance.new("UICorner")
+tsbCorner.Parent = TweenSpeedBox
+
+TweenSpeedBox.FocusLost:Connect(function()
+    getgenv().UbeyConfig.SummitTweenSpeed = TweenSpeedBox.Text
+    SaveConfig()
+end)
+
+local CPDelayBox = Instance.new("TextBox")
+CPDelayBox.Parent = SummitPage
+CPDelayBox.Size = UDim2.new(1, 0, 0, 35)
+CPDelayBox.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+CPDelayBox.PlaceholderText = "Jeda di Tiap Titik (Detik, Contoh: 0.5)"
+CPDelayBox.Text = tostring(getgenv().UbeyConfig.SummitCPDelay or "0.5")
+CPDelayBox.TextColor3 = Color3.new(1, 1, 1)
+CPDelayBox.Font = Enum.Font.Gotham
+CPDelayBox.TextSize = 12
+local cpbCorner = Instance.new("UICorner")
+cpbCorner.Parent = CPDelayBox
+
+CPDelayBox.FocusLost:Connect(function()
+    getgenv().UbeyConfig.SummitCPDelay = CPDelayBox.Text
+    SaveConfig()
+end)
+
+-- Daftar Jalur Berurutan (CP & Tengah CP berselang-seling)
+local SequentialSummitPath = {
+    CFrame.new(464.845001, 452.719116, -8948.57227, 0.997986674, 0.00330765732, -0.063337639, 5.851164e-10, 0.998639166, 0.0521515608, 0.0634239465, -0.0520465635, 0.996628582), -- CP1
+    CFrame.new(474.590057, 447.956573, -9159.24023, 0.999968529, -0.000852574885, -0.00788716134, -1.21188393e-10, 0.994208276, -0.107470497, 0.0079331072, 0.107467115, 0.994176984), -- Tengah CP 1-2
+    CFrame.new(451.694855, 499.646576, -9572.44434, 0.99949652, 0.000553500664, 0.0317238159, 1.04904453e-10, 0.999847829, -0.0174448304, -0.0317286439, 0.0174360462, 0.999344409), -- CP2
+    CFrame.new(445.483307, 621.606934, -9778.32324, 0.997986615, -0.0062114615, 0.0631198436, 2.39959358e-10, 0.995192885, 0.0979343653, -0.0634247363, -0.0977371857, 0.993189156), -- Tengah CP 2-3
+    CFrame.new(397.967834, 639.463623, -10116.7002, 0.999716818, -0.000510056969, -0.02379141, 4.97792363e-11, 0.999770284, -0.0214337762, 0.0237968769, 0.0214277059, 0.999487162), -- CP3
+    CFrame.new(395.853546, 635.549683, -10386.791, 0.999716818, 0.00315287593, -0.0235871132, 5.91942884e-10, 0.991184175, 0.132491052, 0.0237969011, -0.132453531, 0.990903497), -- Tengah CP 3-4
+    CFrame.new(395.853546, 635.549683, -10386.791, 0.999716818, 0.00315287593, -0.0235871132, 5.91942884e-10, 0.991184175, 0.132491052, 0.0237969011, -0.132453531, 0.990903497), -- CP4
+    CFrame.new(956.084595, 697.091187, -10802.7363, 0.795761228, -0.0310973153, -0.604811549, -1.72196937e-10, 0.99868077, -0.0513487086, 0.60561049, 0.0408613123, 0.794711471), -- Tengah CP 4-5
+    CFrame.new(1086.91284, 731.401855, -11160.585, 0.998458445, 0.000272808335, 0.0555039383, 3.18766229e-11, 0.9999879, -0.00491505768, -0.0555046089, 0.00490748091, 0.998446345), -- CP5
+    CFrame.new(1057.28174, 733.071716, -11465.1123, 0.986154497, 0.0050284788, -0.165753007, 1.63842329e-09, 0.99954015, 0.030323239, 0.165829256, -0.0299033988, 0.985700965), -- Tengah CP 5-6
+    CFrame.new(971.530334, 740.581787, -11810.3145, 0.126592144, -0.0387375578, 0.991198182, 2.35382769e-10, 0.99923718, 0.0390517339, -0.991954863, -0.00494364277, 0.126495585), -- CP6
+    CFrame.new(691.74884, 797.521545, -11823.7451, 0.0396752357, -0.102132671, 0.993979275, -7.48076157e-10, 0.99476254, 0.102213152, -0.999212623, -0.00405533146, 0.0394674353), -- Tengah CP 6-7
+    CFrame.new(388.335876, 895.511658, -11840.2939, 0.0238173455, -0.0717899501, 0.997135341, -6.08690737e-11, 0.997418284, 0.07181032, -0.999716341, -0.0017103313, 0.0237558559), -- CP7
+    CFrame.new(49.462944, 888.104858, -11861.6387, -0.34944579, -0.19423911, 0.916601777, -3.19386761e-09, 0.978275597, 0.207308546, -0.936956584, 0.0724430978, -0.341854304), -- Tengah CP 7-8
+    CFrame.new(-328.146729, 853.138916, -11739.3906, 0.00795334298, -0.0638618842, 0.99792707, -8.82961412e-11, 0.997958601, 0.0638639033, -0.99996835, -0.000507931632, 0.00793710724), -- CP8
+    CFrame.new(-586.720459, 854.341248, -11757.834, -0.0317074656, -0.143703595, 0.989112675, -3.78500481e-10, 0.989610255, 0.14377588, -0.999497175, 0.00455876859, -0.0313780345), -- Tengah CP 8-9
+    CFrame.new(-873.571655, 857.913574, -11736.6006, -0.0475608706, -0.0613531955, 0.996982336, -8.74402217e-11, 0.998111844, 0.0614227057, -0.998868346, 0.00292131724, -0.0474710688), -- CP9
+    CFrame.new(-1278.78198, 862.183228, -11790.2275, 0.987442195, -0.0267404672, 0.155701235, 5.12804066e-09, 0.985570729, 0.169264019, -0.157980785, -0.167138427, 0.973194122), -- Tengah CP 9-10
+    CFrame.new(-1282.57056, 863.854065, -12096.4014, 0.999212563, 5.95095444e-05, -0.0396771468, -1.05802248e-12, 0.999998868, 0.00149984262, 0.0396771915, -0.00149866159, 0.999211431), -- CP10
+    CFrame.new(-1163.88379, 880.556641, -12491.4229, 0.999716282, 0.00329811801, -0.0235888157, 4.36980556e-11, 0.990366638, 0.138470113, 0.0238182656, -0.138430834, 0.990085661), -- Tengah CP 10-11
+    CFrame.new(-1314.84912, 896.930481, -12835.1504, -0.0317075849, -0.0382487178, 0.998765051, -2.9176847e-10, 0.999267519, 0.0382679589, -0.999497175, 0.00121338433, -0.0316843614), -- CP11
+    CFrame.new(-1935.85815, 918.891724, -12822.8037, 0.0555249788, -0.118038259, 0.991455495, 5.07237197e-10, 0.992987335, 0.118220635, -0.998457313, -0.0065641976, 0.0551356003), -- Tengah CP 11-12
+    CFrame.new(-2322.29541, 919.173645, -12668.2285, -0.99745357, 0.00879278593, -0.0707743391, -2.61384775e-10, 0.992370784, 0.123289101, 0.0713184401, 0.122975156, -0.989843845), -- CP12
+    CFrame.new(-2335.94287, 919.825073, -12331.4092, -0.999212563, 0.000273454934, 0.0396762192, 4.04826658e-11, 0.999976277, -0.00689199753, -0.0396771617, -0.00688657025, -0.99918884), -- Tengah CP 12-13
+    CFrame.new(-2311.24023, 923.90979, -11851.917, -0.99745059, -0.00294975913, 0.0712991208, -1.04126284e-10, 0.999145269, 0.0413362421, -0.0713601112, 0.0412308611, -0.996598065), -- CP13
+    CFrame.new(-2340.36206, 951.430298, -11351.1699, -0.999497175, 0.00360921631, -0.03150158, -6.74113487e-10, 0.993500471, 0.113827907, 0.0317076631, 0.113770671, -0.993000925), -- Tengah CP 13-14
+    CFrame.new(-2448.27344, 964.254089, -11057.0312, 0.0476028472, -0.0647127628, 0.996767879, 3.43433559e-10, 0.997899175, 0.0647862107, -0.99886632, -0.00308400765, 0.0475028418), -- CP14
+    CFrame.new(-3044.74292, 981.493469, -11030.8037, 0.0238184482, -0.0852627605, 0.996073782, -5.87034976e-10, 0.996356428, 0.08528696, -0.999716282, -0.00203140359, 0.0237316638), -- Tengah CP 14-15
+    CFrame.new(-3483.43945, 988.503296, -11013.0811, 0.0396763459, -0.0475526191, 0.998080432, -1.16498686e-10, 0.998866975, 0.0475900918, -0.999212563, -0.00188820099, 0.0396313891), -- CP15
+    CFrame.new(-3854.48242, 985.936829, -11009.2061, -0.0950342268, -0.142578945, 0.985210478, -2.72903367e-09, 0.989689827, 0.14322719, -0.995473981, 0.0136114825, -0.0940544084), -- Tengah CP 15-16
+    CFrame.new(-4231.1875, 1006.55963, -11017.707, 0.0950784385, -0.0579245724, 0.993783116, -6.25444918e-10, 0.998305619, 0.0581881776, -0.995469809, -0.00553244166, 0.0949173421), -- CP16
+    CFrame.new(-4490.48242, 1038.65771, -11328.7051, 0.990922332, -0.00802882854, 0.134195656, -4.68678207e-10, 0.99821502, 0.0597224832, -0.134435624, -0.0591803417, 0.989153564), -- Tengah CP 16-17
+    CFrame.new(-4655.4458, 1085.97107, -11667.3447, -0.110815927, 0.02199829, 0.993597448, 2.2579081e-11, 0.999755025, -0.0221346188, -0.993840933, -0.00245286827, -0.110788777), -- CP17
+    CFrame.new(-5027.59277, 1094.36035, -11674.2949, 0.0238194466, -0.060855411, 0.997862339, -6.60101834e-11, 0.998145521, 0.0608726814, -0.999716282, -0.00144995365, 0.0237752739), -- Tengah CP 17-18
+    CFrame.new(-5545.39404, 1107.8219, -11650.6357, -0.00791138876, -0.0912490711, 0.99579668, -1.18666341e-10, 0.995827854, 0.0912519246, -0.999968708, 0.000721929304, -0.00787838083), -- CP18
+    CFrame.new(-6414.31885, 1107.92029, -11711.4941, 0.39367038, -0.111929558, 0.912411869, 1.31374795e-08, 0.992559373, 0.121761598, -0.91925168, -0.0479339212, 0.390741229), -- Tengah CP 18-19
+    CFrame.new(-6766.26074, 1105.58411, -11503.3955, -0.999874473, 0.000155506685, -0.015843736, -2.90724042e-12, 0.999951839, 0.00981455389, 0.0158444997, 0.00981332175, -0.999826312), -- CP19
+    CFrame.new(-6762.13184, 1099.67126, -11186.042, -0.998868346, 0.00112270634, -0.0475471318, -5.17564568e-11, 0.999721348, 0.0236059148, 0.0475603864, 0.0235792007, -0.998589993), -- Tengah CP 19-20
+    CFrame.new(-6746.04248, 1108.37537, -10794.8271, -0.993840754, 0.0067165764, -0.11061395, -6.0127392e-10, 0.998161554, 0.060609255, 0.110817678, 0.0602359474, -0.992013633)  -- CP20
+}
+
+local SummitPuncak = CFrame.new(-6766.44629, 1360, -10083.8037)
+local SummitBasecamp = CFrame.new(-6834.84912, 1350, -9902.42285)
+
+-- NoClip anti tabrak dinding map
+local RunService = game:GetService("RunService")
+RunService.Stepped:Connect(function()
+    if getgenv().AutoSummitRunning then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Fungsi Tween Berurutan
+local function FlyToCFrame(targetCFrame)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local duration = tonumber(getgenv().UbeyConfig.SummitTweenSpeed) or 1.0
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    
+    tween:Play()
+    tween.Completed:Wait()
 end
 
--- Fungsi Pencari Posisi Checkpoint (FindFirstChild + Fallback CFrame)
-local function GetCheckpointTargetCFrame(index)
-	local fallbackCFrame = FixedCheckpointList[index]
-	local cpFolder = workspace:FindFirstChild("Checkpoint") or workspace:FindFirstChild("Checkpoints")
-	
-	if cpFolder then
-		local targetObj = cpFolder:FindFirstChild(tostring(index)) 
-			or cpFolder:FindFirstChild("Checkpoint" .. tostring(index))
-			or cpFolder:FindFirstChild("CP" .. tostring(index))
-			
-		if targetObj then
-			if targetObj:IsA("BasePart") then
-				return targetObj.CFrame
-			elseif targetObj:IsA("Model") and targetObj.PrimaryPart then
-				return targetObj.PrimaryPart.CFrame
-			elseif targetObj:IsA("Model") then
-				local cf, _ = targetObj:GetBoundingBox()
-				return cf
-			end
-		end
-	end
-	
-	return fallbackCFrame
-end
-
+-- Thread Loop Jalur Berurutan
 task.spawn(function()
-	while true do
-		if getgenv().AutoSummitRunning then
-			pcall(function()
-				local character = LocalPlayer.Character
-				local hrp = character and character:FindFirstChild("HumanoidRootPart")
-				
-				if hrp then
-					local currentDelay = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 1.5
-					
-					for cpIndex = 1, #FixedCheckpointList do
-						if not getgenv().AutoSummitRunning then break end
-						
-						local targetCFrame = GetCheckpointTargetCFrame(cpIndex)
-						
-						if targetCFrame then
-							TweenToPosition(targetCFrame + Vector3.new(0, 5, 0))
-							task.wait(currentDelay)
-						end
-					end
-					
-					if getgenv().AutoSummitRunning then
-						TweenToPosition(CFrame.new(SummitPuncakVector), 2.5)
-						task.wait(3.0)
-						
-						TweenToPosition(CFrame.new(BaseCampVector), 2.0)
-						task.wait(1.5)
-					end
-				end
-			end)
-			task.wait(1)
-		else
-			task.wait(0.5)
-		end
-	end
+    while true do
+        if getgenv().AutoSummitRunning then
+            pcall(function()
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if hrp then
+                    local delayTime = tonumber(getgenv().UbeyConfig.SummitCPDelay) or 0.5
+                    
+                    -- Berjalan melewati setiap titik secara berurutan dari awal sampai akhir
+                    for _, pathCFrame in ipairs(SequentialSummitPath) do
+                        if not getgenv().AutoSummitRunning then break end
+                        
+                        FlyToCFrame(pathCFrame)
+                        task.wait(delayTime)
+                    end
+                    
+                    -- Jika sampai akhir, terbang ke Puncak lalu balik ke Basecamp
+                    if getgenv().AutoSummitRunning then
+                        FlyToCFrame(SummitPuncak)
+                        task.wait(2.0)
+                        
+                        FlyToCFrame(SummitBasecamp)
+                        task.wait(1.5)
+                    end
+                end
+            end)
+            task.wait(1)
+        else
+            task.wait(0.5)
+        end
+    end
 end)
 
 ----------------------------------------------------
