@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (100% CLEAN & READY TO EXECUTE)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (OPTIMIZED & AUTO EQUIP ROD)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -24,7 +24,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "0.5",
+	BiteDelay = "0.35", -- Dipercepat ke 0.35 detik
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AntiAdminEnabled = false,
@@ -46,7 +46,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
+			local data = HttpService:JSONEncode(content)
 			if data then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
@@ -63,7 +63,7 @@ end
 local function ResetConfig()
 	pcall(function()
 		getgenv().UbeyConfig = {
-			BiteDelay = "0.5",
+			BiteDelay = "0.35",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
 			AntiAdminEnabled = false,
@@ -101,7 +101,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD WEBHOOK SYSTEM (STRICT SECRET & FORGOTTEN ONLY)
+-- DISCORD WEBHOOK SYSTEM (SECRET & FORGOTTEN)
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade, fishWeight, fishChance)
 	pcall(function()
@@ -248,6 +248,7 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 getgenv().AutoDetectCoreEvent = false
+getgenv().AutoEquipRodRunning = true -- Default Auto Equip Rod Aktif
 
 getgenv().LoopSpotEnabled = false
 getgenv().SpotLoopConfig = {
@@ -291,12 +292,51 @@ local FishingSpots = {
 
 local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
 
-local function OptimizeRodSettings()
+------------------------------------------------------------------
+-- AUTO EQUIP ROD FUNCTION
+------------------------------------------------------------------
+local function GetEquippedRod()
+	local char = LocalPlayer.Character
+	if not char then return nil end
+	for _, item in ipairs(char:GetChildren()) do
+		if item:IsA("Tool") and item:FindFirstChild("Mechanics") then
+			return item
+		end
+	end
+	return nil
+end
+
+local function AutoEquipRod()
 	pcall(function()
-		local character = LocalPlayer.Character
-		local rod = character and character:FindFirstChild("Withering Rod")
-		if rod then
-			local settingsFolder = rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+		if GetEquippedRod() then return end
+		local backpack = LocalPlayer:FindFirstChild("Backpack")
+		if backpack then
+			for _, item in ipairs(backpack:GetChildren()) do
+				if item:IsA("Tool") and item:FindFirstChild("Mechanics") then
+					local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+					if humanoid then
+						humanoid:EquipTool(item)
+					end
+					break
+				end
+			end
+		end
+	end)
+end
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoEquipRodRunning or getgenv().AutoFishingEventRunning then
+			AutoEquipRod()
+		end
+		task.wait(1.5)
+	end
+end)
+
+local function OptimizeRodSettings(rod)
+	pcall(function()
+		if rod and rod:FindFirstChild("Mechanics") then
+			local settingsFolder = rod.Mechanics:FindFirstChild("Settings")
 			if settingsFolder then
 				local timeSetting = settingsFolder:FindFirstChild("Time_before_getfish")
 				if timeSetting then timeSetting.Value = 0.05 end
@@ -308,33 +348,39 @@ local function OptimizeRodSettings()
 end
 
 ------------------------------------------------------------------
--- POST-UPDATE AUTO FISHING FUNCTION
+-- OPTIMIZED AUTO FISHING CYCLE (FAST 0.35s)
 ------------------------------------------------------------------
-local function RunAutoFishCycle(remoteFolder)
+local function RunAutoFishCycle(rod, remoteFolder)
 	pcall(function()
 		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		if not hrp then return end
 		
-		OptimizeRodSettings()
+		OptimizeRodSettings(rod)
 		
+		-- 1. Fast Cast
 		remoteFolder.CastEvent:FireServer(true)
-		task.wait(0.05)
+		task.wait(0.02)
 		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 		
+		-- 2. Wait Bite Notification
 		local hooked = false
 		local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-			if actionType == "Bite" or actionType == "Hook" then hooked = true end
+			if actionType == "Bite" or actionType == "Hook" or actionType == "GotFish" then 
+				hooked = true 
+			end
 		end)
 		
 		local start = tick()
 		while not hooked and getgenv().AutoFishingEventRunning do
-			if tick() - start > 8 then break end
-			task.wait(0.05)
+			if tick() - start > 5 then break end
+			task.wait(0.02)
 		end
 		if conn then conn:Disconnect() end
 		
-		if hooked and getgenv().AutoFishingEventRunning then
-			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
+		-- 3. Trigger TandaSeruBersama & Instant Pull
+		if hooked and getgenv().AutoFishingEventRunning do
+			local delayVal = tonumber(getgenv().BiteDelayInput) or 0.35
+			task.wait(delayVal)
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
 			if tandaSeruRemote then
@@ -347,9 +393,9 @@ local function RunAutoFishCycle(remoteFolder)
 				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)
 			end
 			
-			task.wait(0.1)
+			task.wait(0.02)
 			remoteFolder.MiniGame:FireServer(true)
-			task.wait(0.3)
+			task.wait(0.05)
 		end
 	end)
 end
@@ -804,19 +850,19 @@ PrivacyBtn.MouseButton1Click:Connect(function() HideAll(); PrivacyPage.Visible =
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
 
-local function AddToggle(parent, text, callback)
+local function AddToggle(parent, text, callback, defaultState)
 	local b = Instance.new("TextButton")
 	b.Parent = parent
 	b.Size = UDim2.new(1,0,0,35)
-	b.BackgroundColor3 = Color3.fromRGB(30,30,40)
-	b.Text = "  " .. text .. " [OFF]"
+	b.BackgroundColor3 = defaultState and Color3.fromRGB(0,100,180) or Color3.fromRGB(30,30,40)
+	b.Text = "  " .. text .. (defaultState and " [ON]" or " [OFF]")
 	b.TextColor3 = Color3.new(1,1,1)
 	b.Font = Enum.Font.Gotham
 	b.TextSize = 13
 	b.TextXAlignment = Enum.TextXAlignment.Left
 	local c = Instance.new("UICorner")
 	c.Parent = b
-	local state = false
+	local state = defaultState or false
 	b.MouseButton1Click:Connect(function()
 		state = not state
 		b.Text = "  " .. text .. (state and " [ON]" or " [OFF]")
@@ -920,6 +966,10 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
+AddToggle(FishingPage, "Auto Equip Rod (Pegang Pancingan)", function(v)
+	getgenv().AutoEquipRodRunning = v
+end, true)
+
 local SpotLabel = Instance.new("TextLabel")
 SpotLabel.Parent = FishingPage
 SpotLabel.Size = UDim2.new(1,0,0,25)
@@ -960,17 +1010,18 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
+					local rod = GetEquippedRod()
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
-							RunAutoFishCycle(remoteFolder)
+							RunAutoFishCycle(rod, remoteFolder)
 						end
 					else
-						task.wait(1)
+						AutoEquipRod()
+						task.wait(0.5)
 					end
 				end)
-				task.wait(0.1)
+				task.wait(0.05)
 			end
 		end)
 	end
@@ -982,17 +1033,18 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
+					local rod = GetEquippedRod()
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
 						if remoteFolder then
-							RunAutoFishCycle(remoteFolder)
+							RunAutoFishCycle(rod, remoteFolder)
 						end
 					else
-						task.wait(1)
+						AutoEquipRod()
+						task.wait(0.5)
 					end
 				end)
-				task.wait(0.1)
+				task.wait(0.05)
 			end
 		end)
 	end
@@ -1002,7 +1054,7 @@ local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
 BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.35)"
 BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
@@ -1137,7 +1189,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- DROPDOWN BUILDER (UNIVERSAL MULTI-SELECT)
+-- DROPDOWN BUILDER
 ----------------------------------------------------
 local function CreateMultiSelectDropdown(parent, titleText, optionsTable, targetStateTable)
 	local container = Instance.new("Frame")
@@ -1307,7 +1359,7 @@ uac.Parent = UnfavBtn
 UnfavBtn.MouseButton1Click:Connect(function() UnfavoriteAllFish() end)
 
 ----------------------------------------------------
--- 3. GALATAMA PAGE (DENGAN AUTO DETEKSI CORE EVENT)
+-- 3. GALATAMA PAGE (UPDATED PATTERN & REMOTE DETECT)
 ----------------------------------------------------
 local TitleGal = Instance.new("TextLabel")
 TitleGal.Parent = GalatamaPage
@@ -1338,14 +1390,18 @@ AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 		task.spawn(function()
 			while getgenv().AutoGalatamaRunning do
 				pcall(function() 
-					local galatamaRemote = ReplicatedStorage:FindFirstChild("Remote") 
-						and ReplicatedStorage.Remote:FindFirstChild("Galatama") 
-						and ReplicatedStorage.Remote.Galatama:FindFirstChild("Ikut")
-					if galatamaRemote then
-						galatamaRemote:InvokeServer() 
+					local folder = ReplicatedStorage:FindFirstChild("Glatama") or ReplicatedStorage:FindFirstChild("Galatama")
+					local remote = folder and folder:FindFirstChild("Ikut")
+					
+					if remote then
+						if remote:IsA("RemoteFunction") then
+							remote:InvokeServer()
+						elseif remote:IsA("RemoteEvent") then
+							remote:FireServer()
+						end
 					end
 				end)
-				task.wait(10)
+				task.wait(5)
 			end
 		end)
 	end
@@ -1556,7 +1612,6 @@ local function TweenTo(hrp, targetCF)
 	conn:Disconnect()
 end
 
--- Cari part checkpoint asli (Workspace.Checkpoint["Checkpoint N"]) lalu sentuh dengan benar
 local function TouchCheckpoint(cpNumber, approxCF)
 	local part
 	local waited = 0
@@ -1565,7 +1620,6 @@ local function TouchCheckpoint(cpNumber, approxCF)
 		part = folder and folder:FindFirstChild("Checkpoint " .. tostring(cpNumber))
 		if part and part:IsA("BasePart") then break end
 		part = nil
-		-- paksa area dimuat lagi sambil menunggu checkpoint muncul
 		pcall(function() LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 1) end)
 		task.wait(0.5)
 		waited = waited + 0.5
@@ -1575,16 +1629,13 @@ local function TouchCheckpoint(cpNumber, approxCF)
 	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 	if not hrp then return end
 
-	-- posisi tepat di atas checkpoint
 	local standPos = part.Position + Vector3.new(0, (part.Size.Y / 2) + 3, 0)
 
-	-- naik sedikit lalu jatuh ke checkpoint supaya event sentuhan terpicu
 	hrp.CFrame = CFrame.new(standPos + Vector3.new(0, 6, 0))
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	task.wait(0.2)
 	hrp.CFrame = CFrame.new(standPos)
 
-	-- cadangan: picu sentuhan langsung bila executor mendukung
 	if firetouchinterest then
 		pcall(function()
 			firetouchinterest(hrp, part, 0)
@@ -1610,18 +1661,15 @@ task.spawn(function()
 					local cpIndex = string.match(name, "^Cp(%d+)$")
 					local height = cpIndex and cpHeight or midHeight
 
-					-- paksa game memuat (stream) area di sekitar titik tujuan agar checkpoint muncul
 					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 3) end)
 
 					SetPlatformStand(true)
 					TweenTo(hrp, point[2] + Vector3.new(0, height, 0))
 
 					if cpIndex then
-						-- di titik Cp: lepas PlatformStand supaya karakter turun & menginjak checkpoint
 						SetPlatformStand(false)
 						TouchCheckpoint(tonumber(cpIndex), point[2])
 						task.wait(getgenv().SummitDelay or 1)
-						-- (opsional) panggil remote lama kalau toggle Remote diaktifkan
 						if getgenv().SummitUseRemote then
 							pcall(function()
 								ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(tonumber(cpIndex))
@@ -1633,7 +1681,6 @@ task.spawn(function()
 					end
 				end
 
-				-- setelah Cp20: kembali ke titik awal seperti script lama
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp and getgenv().AutoSummitRunning then
 					TweenTo(hrp, CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0))
@@ -1984,7 +2031,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE (SECRET & FORGOTTEN EXCLUSIVE)
+-- 10. SETTINGS & WEBHOOK PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
