@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (OPTIMIZED & AUTO EQUIP ROD)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (OPTIMIZED AUTO FISH & AUTO EQUIP ROD)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -24,7 +24,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "0.35", -- Dipercepat ke 0.35 detik
+	BiteDelay = "0.35", -- Diperbarui ke 0.35 detik
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AntiAdminEnabled = false,
@@ -101,7 +101,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD WEBHOOK SYSTEM (SECRET & FORGOTTEN)
+-- DISCORD WEBHOOK SYSTEM (STRICT SECRET & FORGOTTEN ONLY)
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade, fishWeight, fishChance)
 	pcall(function()
@@ -248,7 +248,6 @@ getgenv().FakeNameInput = "UBEY HUB"
 getgenv().CurrentSelectedHalo = nil
 getgenv().KeyVerified = false
 getgenv().AutoDetectCoreEvent = false
-getgenv().AutoEquipRodRunning = true -- Default Auto Equip Rod Aktif
 
 getgenv().LoopSpotEnabled = false
 getgenv().SpotLoopConfig = {
@@ -324,15 +323,6 @@ local function AutoEquipRod()
 	end)
 end
 
-task.spawn(function()
-	while true do
-		if getgenv().AutoEquipRodRunning or getgenv().AutoFishingEventRunning then
-			AutoEquipRod()
-		end
-		task.wait(1.5)
-	end
-end)
-
 local function OptimizeRodSettings(rod)
 	pcall(function()
 		if rod and rod:FindFirstChild("Mechanics") then
@@ -348,7 +338,7 @@ local function OptimizeRodSettings(rod)
 end
 
 ------------------------------------------------------------------
--- OPTIMIZED AUTO FISHING CYCLE (FAST 0.35s)
+-- POST-UPDATE OPTIMIZED AUTO FISHING FUNCTION
 ------------------------------------------------------------------
 local function RunAutoFishCycle(rod, remoteFolder)
 	pcall(function()
@@ -378,7 +368,7 @@ local function RunAutoFishCycle(rod, remoteFolder)
 		if conn then conn:Disconnect() end
 		
 		-- 3. Trigger TandaSeruBersama & Instant Pull
-		if hooked and getgenv().AutoFishingEventRunning do
+		if hooked and getgenv().AutoFishingEventRunning then
 			local delayVal = tonumber(getgenv().BiteDelayInput) or 0.35
 			task.wait(delayVal)
 			
@@ -966,10 +956,6 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
-AddToggle(FishingPage, "Auto Equip Rod (Pegang Pancingan)", function(v)
-	getgenv().AutoEquipRodRunning = v
-end, true)
-
 local SpotLabel = Instance.new("TextLabel")
 SpotLabel.Parent = FishingPage
 SpotLabel.Size = UDim2.new(1,0,0,25)
@@ -1189,7 +1175,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- DROPDOWN BUILDER
+-- DROPDOWN BUILDER (UNIVERSAL MULTI-SELECT)
 ----------------------------------------------------
 local function CreateMultiSelectDropdown(parent, titleText, optionsTable, targetStateTable)
 	local container = Instance.new("Frame")
@@ -1359,7 +1345,7 @@ uac.Parent = UnfavBtn
 UnfavBtn.MouseButton1Click:Connect(function() UnfavoriteAllFish() end)
 
 ----------------------------------------------------
--- 3. GALATAMA PAGE (UPDATED PATTERN & REMOTE DETECT)
+-- 3. GALATAMA PAGE (DENGAN AUTO DETEKSI CORE EVENT)
 ----------------------------------------------------
 local TitleGal = Instance.new("TextLabel")
 TitleGal.Parent = GalatamaPage
@@ -1390,18 +1376,14 @@ AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 		task.spawn(function()
 			while getgenv().AutoGalatamaRunning do
 				pcall(function() 
-					local folder = ReplicatedStorage:FindFirstChild("Glatama") or ReplicatedStorage:FindFirstChild("Galatama")
-					local remote = folder and folder:FindFirstChild("Ikut")
-					
-					if remote then
-						if remote:IsA("RemoteFunction") then
-							remote:InvokeServer()
-						elseif remote:IsA("RemoteEvent") then
-							remote:FireServer()
-						end
+					local galatamaRemote = ReplicatedStorage:FindFirstChild("Remote") 
+						and ReplicatedStorage.Remote:FindFirstChild("Galatama") 
+						and ReplicatedStorage.Remote.Galatama:FindFirstChild("Ikut")
+					if galatamaRemote then
+						galatamaRemote:InvokeServer() 
 					end
 				end)
-				task.wait(5)
+				task.wait(10)
 			end
 		end)
 	end
