@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (FINAL FIXED ANTI-STUCK WATCHDOG)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (SUMMIT SYSTEM CHANGED TO INSTANT TP)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1444,13 +1444,13 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FINAL FIXED WATCHDOG & RESET ENGINE)
+-- 5. SUMMIT PAGE (INSTANT TELEPORT ENGINE)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
 TitleSum.Size = UDim2.new(1,0,0,30)
 TitleSum.BackgroundTransparency = 1
-TitleSum.Text = "⛰️ AUTO SUMMIT FARM (TWEEN)"
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM (INSTANT TP)"
 TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSum.Font = Enum.Font.GothamBold
 TitleSum.TextSize = 13
@@ -1458,9 +1458,7 @@ TitleSum.TextSize = 13
 getgenv().SummitDelay = 1
 getgenv().SummitCpHeight = 1.5
 getgenv().SummitUseRemote = false
-getgenv().SummitSpeed = 150
 getgenv().SummitHeight = 6
-local TweenService = game:GetService("TweenService")
 
 local SummitPoints = {
 	{"Cp1", CFrame.new(464.845001, 452.719116, -8948.57227, 0.997986674, 0.00330765732, -0.063337639, 5.851164e-10, 0.998639166, 0.0521515608, 0.0634239465, -0.0520465635, 0.996628582)},
@@ -1511,7 +1509,7 @@ local function SetPlatformStand(state)
 	end)
 end
 
-AddToggle(SummitPage, "Auto Summit Loop (Tween)", function(v)
+AddToggle(SummitPage, "Auto Summit Loop (Instant TP)", function(v)
 	getgenv().AutoSummitRunning = v
 	if not v then 
 		SetPlatformStand(false)
@@ -1543,45 +1541,10 @@ local function AddSummitBox(placeholder, default, onChange)
 	end)
 end
 
-AddSummitBox("Kecepatan Tween (studs/detik, Cth: 150)", 150, function(n) getgenv().SummitSpeed = math.max(n, 20) end)
 AddSummitBox("Tinggi di titik Tengah (Cth: 6)", 6, function(n) getgenv().SummitHeight = n end)
 AddSummitBox("Tinggi di titik Cp (Cth: 1.5)", 1.5, function(n) getgenv().SummitCpHeight = n end)
 AddToggle(SummitPage, "Pakai Remote Checkpoint (opsional)", function(v) getgenv().SummitUseRemote = v end)
 AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitDelay = math.max(n, 0) end)
-
-local ActiveSummitTween = nil
-
-local function TweenTo(hrp, targetCF)
-	if ActiveSummitTween then 
-		pcall(function() ActiveSummitTween:Cancel() end)
-		ActiveSummitTween = nil
-	end
-	
-	local dist = (hrp.Position - targetCF.Position).Magnitude
-	local speed = math.max(tonumber(getgenv().SummitSpeed) or 150, 20)
-	local duration = math.clamp(dist / speed, 0.1, 10)
-	
-	local tween = TweenService:Create(hrp, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = targetCF})
-	ActiveSummitTween = tween
-	
-	local done = false
-	local conn = tween.Completed:Connect(function() done = true end)
-	tween:Play()
-	
-	local startTime = tick()
-	while not done and getgenv().AutoSummitRunning do
-		hrp.AssemblyLinearVelocity = Vector3.zero
-		hrp.AssemblyAngularVelocity = Vector3.zero
-		if (tick() - startTime) > (duration + 3) or (tick() - startTime) > 8 then
-			break
-		end
-		task.wait()
-	end
-	
-	pcall(function() tween:Cancel() end)
-	if conn then conn:Disconnect() end
-	ActiveSummitTween = nil
-end
 
 local function TouchCheckpoint(cpNumber, approxCF)
 	local part
@@ -1592,8 +1555,8 @@ local function TouchCheckpoint(cpNumber, approxCF)
 		if part and part:IsA("BasePart") then break end
 		part = nil
 		pcall(function() LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 2) end)
-		task.wait(0.4)
-		waited = waited + 0.4
+		task.wait(0.3)
+		waited = waited + 0.3
 	end
 
 	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1607,11 +1570,8 @@ local function TouchCheckpoint(cpNumber, approxCF)
 
 	local standPos = part.Position + Vector3.new(0, (part.Size.Y / 2) + 2, 0)
 	
-	SetPlatformStand(false)
-	hrp.CFrame = CFrame.new(standPos + Vector3.new(0, 4, 0))
-	hrp.AssemblyLinearVelocity = Vector3.zero
-	task.wait(0.2)
 	hrp.CFrame = CFrame.new(standPos)
+	hrp.AssemblyLinearVelocity = Vector3.zero
 
 	if firetouchinterest then
 		pcall(function()
@@ -1626,7 +1586,6 @@ task.spawn(function()
 	while true do
 		if getgenv().AutoSummitRunning then
 			pcall(function()
-				SetPlatformStand(true)
 				local midHeight = tonumber(getgenv().SummitHeight) or 6
 				local cpHeight = tonumber(getgenv().SummitCpHeight) or 1.5
 				for _, point in ipairs(SummitPoints) do
@@ -1640,8 +1599,9 @@ task.spawn(function()
 
 					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 2) end)
 
-					SetPlatformStand(true)
-					TweenTo(hrp, point[2] + Vector3.new(0, height, 0))
+					-- TELEPORT INSTAN KE TITIK TUJUAN
+					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
+					hrp.AssemblyLinearVelocity = Vector3.zero
 
 					if not getgenv().AutoSummitRunning then break end
 
@@ -1653,20 +1613,19 @@ task.spawn(function()
 								ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(tonumber(cpIndex))
 							end)
 						end
-						task.wait(0.2)
-					else
 						task.wait(0.1)
+					else
+						task.wait(0.15)
 					end
 				end
 
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp and getgenv().AutoSummitRunning then
-					TweenTo(hrp, CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0))
-					task.wait(2)
-					TweenTo(hrp, CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0))
+					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
+					task.wait(1)
+					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
 				end
 			end)
-			SetPlatformStand(false)
 			task.wait(0.3)
 		else
 			task.wait(0.5)
