@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (FIXED GLATAMA REMOTE PATH)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (WITH AUTO EQUIP ROD)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -219,6 +219,30 @@ task.spawn(function()
 	task.wait(1)
 	ListenToFishCatch()
 end)
+
+----------------------------------------------------
+-- AUTO EQUIP ROD SYSTEM
+----------------------------------------------------
+local function AutoEquipRod()
+	pcall(function()
+		local character = LocalPlayer.Character
+		if not character then return end
+		
+		-- Cek apakah pancingan sudah di tangan (Character)
+		local rodInChar = character:FindFirstChild("Withering Rod")
+		if rodInChar then return end
+		
+		-- Jika belum di tangan, cari di Backpack lalu pindahkan ke Character
+		local backpack = LocalPlayer:FindFirstChild("Backpack")
+		if backpack then
+			local rodInBackpack = backpack:FindFirstChild("Withering Rod")
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if rodInBackpack and humanoid then
+				humanoid:EquipTool(rodInBackpack)
+			end
+		end
+	end)
+end
 
 ------------------------------------------------------------------
 -- AUTO RECONNECT
@@ -960,6 +984,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
+					AutoEquipRod() -- Auto equip pancingan secara berkala
 					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
@@ -982,6 +1007,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
+					AutoEquipRod() -- Auto equip pancingan secara berkala
 					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
