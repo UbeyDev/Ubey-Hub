@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (OPTIMIZED AUTO FISH & AUTO EQUIP ROD)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (INSTANT CAST ON GOTFISH CONFIRMATION)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -24,7 +24,7 @@ local CONFIG_FILE = "UbeyHubV3_Config.json"
 local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
-	BiteDelay = "0.35", -- Diperbarui ke 0.35 detik
+	BiteDelay = "0.35",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AntiAdminEnabled = false,
@@ -101,7 +101,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD WEBHOOK SYSTEM (STRICT SECRET & FORGOTTEN ONLY)
+-- DISCORD WEBHOOK SYSTEM
 ------------------------------------------------------------------
 local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade, fishWeight, fishChance)
 	pcall(function()
@@ -292,7 +292,7 @@ local FishingSpots = {
 local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
 
 ------------------------------------------------------------------
--- AUTO EQUIP ROD FUNCTION
+-- AUTO EQUIP ROD & OPTIMIZATION
 ------------------------------------------------------------------
 local function GetEquippedRod()
 	local char = LocalPlayer.Character
@@ -329,7 +329,7 @@ local function OptimizeRodSettings(rod)
 			local settingsFolder = rod.Mechanics:FindFirstChild("Settings")
 			if settingsFolder then
 				local timeSetting = settingsFolder:FindFirstChild("Time_before_getfish")
-				if timeSetting then timeSetting.Value = 0.05 end
+				if timeSetting then timeSetting.Value = 0.01 end
 				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
 				if enableMiniGame then enableMiniGame.Value = false end
 			end
@@ -338,7 +338,7 @@ local function OptimizeRodSettings(rod)
 end
 
 ------------------------------------------------------------------
--- POST-UPDATE OPTIMIZED AUTO FISHING FUNCTION
+-- EVENT-DRIVEN INSTANT AUTO FISHING (CAST LANGSUNG SAAT GOTFISH)
 ------------------------------------------------------------------
 local function RunAutoFishCycle(rod, remoteFolder)
 	pcall(function()
@@ -347,28 +347,32 @@ local function RunAutoFishCycle(rod, remoteFolder)
 		
 		OptimizeRodSettings(rod)
 		
-		-- 1. Fast Cast
+		-- 1. Lempar Kail
 		remoteFolder.CastEvent:FireServer(true)
-		task.wait(0.02)
+		task.wait(0.04)
 		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
 		
-		-- 2. Wait Bite Notification
+		-- 2. Dengarkan Sinyal Server (Bite & GotFish)
 		local hooked = false
+		local fishInBag = false
+		
 		local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
-			if actionType == "Bite" or actionType == "Hook" or actionType == "GotFish" then 
+			if actionType == "Bite" or actionType == "Hook" then 
 				hooked = true 
+			elseif actionType == "GotFish" then
+				fishInBag = true
 			end
 		end)
 		
+		-- Wait Bite
 		local start = tick()
 		while not hooked and getgenv().AutoFishingEventRunning do
 			if tick() - start > 5 then break end
 			task.wait(0.02)
 		end
-		if conn then conn:Disconnect() end
 		
-		-- 3. Trigger TandaSeruBersama & Instant Pull
-		if hooked and getgenv().AutoFishingEventRunning then
+		-- 3. Eksekusi Penarikan & Tunggu Konfirmasi GotFish dari Server
+		if hooked and getgenv().AutoFishingEventRunning do
 			local delayVal = tonumber(getgenv().BiteDelayInput) or 0.35
 			task.wait(delayVal)
 			
@@ -383,10 +387,20 @@ local function RunAutoFishCycle(rod, remoteFolder)
 				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)
 			end
 			
-			task.wait(0.02)
+			task.wait(0.03)
 			remoteFolder.MiniGame:FireServer(true)
-			task.wait(0.05)
+			
+			-- 🎯 MENUNGGU SAAT IKAN MASUK TAS (EVENT GOTFISH)
+			local confirmStart = tick()
+			while not fishInBag and getgenv().AutoFishingEventRunning do
+				if tick() - confirmStart > 2.5 then break end -- Max timeout 2.5 detik
+				task.wait(0.02)
+			end
 		end
+		
+		if conn then conn:Disconnect() end
+		
+		-- Begitu GotFish terkonfirmasi, siklus selesai & langsung melempar ulang di iterasi berikutnya!
 	end)
 end
 
@@ -1007,7 +1021,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 						task.wait(0.5)
 					end
 				end)
-				task.wait(0.05)
+				task.wait(0.01)
 			end
 		end)
 	end
@@ -1030,7 +1044,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 						task.wait(0.5)
 					end
 				end)
-				task.wait(0.05)
+				task.wait(0.01)
 			end
 		end)
 	end
