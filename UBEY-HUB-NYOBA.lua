@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | VIP SCRIPT (BLACK SCREEN + STAT TRACKER + MULTI-THEME SUPPORT)
+-- UBEY HUB V3 | VIP FULL SCRIPT (FIXED FULL BLACK SCREEN & CLEAN UI)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -13,7 +13,6 @@ local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -168,7 +167,6 @@ local hookedRemotes = {}
 local function ProcessNotifyClient(actionType, fishDataArg)
 	if actionType == "GotFish" and type(fishDataArg) == "table" then
 		pcall(function()
-			-- Tambah hitungan total ikan
 			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
 			
 			local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
@@ -1486,7 +1484,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (INSTANT TELEPORT ENGINE)
+-- 5. SUMMIT PAGE (FIXED ANTI-STUCK ENGINE)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1591,14 +1589,18 @@ AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitD
 local function TouchCheckpoint(cpNumber, approxCF)
 	local part
 	local waited = 0
-	while getgenv().AutoSummitRunning and waited < 3 do
+	
+	pcall(function() 
+		LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 5) 
+	end)
+
+	while getgenv().AutoSummitRunning and waited < 2 do
 		local folder = workspace:FindFirstChild("Checkpoint")
 		part = folder and folder:FindFirstChild("Checkpoint " .. tostring(cpNumber))
 		if part and part:IsA("BasePart") then break end
 		part = nil
-		pcall(function() LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 2) end)
-		task.wait(0.3)
-		waited = waited + 0.3
+		task.wait(0.2)
+		waited = waited + 0.2
 	end
 
 	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1611,7 +1613,6 @@ local function TouchCheckpoint(cpNumber, approxCF)
 	end
 
 	local standPos = part.Position + Vector3.new(0, (part.Size.Y / 2) + 2, 0)
-	
 	hrp.CFrame = CFrame.new(standPos)
 	hrp.AssemblyLinearVelocity = Vector3.zero
 
@@ -1630,28 +1631,42 @@ task.spawn(function()
 			pcall(function()
 				local midHeight = tonumber(getgenv().SummitHeight) or 6
 				local cpHeight = tonumber(getgenv().SummitCpHeight) or 1.5
+				
 				for _, point in ipairs(SummitPoints) do
 					if not getgenv().AutoSummitRunning then break end
-					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if not hrp then break end
+					
+					local character = LocalPlayer.Character
+					local hrp = character and character:FindFirstChild("HumanoidRootPart")
+					local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+					if not hrp or not humanoid then break end
 
 					local name = point[1]
 					local cpIndex = string.match(name, "^Cp(%d+)$")
 					local height = cpIndex and cpHeight or midHeight
 
-					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 2) end)
+					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 3) end)
 
-					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
 					hrp.AssemblyLinearVelocity = Vector3.zero
+					hrp.AssemblyAngularVelocity = Vector3.zero
+					
+					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
 
 					if not getgenv().AutoSummitRunning then break end
 
 					if cpIndex then
 						TouchCheckpoint(tonumber(cpIndex), point[2])
-						task.wait(getgenv().SummitDelay or 1)
+						
+						local delayTime = tonumber(getgenv().SummitDelay) or 1
+						task.wait(delayTime)
+						
 						if getgenv().SummitUseRemote then
 							pcall(function()
-								ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(tonumber(cpIndex))
+								local cpRemote = ReplicatedStorage:FindFirstChild("Remote") 
+									and ReplicatedStorage.Remote:FindFirstChild("Checkpoint") 
+									and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
+								if cpRemote then
+									cpRemote:FireServer(tonumber(cpIndex))
+								end
 							end)
 						end
 						task.wait(0.1)
@@ -1663,7 +1678,7 @@ task.spawn(function()
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp and getgenv().AutoSummitRunning then
 					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
-					task.wait(1)
+					task.wait(0.8)
 					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
 				end
 			end)
@@ -2009,7 +2024,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE (INCLUDES BLACK SCREEN)
+-- 10. SETTINGS & WEBHOOK PAGE (FIXED FULL BLACK SCREEN)
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -2039,7 +2054,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- BLACK SCREEN / BATTERY SAVER MODE (Tepat di bawah FPS Boost)
+-- FIXED FULL BLACK SCREEN / BATTERY SAVER MODE
 local BlackScreenGui = nil
 local BlackScreenToggleBtn = Instance.new("TextButton")
 BlackScreenToggleBtn.Parent = SettingsPage
@@ -2063,22 +2078,23 @@ BlackScreenToggleBtn.MouseButton1Click:Connect(function()
 			BlackScreenGui = Instance.new("ScreenGui")
 			BlackScreenGui.Name = "UbeyBlackScreen"
 			BlackScreenGui.Parent = PlayerGui
-			BlackScreenGui.DisplayOrder = 999
+			BlackScreenGui.DisplayOrder = 999999 -- Pastikan berada di layer paling atas menutupi semua tombol game
+			BlackScreenGui.IgnoreGuiInset = true
 			
 			local frame = Instance.new("Frame")
 			frame.Parent = BlackScreenGui
 			frame.Size = UDim2.new(1,0,1,0)
-			frame.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+			frame.BackgroundColor3 = Color3.fromRGB(2, 2, 5)
 			
 			local txt = Instance.new("TextLabel")
 			txt.Parent = frame
-			txt.Size = UDim2.new(1,0,0,50)
+			txt.Size = UDim2.new(1,0,0,60)
 			txt.Position = UDim2.new(0,0,0.45,0)
 			txt.BackgroundTransparency = 1
 			txt.Text = "🌙 UBEY HUB V3 - BATTERY SAVER ACTIVE\n(Sentuh Layar Untuk Kembali)"
 			txt.TextColor3 = Color3.fromRGB(0, 170, 255)
 			txt.Font = Enum.Font.GothamBold
-			txt.TextSize = 14
+			txt.TextSize = 13
 			
 			frame.InputBegan:Connect(function()
 				isBlackScreen = false
@@ -2248,32 +2264,12 @@ task.spawn(function()
 				timeStr = string.format("%02ds", secs)
 			end
 			
-			StatLabel.Text = "📊 Total Ikan: " .. tostring(getgenv().TotalFishCaught) .. "  |  ⏱️ Play: " .. timeStr
+			StatLabel.Text = "📊 Total Ikan: " .. tostring(getgenv().TotalFishCaught) .. "  |  ⏱️ Play: " + timeStr
+			StatLabel.Text = string.format("📊 Total Ikan: %d  |  ⏱️ Play: %s", getgenv().TotalFishCaught, timeStr)
 		end)
 		task.wait(1)
 	end
 end)
-
-----------------------------------------------------
--- MULTI-THEME SUPPORT SYSTEM
-----------------------------------------------------
-getgenv().Themes = {
-	["Default Blue"] = { Primary = Color3.fromRGB(0, 170, 255), Background = Color3.fromRGB(20, 20, 25), Sidebar = Color3.fromRGB(15, 15, 20) },
-	["Cyberpunk Neon"] = { Primary = Color3.fromRGB(255, 0, 128), Background = Color3.fromRGB(25, 15, 25), Sidebar = Color3.fromRGB(18, 10, 18) },
-	["Emerald Green"] = { Primary = Color3.fromRGB(0, 230, 120), Background = Color3.fromRGB(15, 25, 20), Sidebar = Color3.fromRGB(10, 18, 15) },
-	["Blood Red"] = { Primary = Color3.fromRGB(255, 50, 50), Background = Color3.fromRGB(25, 15, 15), Sidebar = Color3.fromRGB(18, 10, 10) }
-}
-
-local function ChangeTheme(themeName)
-	local t = getgenv().Themes[themeName]
-	if not t then return end
-	Main.BackgroundColor3 = t.Background
-	Sidebar.BackgroundColor3 = t.Sidebar
-	MainStroke.Color = t.Primary
-	HubTitle.TextColor3 = t.Primary
-	TitleFish.TextColor3 = t.Primary
-	StatLabel.TextColor3 = t.Primary
-end
 
 ----------------------------------------------------
 -- FLOATING BUTTON
