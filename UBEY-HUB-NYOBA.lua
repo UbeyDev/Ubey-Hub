@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (SUMMIT SYSTEM CHANGED TO INSTANT TP)
+-- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (FIXED GLATAMA REMOTE PATH)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -1339,8 +1339,8 @@ AddToggle(GalatamaPage, "Aktifkan Auto Join Galatama", function(v)
 			while getgenv().AutoGalatamaRunning do
 				pcall(function() 
 					local galatamaRemote = ReplicatedStorage:FindFirstChild("Remote") 
-						and ReplicatedStorage.Remote:FindFirstChild("Galatama") 
-						and ReplicatedStorage.Remote.Galatama:FindFirstChild("Ikut")
+						and ReplicatedStorage.Remote:FindFirstChild("Glatama") 
+						and ReplicatedStorage.Remote.Glatama:FindFirstChild("Ikut")
 					if galatamaRemote then
 						galatamaRemote:InvokeServer() 
 					end
@@ -1599,7 +1599,6 @@ task.spawn(function()
 
 					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 2) end)
 
-					-- TELEPORT INSTAN KE TITIK TUJUAN
 					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
 					hrp.AssemblyLinearVelocity = Vector3.zero
 
