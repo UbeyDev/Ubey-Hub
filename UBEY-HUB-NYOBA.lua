@@ -945,6 +945,7 @@ local PlayerTpBtn = CreateNavButton("Teleport Player", 305)
 local PrivacyBtn = CreateNavButton("Privacy", 340)
 local SettingsBtn = CreateNavButton("Settings", 375)
 local CreditsBtn = CreateNavButton("Credits", 410)
+local LarpBtn = CreateNavButton("🎭 Larp", 445)
 
 local function MakePage()
 	local f = Instance.new("ScrollingFrame")
@@ -975,6 +976,7 @@ local PlayerTpPage = MakePage()
 local PrivacyPage = MakePage()
 local SettingsPage = MakePage()
 local CreditsPage = MakePage()
+local LarpPage = MakePage()
 
 local function HideAll()
 	FishingPage.Visible = false
@@ -988,6 +990,7 @@ local function HideAll()
 	PrivacyPage.Visible = false
 	SettingsPage.Visible = false
 	CreditsPage.Visible = false
+	LarpPage.Visible = false
 end
 
 HomeBtn.MouseButton1Click:Connect(function() HideAll(); FishingPage.Visible = true end)
@@ -1001,6 +1004,7 @@ PlayerTpBtn.MouseButton1Click:Connect(function() HideAll(); PlayerTpPage.Visible
 PrivacyBtn.MouseButton1Click:Connect(function() HideAll(); PrivacyPage.Visible = true end)
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
+LarpBtn.MouseButton1Click:Connect(function() HideAll(); LarpPage.Visible = true end)
 
 local function AddToggle(parent, text, callback)
 	local b = Instance.new("TextButton")
@@ -1842,16 +1846,75 @@ AddSummitBox("Tinggi di titik Cp (Cth: 1.5)", 1.5, function(n) getgenv().SummitC
 AddToggle(SummitPage, "Pakai Remote Checkpoint (opsional)", function(v) getgenv().SummitUseRemote = v end)
 AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitDelay = math.max(n, 0) end)
 
-local function TouchCheckpoint(cpNumber, approxCF)
+----------------------------------------------------
+-- AUTO SUMMIT ENGINE (WATCHDOG + RESUME DARI TITIK TERAKHIR)
+----------------------------------------------------
+getgenv().SummitRunId = 0
+getgenv().SummitLoopCount = 0
+getgenv().SummitRecoverCount = 0
+
+local SummitState = { index = 1, last = tick() }
+
+local SummitStatusLabel = Instance.new("TextLabel")
+SummitStatusLabel.Parent = SummitPage
+SummitStatusLabel.Size = UDim2.new(1,0,0,25)
+SummitStatusLabel.BackgroundTransparency = 1
+SummitStatusLabel.Text = "Status: Idle"
+SummitStatusLabel.TextColor3 = Color3.fromRGB(0,255,170)
+SummitStatusLabel.Font = Enum.Font.GothamBold
+SummitStatusLabel.TextSize = 11
+SummitStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local function SetSummitStatus(text)
+	SummitStatusLabel.Text = string.format("Status: %s | Putaran: %d | Recovery: %d",
+		tostring(text), getgenv().SummitLoopCount, getgenv().SummitRecoverCount)
+end
+
+-- tandai bahwa worker masih bergerak (dibaca oleh watchdog)
+local function SummitTick()
+	SummitState.last = tick()
+end
+
+local function GetLiveCharacter()
+	local char = LocalPlayer.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if hrp and hum and hum.Health > 0 then return hrp, hum end
+	return nil
+end
+
+local function WaitForLiveCharacter(alive, maxWait)
+	local waited = 0
+	while alive() and waited < maxWait do
+		local hrp, hum = GetLiveCharacter()
+		if hrp then return hrp, hum end
+		SummitTick()
+		task.wait(0.25)
+		waited = waited + 0.25
+	end
+	return nil
+end
+
+-- Streaming dengan batas waktu: RequestStreamAroundAsync dijalankan di thread
+-- terpisah supaya kalau macet, script utama tidak ikut macet.
+local function StreamAroundBounded(pos, maxWait)
+	local done = false
+	task.spawn(function()
+		pcall(function() LocalPlayer:RequestStreamAroundAsync(pos, 2) end)
+		done = true
+	end)
+	local t = 0
+	while not done and t < maxWait do
+		task.wait(0.05)
+		t = t + 0.05
+	end
+end
+
+local function TouchCheckpoint(cpNumber, approxCF, alive)
 	local part
 	local waited = 0
-	
-	pcall(function() 
-		LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 5) 
-	end)
-
-	while getgenv().AutoSummitRunning and waited < 2 do
-		local folder = workspace:FindFirstChild("Checkpoint")
+	while alive() and waited < 2 do
+		local folder = Workspace:FindFirstChild("Checkpoint")
 		part = folder and folder:FindFirstChild("Checkpoint " .. tostring(cpNumber))
 		if part and part:IsA("BasePart") then break end
 		part = nil
@@ -1859,8 +1922,8 @@ local function TouchCheckpoint(cpNumber, approxCF)
 		waited = waited + 0.2
 	end
 
-	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if not hrp or not getgenv().AutoSummitRunning then return end
+	local hrp = GetLiveCharacter()
+	if not hrp or not alive() then return end
 
 	if not part then
 		hrp.CFrame = approxCF
@@ -1881,67 +1944,158 @@ local function TouchCheckpoint(cpNumber, approxCF)
 	end
 end
 
-task.spawn(function()
-	while true do
-		if getgenv().AutoSummitRunning then
+-- Proses satu titik. Return true kalau karakter masih hidup di akhir
+-- (kalau mati, titik yang sama diulang setelah respawn).
+local function DoSummitPoint(point, alive)
+	local hrp = GetLiveCharacter()
+	if not hrp then return false end
+
+	local name = point[1]
+	local cpIndex = string.match(name, "^Cp(%d+)$")
+	local height = cpIndex and (tonumber(getgenv().SummitCpHeight) or 1.5) or (tonumber(getgenv().SummitHeight) or 6)
+
+	StreamAroundBounded(point[2].Position, 1.5)
+
+	hrp = GetLiveCharacter()
+	if not hrp or not alive() then return false end
+
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	hrp.AssemblyAngularVelocity = Vector3.zero
+	hrp.CFrame = point[2] + Vector3.new(0, height, 0)
+
+	if cpIndex then
+		TouchCheckpoint(tonumber(cpIndex), point[2], alive)
+		task.wait(math.max(tonumber(getgenv().SummitDelay) or 1, 0))
+
+		if getgenv().SummitUseRemote and alive() then
 			pcall(function()
-				local midHeight = tonumber(getgenv().SummitHeight) or 6
-				local cpHeight = tonumber(getgenv().SummitCpHeight) or 1.5
-				
-				for _, point in ipairs(SummitPoints) do
-					if not getgenv().AutoSummitRunning then break end
-					
-					local character = LocalPlayer.Character
-					local hrp = character and character:FindFirstChild("HumanoidRootPart")
-					local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-					if not hrp or not humanoid then break end
-
-					local name = point[1]
-					local cpIndex = string.match(name, "^Cp(%d+)$")
-					local height = cpIndex and cpHeight or midHeight
-
-					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 3) end)
-
-					hrp.AssemblyLinearVelocity = Vector3.zero
-					hrp.AssemblyAngularVelocity = Vector3.zero
-					
-					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
-
-					if not getgenv().AutoSummitRunning then break end
-
-					if cpIndex then
-						TouchCheckpoint(tonumber(cpIndex), point[2])
-						
-						local delayTime = tonumber(getgenv().SummitDelay) or 1
-						task.wait(delayTime)
-						
-						if getgenv().SummitUseRemote then
-							pcall(function()
-								local cpRemote = ReplicatedStorage:FindFirstChild("Remote") 
-									and ReplicatedStorage.Remote:FindFirstChild("Checkpoint") 
-									and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
-								if cpRemote then
-									cpRemote:FireServer(tonumber(cpIndex))
-								end
-							end)
-						end
-						task.wait(0.1)
-					else
-						task.wait(0.15)
-					end
-				end
-
-				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if hrp and getgenv().AutoSummitRunning then
-					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
-					task.wait(0.8)
-					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
-				end
+				local cpRemote = ReplicatedStorage:FindFirstChild("Remote")
+					and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
+					and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
+				if cpRemote then cpRemote:FireServer(tonumber(cpIndex)) end
 			end)
+		end
+		task.wait(0.1)
+	else
+		task.wait(0.15)
+	end
+
+	return GetLiveCharacter() ~= nil
+end
+
+local function SummitReturnToBase(alive)
+	local hrp = GetLiveCharacter()
+	if hrp and alive() then
+		hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
+		task.wait(0.8)
+		hrp = GetLiveCharacter()
+		if hrp and alive() then
+			hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
+		end
+	end
+end
+
+-- Worker: satu thread yang menjalankan putaran summit.
+-- Kalau RunId berubah (watchdog / toggle OFF), worker lama otomatis berhenti.
+local function SummitWorker(runId, startIndex)
+	local function alive()
+		return getgenv().AutoSummitRunning and getgenv().SummitRunId == runId
+	end
+
+	local i = startIndex or 1
+	local fails = 0
+
+	while alive() do
+		local point = SummitPoints[i]
+		if not point then
+			SetSummitStatus("Kembali ke base")
+			SummitTick()
+			SummitReturnToBase(alive)
+			getgenv().SummitLoopCount = getgenv().SummitLoopCount + 1
+			i = 1
+			fails = 0
+			SummitState.index = 1
+			SummitTick()
 			task.wait(0.3)
 		else
-			task.wait(0.5)
+			SummitState.index = i
+			SummitTick()
+			SetSummitStatus(point[1])
+
+			if not GetLiveCharacter() then
+				SetSummitStatus("Menunggu respawn")
+				WaitForLiveCharacter(alive, 15)
+				task.wait(1)
+			else
+				local ok, res = pcall(DoSummitPoint, point, alive)
+				if ok and res then
+					i = i + 1
+					fails = 0
+				else
+					fails = fails + 1
+					if not ok then warn("[Summit] error di " .. tostring(point[1]) .. ": " .. tostring(res)) end
+					-- gagal 3x berturut-turut di titik yang sama -> lanjut ke titik berikutnya
+					if fails >= 3 then
+						i = i + 1
+						fails = 0
+					end
+					task.wait(0.5)
+				end
+				SummitTick()
+			end
 		end
+	end
+end
+
+-- Watchdog: kalau worker tidak ada kemajuan, mulai ulang dari titik terakhir.
+task.spawn(function()
+	local wasRunning = false
+	local lastRecoverIndex, sameIndexCount = nil, 0
+
+	while true do
+		local running = getgenv().AutoSummitRunning
+
+		if running then
+			if not wasRunning then
+				-- baru dinyalakan
+				getgenv().SummitRunId = getgenv().SummitRunId + 1
+				SummitState.index = 1
+				SummitTick()
+				lastRecoverIndex, sameIndexCount = nil, 0
+				task.spawn(SummitWorker, getgenv().SummitRunId, 1)
+			else
+				local stallLimit = 8 + (tonumber(getgenv().SummitDelay) or 1)
+				if tick() - SummitState.last > stallLimit then
+					getgenv().SummitRecoverCount = getgenv().SummitRecoverCount + 1
+
+					if SummitState.index == lastRecoverIndex then
+						sameIndexCount = sameIndexCount + 1
+					else
+						lastRecoverIndex = SummitState.index
+						sameIndexCount = 1
+					end
+
+					-- macet 2x di titik yang sama: reset karakter (respawn) sebagai jalan keluar
+					if sameIndexCount >= 2 then
+						pcall(function()
+							local _, hum = GetLiveCharacter()
+							if hum then hum.Health = 0 end
+						end)
+						sameIndexCount = 0
+					end
+
+					getgenv().SummitRunId = getgenv().SummitRunId + 1 -- matikan worker lama
+					SummitTick()
+					SetSummitStatus("Recovery di titik " .. tostring(SummitState.index))
+					task.spawn(SummitWorker, getgenv().SummitRunId, SummitState.index)
+				end
+			end
+		else
+			if wasRunning then SetSummitStatus("Idle") end
+		end
+
+		wasRunning = running
+		task.wait(1)
 	end
 end)
 
@@ -2048,6 +2202,294 @@ task.spawn(function()
 		end
 		task.wait(1)
 	end
+end)
+
+----------------------------------------------------
+-- LARP PAGE (COSMETIK CLIENT-SIDE, HANYA TERLIHAT OLEHMU)
+----------------------------------------------------
+local TitleLarp = Instance.new("TextLabel")
+TitleLarp.Parent = LarpPage
+TitleLarp.Size = UDim2.new(1,0,0,30)
+TitleLarp.BackgroundTransparency = 1
+TitleLarp.Text = "🎭 LARP & EFEK KARAKTER (CLIENT-SIDE)"
+TitleLarp.TextColor3 = Color3.fromRGB(0,170,255)
+TitleLarp.Font = Enum.Font.GothamBold
+TitleLarp.TextSize = 13
+
+local LarpStatus = Instance.new("TextLabel")
+LarpStatus.Parent = LarpPage
+LarpStatus.Size = UDim2.new(1,0,0,20)
+LarpStatus.BackgroundTransparency = 1
+LarpStatus.Text = "Status: siap"
+LarpStatus.TextColor3 = Color3.fromRGB(0,255,170)
+LarpStatus.Font = Enum.Font.GothamBold
+LarpStatus.TextSize = 11
+LarpStatus.TextXAlignment = Enum.TextXAlignment.Left
+
+local function SetLarpStatus(text) LarpStatus.Text = "Status: " .. tostring(text) end
+
+local function LarpButton(text, color, callback)
+	local b = Instance.new("TextButton")
+	b.Parent = LarpPage
+	b.Size = UDim2.new(1,0,0,35)
+	b.BackgroundColor3 = color
+	b.Text = text
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 12
+	local c = Instance.new("UICorner")
+	c.Parent = b
+	b.MouseButton1Click:Connect(callback)
+	return b
+end
+
+-- ID aset katalog (angka di URL roblox.com/catalog/<ID>)
+local KORBLOX_RIGHT_LEG_ID = 139607718
+local HEADLESS_HEAD_ID = 134082579
+
+local LarpState = { Hats = {} }
+local OriginalDesc = nil
+
+local function LarpHasState()
+	for k, v in pairs(LarpState) do
+		if k == "Hats" then
+			if #v > 0 then return true end
+		elseif v then
+			return true
+		end
+	end
+	return false
+end
+
+-- Terapkan HumanoidDescription ke karakter sendiri
+local function ApplyLarp()
+	local ok, err = pcall(function()
+		local char = LocalPlayer.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		assert(hum, "Humanoid tidak ditemukan")
+
+		if not OriginalDesc then OriginalDesc = hum:GetAppliedDescription() end
+		local desc = hum:GetAppliedDescription()
+
+		for _, slot in ipairs({"Head","Torso","LeftArm","RightArm","LeftLeg","RightLeg","Face"}) do
+			if LarpState[slot] then desc[slot] = LarpState[slot] end
+		end
+
+		if #LarpState.Hats > 0 then
+			local existing, list = {}, {}
+			for id in string.gmatch(desc.HatAccessory or "", "%d+") do
+				existing[id] = true
+				table.insert(list, id)
+			end
+			for _, id in ipairs(LarpState.Hats) do
+				local s = tostring(id)
+				if not existing[s] then table.insert(list, s) end
+			end
+			desc.HatAccessory = table.concat(list, ",")
+		end
+
+		hum:ApplyDescription(desc)
+	end)
+	if ok then
+		SetLarpStatus("✅ diterapkan")
+	else
+		SetLarpStatus("⚠️ gagal: " .. tostring(err))
+	end
+	return ok
+end
+
+-- Fallback kalau ApplyDescription diblok game: sembunyikan kaki kanan
+local function HideRightLegFallback()
+	pcall(function()
+		local char = LocalPlayer.Character
+		if not char then return end
+		for _, n in ipairs({"RightUpperLeg","RightLowerLeg","RightFoot","Right Leg"}) do
+			local p = char:FindFirstChild(n)
+			if p and p:IsA("BasePart") then p.Transparency = 1 end
+		end
+	end)
+end
+
+local function ResetLarp()
+	for k in pairs(LarpState) do LarpState[k] = nil end
+	LarpState.Hats = {}
+	pcall(function()
+		local char = LocalPlayer.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if hum and OriginalDesc then hum:ApplyDescription(OriginalDesc) end
+		-- kembalikan transparansi (fallback headless / korblox)
+		local head = char and char:FindFirstChild("Head")
+		if head then
+			head.Transparency = 0
+			for _, d in ipairs(head:GetChildren()) do if d:IsA("Decal") then d.Transparency = 0 end end
+		end
+		for _, n in ipairs({"RightUpperLeg","RightLowerLeg","RightFoot","Right Leg"}) do
+			local p = char and char:FindFirstChild(n)
+			if p and p:IsA("BasePart") then p.Transparency = 0 end
+		end
+	end)
+	OriginalDesc = nil
+	SetLarpStatus("🔄 direset")
+end
+
+-- PRESET
+LarpButton("🦴 Korblox Deathspeaker (Kaki Kanan)", Color3.fromRGB(0,100,180), function()
+	LarpState.RightLeg = KORBLOX_RIGHT_LEG_ID
+	if not ApplyLarp() then HideRightLegFallback() end
+end)
+
+LarpButton("💀 Headless Horseman (Kepala)", Color3.fromRGB(0,100,180), function()
+	LarpState.Head = HEADLESS_HEAD_ID
+	if not ApplyLarp() then
+		pcall(function()
+			local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+			if head then
+				head.Transparency = 1
+				for _, d in ipairs(head:GetChildren()) do if d:IsA("Decal") then d.Transparency = 1 end end
+			end
+		end)
+	end
+end)
+
+LarpButton("👑 Korblox + Headless (Combo)", Color3.fromRGB(150,0,200), function()
+	LarpState.RightLeg = KORBLOX_RIGHT_LEG_ID
+	LarpState.Head = HEADLESS_HEAD_ID
+	ApplyLarp()
+end)
+
+-- CUSTOM ID: pilih slot lalu isi ID aset katalog
+local LarpSlots = {"Head","Torso","LeftArm","RightArm","LeftLeg","RightLeg","Face","Hat"}
+local larpSlotIndex = 6
+
+local SlotBtn
+SlotBtn = LarpButton("Slot: " .. LarpSlots[larpSlotIndex] .. " ▶", Color3.fromRGB(35,35,45), function()
+	larpSlotIndex = larpSlotIndex % #LarpSlots + 1
+	SlotBtn.Text = "Slot: " .. LarpSlots[larpSlotIndex] .. " ▶"
+end)
+
+local LarpIdBox = Instance.new("TextBox")
+LarpIdBox.Parent = LarpPage
+LarpIdBox.Size = UDim2.new(1,0,0,35)
+LarpIdBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+LarpIdBox.PlaceholderText = "Isi ID aset katalog lalu tekan Enter"
+LarpIdBox.Text = ""
+LarpIdBox.TextColor3 = Color3.new(1,1,1)
+LarpIdBox.Font = Enum.Font.Gotham
+LarpIdBox.TextSize = 12
+local lidc = Instance.new("UICorner")
+lidc.Parent = LarpIdBox
+
+LarpIdBox.FocusLost:Connect(function()
+	local id = tonumber(LarpIdBox.Text)
+	if not id then
+		SetLarpStatus("⚠️ ID harus angka")
+		return
+	end
+	local slot = LarpSlots[larpSlotIndex]
+	if slot == "Hat" then
+		table.insert(LarpState.Hats, id)
+	else
+		LarpState[slot] = id
+	end
+	ApplyLarp()
+	LarpIdBox.Text = ""
+end)
+
+LarpButton("🧹 Reset Semua Larp", Color3.fromRGB(180,50,50), ResetLarp)
+
+-- EFEK VISUAL (TANPA ID, DIBUAT LANGSUNG)
+local LarpEffectsTitle = Instance.new("TextLabel")
+LarpEffectsTitle.Parent = LarpPage
+LarpEffectsTitle.Size = UDim2.new(1,0,0,25)
+LarpEffectsTitle.BackgroundTransparency = 1
+LarpEffectsTitle.Text = "✨ EFEK KARAKTER"
+LarpEffectsTitle.TextColor3 = Color3.fromRGB(255,200,0)
+LarpEffectsTitle.Font = Enum.Font.GothamBold
+LarpEffectsTitle.TextSize = 13
+
+local LarpEffects = { Aura = false, Sparkles = false, Smoke = false, ForceField = false }
+local OriginalMaterials = setmetatable({}, { __mode = "k" })
+
+local function RefreshEffects()
+	pcall(function()
+		local char = LocalPlayer.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if not char or not hrp then return end
+
+		-- Aura glow (RGB)
+		local aura = char:FindFirstChild("UbeyAura")
+		if LarpEffects.Aura and not aura then
+			aura = Instance.new("Highlight")
+			aura.Name = "UbeyAura"
+			aura.FillTransparency = 0.55
+			aura.OutlineColor = Color3.new(1,1,1)
+			aura.Parent = char
+		elseif not LarpEffects.Aura and aura then
+			aura:Destroy()
+		end
+
+		-- Sparkles
+		local sp = hrp:FindFirstChild("UbeySparkles")
+		if LarpEffects.Sparkles and not sp then
+			sp = Instance.new("Sparkles")
+			sp.Name = "UbeySparkles"
+			sp.Parent = hrp
+		elseif not LarpEffects.Sparkles and sp then
+			sp:Destroy()
+		end
+
+		-- Smoke
+		local sm = hrp:FindFirstChild("UbeySmoke")
+		if LarpEffects.Smoke and not sm then
+			sm = Instance.new("Smoke")
+			sm.Name = "UbeySmoke"
+			sm.Size = 3
+			sm.Opacity = 0.3
+			sm.Color = Color3.fromRGB(120,120,140)
+			sm.Parent = hrp
+		elseif not LarpEffects.Smoke and sm then
+			sm:Destroy()
+		end
+
+		-- Material ForceField di seluruh badan
+		for _, p in ipairs(char:GetDescendants()) do
+			if p:IsA("BasePart") then
+				if LarpEffects.ForceField then
+					if OriginalMaterials[p] == nil then OriginalMaterials[p] = p.Material end
+					p.Material = Enum.Material.ForceField
+				elseif OriginalMaterials[p] ~= nil then
+					p.Material = OriginalMaterials[p]
+					OriginalMaterials[p] = nil
+				end
+			end
+		end
+	end)
+end
+
+AddToggle(LarpPage, "🌈 Aura Glow RGB", function(v) LarpEffects.Aura = v; RefreshEffects() end)
+AddToggle(LarpPage, "✨ Sparkles", function(v) LarpEffects.Sparkles = v; RefreshEffects() end)
+AddToggle(LarpPage, "🌫️ Smoke", function(v) LarpEffects.Smoke = v; RefreshEffects() end)
+AddToggle(LarpPage, "🔮 Body ForceField", function(v) LarpEffects.ForceField = v; RefreshEffects() end)
+
+-- animasi warna aura
+task.spawn(function()
+	while true do
+		if LarpEffects.Aura then
+			pcall(function()
+				local aura = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("UbeyAura")
+				if aura then aura.FillColor = Color3.fromHSV((tick() % 5) / 5, 1, 1) end
+			end)
+		end
+		task.wait(0.1)
+	end
+end)
+
+-- terapkan ulang larp & efek setelah respawn
+LocalPlayer.CharacterAdded:Connect(function()
+	OriginalDesc = nil
+	task.wait(2)
+	if LarpHasState() then ApplyLarp() end
+	RefreshEffects()
 end)
 
 ----------------------------------------------------
