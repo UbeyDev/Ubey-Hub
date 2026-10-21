@@ -754,8 +754,7 @@ KeyBox.Text = ""
 KeyBox.TextColor3 = Color3.new(1,1,1)
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextSize = 13
-local kbCorner = Instance.new("UICorner")
-kbCorner.Parent = KeyBox
+Instance.new("UICorner").Parent = KeyBox
 
 local SubmitKeyBtn = Instance.new("TextButton")
 SubmitKeyBtn.Parent = KeyFrame
@@ -766,8 +765,7 @@ SubmitKeyBtn.Text = "Verifikasi Perangkat"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
 SubmitKeyBtn.Font = Enum.Font.GothamBold
 SubmitKeyBtn.TextSize = 12
-local skCorner = Instance.new("UICorner")
-skCorner.Parent = SubmitKeyBtn
+Instance.new("UICorner").Parent = SubmitKeyBtn
 
 local GetKeyDiscordBtn = Instance.new("TextButton")
 GetKeyDiscordBtn.Parent = KeyFrame
@@ -778,8 +776,7 @@ GetKeyDiscordBtn.Text = "Get Key via Discord"
 GetKeyDiscordBtn.TextColor3 = Color3.new(1,1,1)
 GetKeyDiscordBtn.Font = Enum.Font.GothamBold
 GetKeyDiscordBtn.TextSize = 12
-local gkCorner = Instance.new("UICorner")
-gkCorner.Parent = GetKeyDiscordBtn
+Instance.new("UICorner").Parent = GetKeyDiscordBtn
 
 local StatusKey = Instance.new("TextLabel")
 StatusKey.Parent = KeyFrame
@@ -878,8 +875,7 @@ Sidebar.Size = UDim2.new(0,140,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15,15,20)
 Sidebar.CanvasSize = UDim2.new(0,0,2.6,0)
 Sidebar.ScrollBarThickness = 2
-local sbCorner = Instance.new("UICorner")
-sbCorner.Parent = Sidebar
+Instance.new("UICorner").Parent = Sidebar
 
 local HubTitle = Instance.new("TextLabel")
 HubTitle.Parent = Sidebar
@@ -1128,8 +1124,7 @@ SpotDropdownFrame.Parent = FishingPage
 SpotDropdownFrame.Size = UDim2.new(1,0,0,35)
 SpotDropdownFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
 SpotDropdownFrame.ClipsDescendants = true
-local sdc = Instance.new("UICorner")
-sdc.Parent = SpotDropdownFrame
+Instance.new("UICorner").Parent = SpotDropdownFrame
 
 local DropHeader = Instance.new("TextButton")
 DropHeader.Parent = SpotDropdownFrame
@@ -1190,8 +1185,7 @@ ModeDropdownFrame.Parent = FishingPage
 ModeDropdownFrame.Size = UDim2.new(1,0,0,35)
 ModeDropdownFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
 ModeDropdownFrame.ClipsDescendants = true
-local mdc = Instance.new("UICorner")
-mdc.Parent = ModeDropdownFrame
+Instance.new("UICorner").Parent = ModeDropdownFrame
 
 local ModeDropHeader = Instance.new("TextButton")
 ModeDropHeader.Parent = ModeDropdownFrame
@@ -1290,8 +1284,7 @@ BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
 BiteDelayBox.TextSize = 12
-local bdCorner = Instance.new("UICorner")
-bdCorner.Parent = BiteDelayBox
+Instance.new("UICorner").Parent = BiteDelayBox
 
 BiteDelayBox.FocusLost:Connect(function()
 	getgenv().BiteDelayInput = BiteDelayBox.Text
@@ -1308,8 +1301,7 @@ TapDelayBox.Text = tostring(getgenv().UbeyConfig.TapDelay or "0.12")
 TapDelayBox.TextColor3 = Color3.new(1,1,1)
 TapDelayBox.Font = Enum.Font.Gotham
 TapDelayBox.TextSize = 12
-local tdCorner = Instance.new("UICorner")
-tdCorner.Parent = TapDelayBox
+Instance.new("UICorner").Parent = TapDelayBox
 
 TapDelayBox.FocusLost:Connect(function()
 	getgenv().UbeyConfig.TapDelay = TapDelayBox.Text
@@ -1341,8 +1333,7 @@ SellTimerBox.Text = tostring(getgenv().UbeyConfig.AutoSellTimer)
 SellTimerBox.TextColor3 = Color3.new(1,1,1)
 SellTimerBox.Font = Enum.Font.Gotham
 SellTimerBox.TextSize = 12
-local stCorner = Instance.new("UICorner")
-stCorner.Parent = SellTimerBox
+Instance.new("UICorner").Parent = SellTimerBox
 
 SellTimerBox.FocusLost:Connect(function()
 	getgenv().AutoSellTimerInput = SellTimerBox.Text
@@ -1546,6 +1537,7 @@ local function CreateMultiSelectDropdown(parent, titleText, optionsTable, target
 	end)
 end
 
+do
 ----------------------------------------------------
 -- 2. FAVORITE PAGE
 ----------------------------------------------------
@@ -1590,8 +1582,7 @@ UnfavFilterBtn.Text = "🎯 UNFAVORITE BY FILTER"
 UnfavFilterBtn.TextColor3 = Color3.new(1,1,1)
 UnfavFilterBtn.Font = Enum.Font.GothamBold
 UnfavFilterBtn.TextSize = 12
-local ufc = Instance.new("UICorner")
-ufc.Parent = UnfavFilterBtn
+Instance.new("UICorner").Parent = UnfavFilterBtn
 UnfavFilterBtn.MouseButton1Click:Connect(function() UnfavoriteByFilter() end)
 
 local UnfavBtn = Instance.new("TextButton")
@@ -1602,10 +1593,12 @@ UnfavBtn.Text = "🚨 UNFAVORITE ALL FISH"
 UnfavBtn.TextColor3 = Color3.new(1,1,1)
 UnfavBtn.Font = Enum.Font.GothamBold
 UnfavBtn.TextSize = 12
-local uac = Instance.new("UICorner")
-uac.Parent = UnfavBtn
+Instance.new("UICorner").Parent = UnfavBtn
 UnfavBtn.MouseButton1Click:Connect(function() UnfavoriteAllFish() end)
 
+end
+
+do
 ----------------------------------------------------
 -- 3. GALATAMA PAGE (AUTO DETEKSI CORE EVENT)
 ----------------------------------------------------
@@ -1626,8 +1619,7 @@ TeleportGalatamaBtn.Text = "📍 Teleport ke Galatama"
 TeleportGalatamaBtn.TextColor3 = Color3.new(1,1,1)
 TeleportGalatamaBtn.Font = Enum.Font.GothamBold
 TeleportGalatamaBtn.TextSize = 13
-local tgc = Instance.new("UICorner")
-tgc.Parent = TeleportGalatamaBtn
+Instance.new("UICorner").Parent = TeleportGalatamaBtn
 TeleportGalatamaBtn.MouseButton1Click:Connect(function()
 	pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-8008.12744, 1227.96838, -6091.92627) + Vector3.new(0, 5, 0) end)
 end)
@@ -1710,6 +1702,9 @@ task.spawn(function()
 	end
 end)
 
+end
+
+do
 ----------------------------------------------------
 -- 4. TELEPORT SHOP PAGE
 ----------------------------------------------------
@@ -1742,6 +1737,8 @@ AddShopTeleportBtn(TeleportShopPage, "Pet Shop", CFrame.new(-6640.44092, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Upgrade Pet", CFrame.new(-6637.85156, 1312.69983, -9886.52441))
 AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69983, -9857.41797))
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
+
+end
 
 ----------------------------------------------------
 -- 5. SUMMIT PAGE
@@ -1846,6 +1843,7 @@ AddSummitBox("Tinggi di titik Cp (Cth: 1.5)", 1.5, function(n) getgenv().SummitC
 AddToggle(SummitPage, "Pakai Remote Checkpoint (opsional)", function(v) getgenv().SummitUseRemote = v end)
 AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitDelay = math.max(n, 0) end)
 
+do
 ----------------------------------------------------
 -- AUTO SUMMIT ENGINE (WATCHDOG + RESUME DARI TITIK TERAKHIR)
 ----------------------------------------------------
@@ -2099,6 +2097,9 @@ task.spawn(function()
 	end
 end)
 
+end
+
+do
 ----------------------------------------------------
 -- 6. PLAYER PAGE
 ----------------------------------------------------
@@ -2118,8 +2119,7 @@ SpeedBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
 SpeedBox.PlaceholderText = "Ketik WalkSpeed (Cth: 50)"
 SpeedBox.Text = ""
 SpeedBox.TextColor3 = Color3.new(1,1,1)
-local spc = Instance.new("UICorner")
-spc.Parent = SpeedBox
+Instance.new("UICorner").Parent = SpeedBox
 
 SpeedBox.FocusLost:Connect(function()
 	local num = tonumber(SpeedBox.Text)
@@ -2139,8 +2139,7 @@ HeadlessBtn.Text = "👻 Enable Headless"
 HeadlessBtn.TextColor3 = Color3.new(1,1,1)
 HeadlessBtn.Font = Enum.Font.GothamBold
 HeadlessBtn.TextSize = 13
-local hlc = Instance.new("UICorner")
-hlc.Parent = HeadlessBtn
+Instance.new("UICorner").Parent = HeadlessBtn
 
 HeadlessBtn.MouseButton1Click:Connect(function()
 	pcall(function()
@@ -2160,8 +2159,7 @@ FireRgbBtn.Text = "🔥🌈 Auto RGB Fire: [OFF]"
 FireRgbBtn.TextColor3 = Color3.new(1,1,1)
 FireRgbBtn.Font = Enum.Font.GothamBold
 FireRgbBtn.TextSize = 13
-local frc = Instance.new("UICorner")
-frc.Parent = FireRgbBtn
+Instance.new("UICorner").Parent = FireRgbBtn
 
 local autoRgbActive = false
 FireRgbBtn.MouseButton1Click:Connect(function()
@@ -2204,6 +2202,9 @@ task.spawn(function()
 	end
 end)
 
+end
+
+do
 ----------------------------------------------------
 -- LARP PAGE (COSMETIK CLIENT-SIDE, HANYA TERLIHAT OLEHMU)
 ----------------------------------------------------
@@ -2376,8 +2377,7 @@ LarpIdBox.Text = ""
 LarpIdBox.TextColor3 = Color3.new(1,1,1)
 LarpIdBox.Font = Enum.Font.Gotham
 LarpIdBox.TextSize = 12
-local lidc = Instance.new("UICorner")
-lidc.Parent = LarpIdBox
+Instance.new("UICorner").Parent = LarpIdBox
 
 LarpIdBox.FocusLost:Connect(function()
 	local id = tonumber(LarpIdBox.Text)
@@ -2492,6 +2492,9 @@ LocalPlayer.CharacterAdded:Connect(function()
 	RefreshEffects()
 end)
 
+end
+
+do
 ----------------------------------------------------
 -- 7. HALO PAGE
 ----------------------------------------------------
@@ -2578,6 +2581,9 @@ pcall(function()
 	end
 end)
 
+end
+
+do
 ----------------------------------------------------
 -- 8. TELEPORT PLAYER PAGE
 ----------------------------------------------------
@@ -2598,8 +2604,7 @@ RefreshPlayerBtn.Text = "🔄 Refresh / Scan Pemain"
 RefreshPlayerBtn.TextColor3 = Color3.new(1,1,1)
 RefreshPlayerBtn.Font = Enum.Font.GothamBold
 RefreshPlayerBtn.TextSize = 12
-local rpc = Instance.new("UICorner")
-rpc.Parent = RefreshPlayerBtn
+Instance.new("UICorner").Parent = RefreshPlayerBtn
 
 local PlayerListContainer = Instance.new("ScrollingFrame")
 PlayerListContainer.Parent = PlayerTpPage
@@ -2640,6 +2645,9 @@ end
 RefreshPlayerBtn.MouseButton1Click:Connect(ScanAndDisplayPlayers)
 task.spawn(function() task.wait(2); ScanAndDisplayPlayers() end)
 
+end
+
+do
 ----------------------------------------------------
 -- 9. PRIVACY & ANTI-ADMIN PAGE
 ----------------------------------------------------
@@ -2659,8 +2667,7 @@ FakeNameBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
 FakeNameBox.PlaceholderText = "Nama Samaran (Cth: UBEY HUB)"
 FakeNameBox.Text = "UBEY HUB"
 FakeNameBox.TextColor3 = Color3.new(1,1,1)
-local fnc = Instance.new("UICorner")
-fnc.Parent = FakeNameBox
+Instance.new("UICorner").Parent = FakeNameBox
 FakeNameBox.FocusLost:Connect(function() getgenv().FakeNameInput = FakeNameBox.Text end)
 
 AddToggle(PrivacyPage, "Privacy Mode (Hide Name)", function(v)
@@ -2694,8 +2701,7 @@ AntiAdminToggleBtn.Text = "  Anti-Admin Protect (MPG Group): " .. (getgenv().Ube
 AntiAdminToggleBtn.TextColor3 = Color3.new(1,1,1)
 AntiAdminToggleBtn.Font = Enum.Font.Gotham
 AntiAdminToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-local aac = Instance.new("UICorner")
-aac.Parent = AntiAdminToggleBtn
+Instance.new("UICorner").Parent = AntiAdminToggleBtn
 
 AntiAdminToggleBtn.MouseButton1Click:Connect(function()
 	getgenv().UbeyConfig.AntiAdminEnabled = not getgenv().UbeyConfig.AntiAdminEnabled
@@ -2721,6 +2727,9 @@ Players.PlayerAdded:Connect(function(player)
 	end
 end)
 
+end
+
+do
 ----------------------------------------------------
 -- 10. SETTINGS & WEBHOOK PAGE
 ----------------------------------------------------
@@ -2740,8 +2749,7 @@ AntiLagBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 180)
 AntiLagBtn.Text = "⚡ Aktifkan Anti-Lag (Boost FPS)"
 AntiLagBtn.TextColor3 = Color3.new(1,1,1)
 AntiLagBtn.Font = Enum.Font.GothamBold
-local alc = Instance.new("UICorner")
-alc.Parent = AntiLagBtn
+Instance.new("UICorner").Parent = AntiLagBtn
 
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function()
@@ -2762,8 +2770,7 @@ BlackScreenToggleBtn.Text = "  📱 Black Screen (Battery Saver): [OFF]"
 BlackScreenToggleBtn.TextColor3 = Color3.new(1,1,1)
 BlackScreenToggleBtn.Font = Enum.Font.Gotham
 BlackScreenToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-local bsc = Instance.new("UICorner")
-bsc.Parent = BlackScreenToggleBtn
+Instance.new("UICorner").Parent = BlackScreenToggleBtn
 
 local isBlackScreen = false
 BlackScreenToggleBtn.MouseButton1Click:Connect(function()
@@ -2816,8 +2823,7 @@ WebhookToggleBtn.Text = "  Webhook Secret & Forgotten: " .. (getgenv().UbeyConfi
 WebhookToggleBtn.TextColor3 = Color3.new(1,1,1)
 WebhookToggleBtn.Font = Enum.Font.Gotham
 WebhookToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-local wtc = Instance.new("UICorner")
-wtc.Parent = WebhookToggleBtn
+Instance.new("UICorner").Parent = WebhookToggleBtn
 
 WebhookToggleBtn.MouseButton1Click:Connect(function()
 	getgenv().UbeyConfig.WebhookEnabled = not getgenv().UbeyConfig.WebhookEnabled
@@ -2833,8 +2839,7 @@ WebhookBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
 WebhookBox.PlaceholderText = "Paste Discord Webhook URL di sini..."
 WebhookBox.Text = tostring(getgenv().UbeyConfig.WebhookUrl or "")
 WebhookBox.TextColor3 = Color3.new(1,1,1)
-local wbc = Instance.new("UICorner")
-wbc.Parent = WebhookBox
+Instance.new("UICorner").Parent = WebhookBox
 WebhookBox.FocusLost:Connect(function()
 	getgenv().UbeyConfig.WebhookUrl = WebhookBox.Text
 	SaveConfig()
@@ -2848,8 +2853,7 @@ TestWebhookBtn.Text = "🧪 Test Kirim Webhook ke Discord"
 TestWebhookBtn.TextColor3 = Color3.new(1,1,1)
 TestWebhookBtn.Font = Enum.Font.GothamBold
 TestWebhookBtn.TextSize = 13
-local twc = Instance.new("UICorner")
-twc.Parent = TestWebhookBtn
+Instance.new("UICorner").Parent = TestWebhookBtn
 
 TestWebhookBtn.MouseButton1Click:Connect(function()
 	pcall(function()
@@ -2887,8 +2891,7 @@ SaveConfigBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
 SaveConfigBtn.Text = "💾 Simpan Konfigurasi"
 SaveConfigBtn.TextColor3 = Color3.new(1,1,1)
 SaveConfigBtn.Font = Enum.Font.GothamBold
-local scc = Instance.new("UICorner")
-scc.Parent = SaveConfigBtn
+Instance.new("UICorner").Parent = SaveConfigBtn
 SaveConfigBtn.MouseButton1Click:Connect(function()
 	SaveConfig()
 	SaveConfigBtn.Text = "✅ Config Berhasil Disimpan!"
@@ -2903,8 +2906,7 @@ ResetConfigBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
 ResetConfigBtn.Text = "🔄 Reset Konfigurasi & Clear Key"
 ResetConfigBtn.TextColor3 = Color3.new(1,1,1)
 ResetConfigBtn.Font = Enum.Font.GothamBold
-local rcc = Instance.new("UICorner")
-rcc.Parent = ResetConfigBtn
+Instance.new("UICorner").Parent = ResetConfigBtn
 ResetConfigBtn.MouseButton1Click:Connect(function()
 	ResetConfig()
 	ResetConfigBtn.Text = "🔄 Config Direset!"
@@ -2920,6 +2922,8 @@ CredLbl.Text = "Created By UBEY"
 CredLbl.TextColor3 = Color3.new(1,1,1)
 CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
+
+end
 
 ----------------------------------------------------
 -- 11. BOTTOM PANEL: SESSION STAT TRACKER (LIVE)
