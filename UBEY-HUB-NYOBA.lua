@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- UBEY HUB V3 | VIP FULL SCRIPT (LEGIT = AUTO BAWAAN GAME + AUTO TAP / INSTANT)
--- FIXED: Tombol & Auto-Tap sudah dioptimalkan untuk PC dan Mobile
+-- FIXED: Aman untuk Mobile & Responsif di PC
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -279,7 +279,7 @@ local function AutoEquipRod()
 end
 
 ------------------------------------------------------------------
--- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (LEGIT MODE) - FIX PC
+-- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (FIX MOBILE/PC)
 ------------------------------------------------------------------
 local function EnableGameAutoFishing(state)
 	if state == nil then state = true end
@@ -316,14 +316,22 @@ local function ClickGameAutoButton()
 	end)
 end
 
--- Diperbaiki agar responsif di PC menggunakan koordinat mouse aktif / layar tengah
+-- Diperbaiki agar aman di Mobile (tidak mengklik area UI Hub) dan responsif di PC
 local function PerformTapClicker()
 	local cam = Workspace.CurrentCamera
 	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
-	local mousePos = UIS:GetMouseLocation()
 	
-	-- Jika mouse di dalam game window, gunakan posisi mouse, jika tidak gunakan titik tengah/kanan layar
-	local pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or (getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.5))
+	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+	local pos
+	
+	if isMobile then
+		-- Di mobile, klik diarahkan ke area kosong di sebelah kanan/atas luar UI Hub
+		pos = getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.3)
+	else
+		-- Di PC, gunakan posisi mouse aktif jika ada
+		local mousePos = UIS:GetMouseLocation()
+		pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or (getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.5))
+	end
 	
 	local ok = pcall(function()
 		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
