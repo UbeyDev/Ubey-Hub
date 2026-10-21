@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | FULL VIP PREMIUM SCRIPT (WITH AUTO EQUIP ROD)
+-- UBEY HUB V3 | VIP FULL SCRIPT (FIXED FULL BLACK SCREEN & CLEAN UI)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -16,6 +16,12 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+------------------------------------------------------------------
+-- STAT TRACKER GLOBAL VARIABLES
+------------------------------------------------------------------
+getgenv().TotalFishCaught = 0
+getgenv().SessionStartTime = os.time()
 
 ------------------------------------------------------------------
 -- CONFIGURATION & FILE SAVE SYSTEM
@@ -154,13 +160,15 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR
+-- REAL-TIME CATCH MONITOR & STATS COUNTER
 ------------------------------------------------------------------
 local hookedRemotes = {}
 
 local function ProcessNotifyClient(actionType, fishDataArg)
 	if actionType == "GotFish" and type(fishDataArg) == "table" then
 		pcall(function()
+			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
+			
 			local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
 			local rarity = fishDataArg.rarity or "Common"
 			local mutation = fishDataArg.mutation or "Normal"
@@ -221,24 +229,30 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------
--- AUTO EQUIP ROD SYSTEM
+-- AUTO EQUIP ROD SYSTEM (UNIVERSAL)
 ----------------------------------------------------
 local function AutoEquipRod()
 	pcall(function()
 		local character = LocalPlayer.Character
 		if not character then return end
 		
-		-- Cek apakah pancingan sudah di tangan (Character)
-		local rodInChar = character:FindFirstChild("Withering Rod")
-		if rodInChar then return end
+		for _, child in ipairs(character:GetChildren()) do
+			if child:IsA("Tool") and (string.find(string.lower(child.Name), "rod") or string.find(string.lower(child.Name), "pancing")) then
+				return
+			end
+		end
 		
-		-- Jika belum di tangan, cari di Backpack lalu pindahkan ke Character
 		local backpack = LocalPlayer:FindFirstChild("Backpack")
-		if backpack then
-			local rodInBackpack = backpack:FindFirstChild("Withering Rod")
-			local humanoid = character:FindFirstChildOfClass("Humanoid")
-			if rodInBackpack and humanoid then
-				humanoid:EquipTool(rodInBackpack)
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if backpack and humanoid then
+			for _, item in ipairs(backpack:GetChildren()) do
+				if item:IsA("Tool") then
+					local itemName = string.lower(item.Name)
+					if string.find(itemName, "rod") or string.find(itemName, "pancing") then
+						humanoid:EquipTool(item)
+						break
+					end
+				end
 			end
 		end
 	end)
@@ -984,7 +998,7 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
-					AutoEquipRod() -- Auto equip pancingan secara berkala
+					AutoEquipRod()
 					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
@@ -1007,7 +1021,7 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 		task.spawn(function()
 			while getgenv().AutoFishingEventRunning do
 				pcall(function()
-					AutoEquipRod() -- Auto equip pancingan secara berkala
+					AutoEquipRod()
 					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
 					if rod and rod:FindFirstChild("Mechanics") then
 						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
@@ -1470,7 +1484,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (INSTANT TELEPORT ENGINE)
+-- 5. SUMMIT PAGE (FIXED ANTI-STUCK ENGINE)
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -1575,14 +1589,18 @@ AddSummitBox("Jeda di tiap Cp (detik, Cth: 1)", 1, function(n) getgenv().SummitD
 local function TouchCheckpoint(cpNumber, approxCF)
 	local part
 	local waited = 0
-	while getgenv().AutoSummitRunning and waited < 3 do
+	
+	pcall(function() 
+		LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 5) 
+	end)
+
+	while getgenv().AutoSummitRunning and waited < 2 do
 		local folder = workspace:FindFirstChild("Checkpoint")
 		part = folder and folder:FindFirstChild("Checkpoint " .. tostring(cpNumber))
 		if part and part:IsA("BasePart") then break end
 		part = nil
-		pcall(function() LocalPlayer:RequestStreamAroundAsync(approxCF.Position, 2) end)
-		task.wait(0.3)
-		waited = waited + 0.3
+		task.wait(0.2)
+		waited = waited + 0.2
 	end
 
 	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1595,7 +1613,6 @@ local function TouchCheckpoint(cpNumber, approxCF)
 	end
 
 	local standPos = part.Position + Vector3.new(0, (part.Size.Y / 2) + 2, 0)
-	
 	hrp.CFrame = CFrame.new(standPos)
 	hrp.AssemblyLinearVelocity = Vector3.zero
 
@@ -1614,28 +1631,42 @@ task.spawn(function()
 			pcall(function()
 				local midHeight = tonumber(getgenv().SummitHeight) or 6
 				local cpHeight = tonumber(getgenv().SummitCpHeight) or 1.5
+				
 				for _, point in ipairs(SummitPoints) do
 					if not getgenv().AutoSummitRunning then break end
-					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if not hrp then break end
+					
+					local character = LocalPlayer.Character
+					local hrp = character and character:FindFirstChild("HumanoidRootPart")
+					local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+					if not hrp or not humanoid then break end
 
 					local name = point[1]
 					local cpIndex = string.match(name, "^Cp(%d+)$")
 					local height = cpIndex and cpHeight or midHeight
 
-					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 2) end)
+					pcall(function() LocalPlayer:RequestStreamAroundAsync(point[2].Position, 3) end)
 
-					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
 					hrp.AssemblyLinearVelocity = Vector3.zero
+					hrp.AssemblyAngularVelocity = Vector3.zero
+					
+					hrp.CFrame = point[2] + Vector3.new(0, height, 0)
 
 					if not getgenv().AutoSummitRunning then break end
 
 					if cpIndex then
 						TouchCheckpoint(tonumber(cpIndex), point[2])
-						task.wait(getgenv().SummitDelay or 1)
+						
+						local delayTime = tonumber(getgenv().SummitDelay) or 1
+						task.wait(delayTime)
+						
 						if getgenv().SummitUseRemote then
 							pcall(function()
-								ReplicatedStorage.Remote.Checkpoint.TpToCheckpoint:FireServer(tonumber(cpIndex))
+								local cpRemote = ReplicatedStorage:FindFirstChild("Remote") 
+									and ReplicatedStorage.Remote:FindFirstChild("Checkpoint") 
+									and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
+								if cpRemote then
+									cpRemote:FireServer(tonumber(cpIndex))
+								end
 							end)
 						end
 						task.wait(0.1)
@@ -1647,7 +1678,7 @@ task.spawn(function()
 				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 				if hrp and getgenv().AutoSummitRunning then
 					hrp.CFrame = CFrame.new(-6766.44629, 1320.69983, -10083.8037) + Vector3.new(0, 5, 0)
-					task.wait(1)
+					task.wait(0.8)
 					hrp.CFrame = CFrame.new(-6834.84912, 1313.24744, -9902.42285) + Vector3.new(0, 5, 0)
 				end
 			end)
@@ -1993,13 +2024,13 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE
+-- 10. SETTINGS & WEBHOOK PAGE (FIXED FULL BLACK SCREEN)
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
 TitleSet.Size = UDim2.new(1,0,0,30)
 TitleSet.BackgroundTransparency = 1
-TitleSet.Text = "⚙️ SETTINGS & WEBHOOK SECRET / FORGOTTEN"
+TitleSet.Text = "⚙️ SETTINGS & PERFORMANCE BOOST"
 TitleSet.TextColor3 = Color3.fromRGB(0,170,255)
 TitleSet.Font = Enum.Font.GothamBold
 TitleSet.TextSize = 13
@@ -2013,6 +2044,7 @@ AntiLagBtn.TextColor3 = Color3.new(1,1,1)
 AntiLagBtn.Font = Enum.Font.GothamBold
 local alc = Instance.new("UICorner")
 alc.Parent = AntiLagBtn
+
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function()
 		Lighting.GlobalShadows = false
@@ -2020,6 +2052,62 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 		for _, v in ipairs(workspace:GetDescendants()) do if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then v.Enabled = false end end
 		AntiLagBtn.Text = "⚡ Anti-Lag Aktif!"
 	end)
+end)
+
+-- FIXED FULL BLACK SCREEN / BATTERY SAVER MODE
+local BlackScreenGui = nil
+local BlackScreenToggleBtn = Instance.new("TextButton")
+BlackScreenToggleBtn.Parent = SettingsPage
+BlackScreenToggleBtn.Size = UDim2.new(1,0,0,35)
+BlackScreenToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+BlackScreenToggleBtn.Text = "  📱 Black Screen (Battery Saver): [OFF]"
+BlackScreenToggleBtn.TextColor3 = Color3.new(1,1,1)
+BlackScreenToggleBtn.Font = Enum.Font.Gotham
+BlackScreenToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+local bsc = Instance.new("UICorner")
+bsc.Parent = BlackScreenToggleBtn
+
+local isBlackScreen = false
+BlackScreenToggleBtn.MouseButton1Click:Connect(function()
+	isBlackScreen = not isBlackScreen
+	BlackScreenToggleBtn.Text = "  📱 Black Screen (Battery Saver): " .. (isBlackScreen and "[ON]" or "[OFF]")
+	BlackScreenToggleBtn.BackgroundColor3 = isBlackScreen and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
+	
+	if isBlackScreen then
+		if not BlackScreenGui then
+			BlackScreenGui = Instance.new("ScreenGui")
+			BlackScreenGui.Name = "UbeyBlackScreen"
+			BlackScreenGui.Parent = PlayerGui
+			BlackScreenGui.DisplayOrder = 999999 -- Pastikan berada di layer paling atas menutupi semua tombol game
+			BlackScreenGui.IgnoreGuiInset = true
+			
+			local frame = Instance.new("Frame")
+			frame.Parent = BlackScreenGui
+			frame.Size = UDim2.new(1,0,1,0)
+			frame.BackgroundColor3 = Color3.fromRGB(2, 2, 5)
+			
+			local txt = Instance.new("TextLabel")
+			txt.Parent = frame
+			txt.Size = UDim2.new(1,0,0,60)
+			txt.Position = UDim2.new(0,0,0.45,0)
+			txt.BackgroundTransparency = 1
+			txt.Text = "🌙 UBEY HUB V3 - BATTERY SAVER ACTIVE\n(Sentuh Layar Untuk Kembali)"
+			txt.TextColor3 = Color3.fromRGB(0, 170, 255)
+			txt.Font = Enum.Font.GothamBold
+			txt.TextSize = 13
+			
+			frame.InputBegan:Connect(function()
+				isBlackScreen = false
+				BlackScreenToggleBtn.Text = "  📱 Black Screen (Battery Saver): [OFF]"
+				BlackScreenToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+				BlackScreenGui.Enabled = false
+			end)
+		else
+			BlackScreenGui.Enabled = true
+		end
+	else
+		if BlackScreenGui then BlackScreenGui.Enabled = false end
+	end
 end)
 
 local WebhookToggleBtn = Instance.new("TextButton")
@@ -2134,6 +2222,54 @@ CredLbl.Text = "Created By UBEY"
 CredLbl.TextColor3 = Color3.new(1,1,1)
 CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
+
+----------------------------------------------------
+-- 11. BOTTOM PANEL: SESSION STAT TRACKER (LIVE)
+----------------------------------------------------
+local StatPanel = Instance.new("Frame")
+StatPanel.Parent = Main
+StatPanel.Size = UDim2.new(1, -160, 0, 24)
+StatPanel.Position = UDim2.new(0, 150, 1, -28)
+StatPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+StatPanel.BorderSizePixel = 0
+local stpCorner = Instance.new("UICorner")
+stpCorner.CornerRadius = UDim.new(0, 6)
+stpCorner.Parent = StatPanel
+
+local StatLabel = Instance.new("TextLabel")
+StatLabel.Parent = StatPanel
+StatLabel.Size = UDim2.new(1, -10, 1, 0)
+StatLabel.Position = UDim2.new(0, 5, 0, 0)
+StatLabel.BackgroundTransparency = 1
+StatLabel.Text = "📊 Total Ikan: 0  |  ⏱️ Play Time: 00s"
+StatLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
+StatLabel.Font = Enum.Font.GothamBold
+StatLabel.TextSize = 11
+StatLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+task.spawn(function()
+	while true do
+		pcall(function()
+			local elapsed = os.time() - getgenv().SessionStartTime
+			local hours = math.floor(elapsed / 3600)
+			local mins = math.floor((elapsed % 3600) / 60)
+			local secs = elapsed % 60
+			
+			local timeStr = ""
+			if hours > 0 then
+				timeStr = string.format("%02dh %02dm %02ds", hours, mins, secs)
+			elseif mins > 0 then
+				timeStr = string.format("%02dm %02ds", mins, secs)
+			else
+				timeStr = string.format("%02ds", secs)
+			end
+			
+			StatLabel.Text = "📊 Total Ikan: " .. tostring(getgenv().TotalFishCaught) .. "  |  ⏱️ Play: " + timeStr
+			StatLabel.Text = string.format("📊 Total Ikan: %d  |  ⏱️ Play: %s", getgenv().TotalFishCaught, timeStr)
+		end)
+		task.wait(1)
+	end
+end)
 
 ----------------------------------------------------
 -- FLOATING BUTTON
