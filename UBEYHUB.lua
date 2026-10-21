@@ -1,11 +1,13 @@
 -- ==============================================================================
--- UBEY HUB V3 | VIP FULL SCRIPT (FIXED FULL BLACK SCREEN & CLEAN UI)
+-- UBEY HUB V3 | VIP FULL SCRIPT (LEGIT = AUTO BAWAAN GAME + AUTO TAP / INSTANT)
+-- FIXED: switch mode Instant <-> Legit tidak lagi bikin ikan tidak tertarik
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
@@ -31,6 +33,8 @@ local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 getgenv().UbeyConfig = {
 	BiteDelay = "0.5",
+	TapDelay = "0.12",
+	MinigameMode = "Legit", -- "Legit" / "Instant"
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
 	AntiAdminEnabled = false,
@@ -52,9 +56,11 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONEncode(content)
-			if data then
+			local data = HttpService:JSONDecode(content)
+			if type(data) == "table" then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
+				if data.TapDelay then getgenv().UbeyConfig.TapDelay = data.TapDelay end
+				if data.MinigameMode then getgenv().UbeyConfig.MinigameMode = data.MinigameMode end
 				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
 				if data.AutoSellTimer then getgenv().UbeyConfig.AutoSellTimer = data.AutoSellTimer end
 				if data.AntiAdminEnabled ~= nil then getgenv().UbeyConfig.AntiAdminEnabled = data.AntiAdminEnabled end
@@ -70,6 +76,8 @@ local function ResetConfig()
 	pcall(function()
 		getgenv().UbeyConfig = {
 			BiteDelay = "0.5",
+			TapDelay = "0.12",
+			MinigameMode = "Legit",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
 			AntiAdminEnabled = false,
@@ -165,19 +173,21 @@ end
 local hookedRemotes = {}
 
 local function ProcessNotifyClient(actionType, fishDataArg)
-	if actionType == "GotFish" and type(fishDataArg) == "table" then
+	if actionType == "GotFish" then
 		pcall(function()
 			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
 			
-			local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
-			local rarity = fishDataArg.rarity or "Common"
-			local mutation = fishDataArg.mutation or "Normal"
-			local grade = fishDataArg.grade or "N/A"
-			local weight = fishDataArg.weight or "0"
-			local chance = fishDataArg.chance or "N/A"
-			
-			if name ~= "Unknown Fish" and name ~= "" then
-				SendFilteredWebhook(name, rarity, mutation, grade, weight, chance)
+			if type(fishDataArg) == "table" then
+				local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
+				local rarity = fishDataArg.rarity or "Common"
+				local mutation = fishDataArg.mutation or "Normal"
+				local grade = fishDataArg.grade or "N/A"
+				local weight = fishDataArg.weight or "0"
+				local chance = fishDataArg.chance or "N/A"
+				
+				if name ~= "Unknown Fish" and name ~= "" then
+					SendFilteredWebhook(name, rarity, mutation, grade, weight, chance)
+				end
 			end
 		end)
 	end
@@ -190,21 +200,27 @@ local function AttachNotifyHook(remote)
 	end
 end
 
+local function ScanContainerForNotify(container)
+	if not container then return end
+	for _, v in ipairs(container:GetDescendants()) do
+		if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
+			AttachNotifyHook(v)
+		end
+	end
+end
+
 local function ListenToFishCatch()
 	pcall(function()
-		for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+		ScanContainerForNotify(ReplicatedStorage)
+		ReplicatedStorage.DescendantAdded:Connect(function(v)
 			if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
 				AttachNotifyHook(v)
 			end
-		end
+		end)
 
 		local function ScanCharacter(char)
 			if not char then return end
-			for _, v in ipairs(char:GetDescendants()) do
-				if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
-					AttachNotifyHook(v)
-				end
-			end
+			ScanContainerForNotify(char)
 			char.DescendantAdded:Connect(function(v)
 				if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
 					AttachNotifyHook(v)
@@ -214,12 +230,17 @@ local function ListenToFishCatch()
 
 		if LocalPlayer.Character then ScanCharacter(LocalPlayer.Character) end
 		LocalPlayer.CharacterAdded:Connect(ScanCharacter)
-		
-		ReplicatedStorage.DescendantAdded:Connect(function(v)
-			if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then
-				AttachNotifyHook(v)
-			end
-		end)
+	end)
+
+	-- rescan berkala (rod bisa ter-equip / respawn setelah script jalan)
+	task.spawn(function()
+		while true do
+			pcall(function()
+				ScanContainerForNotify(LocalPlayer.Character)
+				ScanContainerForNotify(LocalPlayer:FindFirstChild("Backpack"))
+			end)
+			task.wait(3)
+		end
 	end)
 end
 
@@ -256,6 +277,60 @@ local function AutoEquipRod()
 			end
 		end
 	end)
+end
+
+------------------------------------------------------------------
+-- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (LEGIT MODE)
+------------------------------------------------------------------
+local function EnableGameAutoFishing(state)
+	if state == nil then state = true end
+	local fired = false
+	pcall(function()
+		local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
+		local r = mancing and (mancing:FindFirstChild("Auto") or mancing:FindFirstChild("AutoFishing"))
+		if r and r:IsA("RemoteEvent") then
+			r:FireServer(state)
+			fired = true
+		end
+	end)
+	return fired
+end
+
+-- Fallback: klik tombol "Auto" di GUI game
+local function ClickGameAutoButton()
+	pcall(function()
+		local hub = PlayerGui:FindFirstChild("UbeyHub")
+		for _, v in ipairs(PlayerGui:GetDescendants()) do
+			if (v:IsA("TextButton") or v:IsA("ImageButton")) and not (hub and v:IsDescendantOf(hub)) then
+				local n = string.lower(v.Name)
+				local t = v:IsA("TextButton") and string.lower(v.Text) or ""
+				if string.find(n, "auto") or string.find(t, "auto") then
+					if firesignal then
+						firesignal(v.MouseButton1Click)
+						firesignal(v.Activated)
+					elseif getconnections then
+						for _, c in ipairs(getconnections(v.MouseButton1Click)) do c:Fire() end
+					end
+					return
+				end
+			end
+		end
+	end)
+end
+
+-- Auto tap/klik layar. Atur posisi manual: getgenv().TapPosition = Vector2.new(x, y)
+local function PerformTapClicker()
+	local cam = Workspace.CurrentCamera
+	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
+	local pos = getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.5)
+	local ok = pcall(function()
+		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
+		task.wait(0.02)
+		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
+	end)
+	if not ok then
+		pcall(function() VirtualUser:ClickButton1(pos) end)
+	end
 end
 
 ------------------------------------------------------------------
@@ -329,25 +404,58 @@ local FishingSpots = {
 
 local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
 
+local function GetEquippedRod()
+	local char = LocalPlayer.Character
+	if not char then return nil end
+	local rod = char:FindFirstChild("Withering Rod")
+	if rod then return rod end
+	for _, c in ipairs(char:GetChildren()) do
+		if c:IsA("Tool") and c:FindFirstChild("Mechanics") then return c end
+	end
+	return nil
+end
+
+------------------------------------------------------------------
+-- ROD SETTINGS (FIXED: simpan nilai asli + bisa di-restore)
+------------------------------------------------------------------
+local OriginalRodValues = {}
+
 local function OptimizeRodSettings()
 	pcall(function()
-		local character = LocalPlayer.Character
-		local rod = character and character:FindFirstChild("Withering Rod")
-		if rod then
-			local settingsFolder = rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
-			if settingsFolder then
-				local timeSetting = settingsFolder:FindFirstChild("Time_before_getfish")
-				if timeSetting then timeSetting.Value = 0.05 end
-				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
-				if enableMiniGame then enableMiniGame.Value = false end
-			end
+		local rod = GetEquippedRod()
+		local s = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+		if not s then return end
+		local t = s:FindFirstChild("Time_before_getfish")
+		if t then
+			if OriginalRodValues[t] == nil then OriginalRodValues[t] = t.Value end
+			t.Value = 0.05
+		end
+		local m = s:FindFirstChild("EnableMiniGame")
+		if m then
+			if OriginalRodValues[m] == nil then OriginalRodValues[m] = m.Value end
+			m.Value = false
 		end
 	end)
 end
 
+local function RestoreRodSettings()
+	pcall(function()
+		for inst, val in pairs(OriginalRodValues) do
+			if inst and inst.Parent then inst.Value = val end
+			OriginalRodValues[inst] = nil
+		end
+		-- fallback kalau nilai asli tidak tersimpan (mis. script dijalankan ulang)
+		local rod = GetEquippedRod()
+		local s = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+		local m = s and s:FindFirstChild("EnableMiniGame")
+		if m then m.Value = true end
+	end)
+end
+
 ------------------------------------------------------------------
--- POST-UPDATE AUTO FISHING FUNCTION
+-- AUTO FISHING (INSTANT / LEGIT)
 ------------------------------------------------------------------
+-- Satu siklus mancing MODE INSTANT
 local function RunAutoFishCycle(remoteFolder)
 	pcall(function()
 		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -365,14 +473,19 @@ local function RunAutoFishCycle(remoteFolder)
 		end)
 		
 		local start = tick()
-		while not hooked and getgenv().AutoFishingEventRunning do
+		while not hooked and getgenv().AutoFishingEventRunning
+			and getgenv().UbeyConfig.MinigameMode == "Instant" do
 			if tick() - start > 8 then break end
 			task.wait(0.05)
 		end
 		if conn then conn:Disconnect() end
 		
-		if hooked and getgenv().AutoFishingEventRunning then
+		if hooked and getgenv().AutoFishingEventRunning
+			and getgenv().UbeyConfig.MinigameMode == "Instant" then
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
+			
+			-- cek ulang: mode bisa saja berubah selama jeda
+			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
 			if tandaSeruRemote then
@@ -386,8 +499,55 @@ local function RunAutoFishCycle(remoteFolder)
 			end
 			
 			task.wait(0.1)
+			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
 			remoteFolder.MiniGame:FireServer(true)
 			task.wait(0.3)
+		end
+	end)
+end
+
+-- Loop utama fishing.
+-- LEGIT   : nyalakan auto bawaan game + tap/klik terus-menerus
+-- INSTANT : cast + minigame via remote (RunAutoFishCycle)
+getgenv().FishLoopId = 0
+
+local function StartFishingLoop()
+	getgenv().FishLoopId = getgenv().FishLoopId + 1
+	local myId = getgenv().FishLoopId
+	task.spawn(function()
+		local lastAuto, clickedGui, restored = 0, false, false
+		while getgenv().AutoFishingEventRunning and getgenv().FishLoopId == myId do
+			local mode = getgenv().UbeyConfig.MinigameMode or "Legit"
+			AutoEquipRod()
+			if mode == "Legit" then
+				-- kembalikan setting rod (minigame ON) sekali saat masuk Legit
+				if not restored then
+					restored = true
+					RestoreRodSettings()
+					lastAuto = 0 -- paksa nyalakan auto bawaan lagi
+				end
+				if tick() - lastAuto > 10 then
+					lastAuto = tick()
+					local viaRemote = EnableGameAutoFishing(true)
+					if not viaRemote and not clickedGui then
+						clickedGui = true
+						ClickGameAutoButton()
+					end
+				end
+				PerformTapClicker()
+				task.wait(tonumber(getgenv().UbeyConfig.TapDelay) or 0.12)
+			else
+				restored = false
+				pcall(function()
+					local rod = GetEquippedRod()
+					local rf = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Remotes")
+					if rf then RunAutoFishCycle(rf) else task.wait(1) end
+				end)
+				task.wait(0.1)
+			end
+		end
+		if getgenv().FishLoopId == myId and (getgenv().UbeyConfig.MinigameMode or "Legit") == "Legit" then
+			EnableGameAutoFishing(false)
 		end
 	end)
 end
@@ -958,35 +1118,148 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
-local SpotLabel = Instance.new("TextLabel")
-SpotLabel.Parent = FishingPage
-SpotLabel.Size = UDim2.new(1,0,0,25)
-SpotLabel.BackgroundTransparency = 1
-SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
-SpotLabel.TextColor3 = Color3.new(1,1,1)
-SpotLabel.Font = Enum.Font.Gotham
-SpotLabel.TextSize = 12
+-- DROPDOWN SPOT MANCING
+local SpotDropdownFrame = Instance.new("Frame")
+SpotDropdownFrame.Parent = FishingPage
+SpotDropdownFrame.Size = UDim2.new(1,0,0,35)
+SpotDropdownFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+SpotDropdownFrame.ClipsDescendants = true
+local sdc = Instance.new("UICorner")
+sdc.Parent = SpotDropdownFrame
 
-local ChangeSpotBtn = Instance.new("TextButton")
-ChangeSpotBtn.Parent = FishingPage
-ChangeSpotBtn.Size = UDim2.new(1,0,0,32)
-ChangeSpotBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
-ChangeSpotBtn.Text = "Ganti Spot Manual"
-ChangeSpotBtn.TextColor3 = Color3.new(1,1,1)
-ChangeSpotBtn.Font = Enum.Font.GothamMedium
-ChangeSpotBtn.TextSize = 12
-local csCorner = Instance.new("UICorner")
-csCorner.Parent = ChangeSpotBtn
+local DropHeader = Instance.new("TextButton")
+DropHeader.Parent = SpotDropdownFrame
+DropHeader.Size = UDim2.new(1,0,0,35)
+DropHeader.BackgroundTransparency = 1
+DropHeader.Text = "  📍 Spot: " .. (getgenv().SelectedFishingSpot or "Spot Mancing Jembatan") .. " 🔽"
+DropHeader.TextColor3 = Color3.fromRGB(0, 170, 255)
+DropHeader.Font = Enum.Font.GothamBold
+DropHeader.TextSize = 11
+DropHeader.TextXAlignment = Enum.TextXAlignment.Left
 
-local spotList = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
-local spotIndex = 1
-ChangeSpotBtn.MouseButton1Click:Connect(function()
-	spotIndex = spotIndex % #spotList + 1
-	getgenv().SelectedFishingSpot = spotList[spotIndex]
-	SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
-	getgenv().UbeyConfig.SelectedSpot = getgenv().SelectedFishingSpot
-	SaveConfig()
+local function SetSpotDisplay(text)
+	DropHeader.Text = "  📍 Spot: " .. tostring(text) .. " 🔽"
+end
+
+local DropContainer = Instance.new("Frame")
+DropContainer.Parent = SpotDropdownFrame
+DropContainer.Position = UDim2.new(0, 5, 0, 35)
+DropContainer.Size = UDim2.new(1, -10, 0, 95)
+DropContainer.BackgroundTransparency = 1
+
+local DropLayout = Instance.new("UIListLayout")
+DropLayout.Parent = DropContainer
+DropLayout.Padding = UDim.new(0, 4)
+
+local isDropOpen = false
+DropHeader.MouseButton1Click:Connect(function()
+	isDropOpen = not isDropOpen
+	SpotDropdownFrame:TweenSize(isDropOpen and UDim2.new(1,0,0,135) or UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
 end)
+
+for _, spotName in ipairs({"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}) do
+	local optBtn = Instance.new("TextButton")
+	optBtn.Parent = DropContainer
+	optBtn.Size = UDim2.new(1,0,0,26)
+	optBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
+	optBtn.Text = "  " .. spotName
+	optBtn.TextColor3 = Color3.new(1,1,1)
+	optBtn.Font = Enum.Font.Gotham
+	optBtn.TextSize = 11
+	optBtn.TextXAlignment = Enum.TextXAlignment.Left
+	local obc = Instance.new("UICorner")
+	obc.Parent = optBtn
+	
+	optBtn.MouseButton1Click:Connect(function()
+		getgenv().SelectedFishingSpot = spotName
+		getgenv().UbeyConfig.SelectedSpot = spotName
+		SetSpotDisplay(spotName)
+		isDropOpen = false
+		SpotDropdownFrame:TweenSize(UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+		SaveConfig()
+	end)
+end
+
+-- DROPDOWN MODE FISHING (LEGIT vs INSTANT)
+local ModeDropdownFrame = Instance.new("Frame")
+ModeDropdownFrame.Parent = FishingPage
+ModeDropdownFrame.Size = UDim2.new(1,0,0,35)
+ModeDropdownFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+ModeDropdownFrame.ClipsDescendants = true
+local mdc = Instance.new("UICorner")
+mdc.Parent = ModeDropdownFrame
+
+local ModeDropHeader = Instance.new("TextButton")
+ModeDropHeader.Parent = ModeDropdownFrame
+ModeDropHeader.Size = UDim2.new(1,0,0,35)
+ModeDropHeader.BackgroundTransparency = 1
+ModeDropHeader.Text = "  🎮 Mode Fishing: " .. (getgenv().UbeyConfig.MinigameMode or "Legit") .. " 🔽"
+ModeDropHeader.TextColor3 = Color3.fromRGB(255, 200, 0)
+ModeDropHeader.Font = Enum.Font.GothamBold
+ModeDropHeader.TextSize = 11
+ModeDropHeader.TextXAlignment = Enum.TextXAlignment.Left
+
+local ModeDropContainer = Instance.new("Frame")
+ModeDropContainer.Parent = ModeDropdownFrame
+ModeDropContainer.Position = UDim2.new(0, 5, 0, 35)
+ModeDropContainer.Size = UDim2.new(1, -10, 0, 60)
+ModeDropContainer.BackgroundTransparency = 1
+
+local ModeDropLayout = Instance.new("UIListLayout")
+ModeDropLayout.Parent = ModeDropContainer
+ModeDropLayout.Padding = UDim.new(0, 4)
+
+local isModeDropOpen = false
+ModeDropHeader.MouseButton1Click:Connect(function()
+	isModeDropOpen = not isModeDropOpen
+	ModeDropdownFrame:TweenSize(isModeDropOpen and UDim2.new(1,0,0,100) or UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+end)
+
+local fishingModes = {
+	{ Name = "Legit Fishing (Auto Bawaan + Tap-Tap)", Value = "Legit" },
+	{ Name = "Instant Fishing (Bypass Cepat)", Value = "Instant" }
+}
+
+for _, modeData in ipairs(fishingModes) do
+	local mOptBtn = Instance.new("TextButton")
+	mOptBtn.Parent = ModeDropContainer
+	mOptBtn.Size = UDim2.new(1,0,0,26)
+	mOptBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
+	mOptBtn.Text = "  " .. modeData.Name
+	mOptBtn.TextColor3 = Color3.new(1,1,1)
+	mOptBtn.Font = Enum.Font.Gotham
+	mOptBtn.TextSize = 11
+	mOptBtn.TextXAlignment = Enum.TextXAlignment.Left
+	local mobc = Instance.new("UICorner")
+	mobc.Parent = mOptBtn
+	
+	mOptBtn.MouseButton1Click:Connect(function()
+		local oldMode = getgenv().UbeyConfig.MinigameMode
+		getgenv().UbeyConfig.MinigameMode = modeData.Value
+		ModeDropHeader.Text = "  🎮 Mode Fishing: " .. modeData.Value .. " 🔽"
+		isModeDropOpen = false
+		ModeDropdownFrame:TweenSize(UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+		SaveConfig()
+
+		-- FIX: reset sistem saat ganti mode supaya state mancing tidak nyangkut
+		if oldMode ~= modeData.Value then
+			task.spawn(function()
+				local wasRunning = getgenv().AutoFishingEventRunning
+				getgenv().FishLoopId = getgenv().FishLoopId + 1 -- hentikan loop lama
+				EnableGameAutoFishing(false)
+				task.wait(0.6)
+				RestoreRodSettings()
+				pcall(function()
+					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+					if hum then hum:UnequipTools() end -- reset state cast
+				end)
+				task.wait(0.4)
+				AutoEquipRod()
+				if wasRunning and getgenv().AutoFishingEventRunning then StartFishingLoop() end
+			end)
+		end
+	end)
+end
 
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
@@ -995,54 +1268,20 @@ AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 			local hrp = LocalPlayer.Character and LocalPlayer.Character:WaitForChild("HumanoidRootPart", 5)
 			if hrp then hrp.CFrame = FishingSpots[getgenv().SelectedFishingSpot] + Vector3.new(0, 5, 0) end
 		end)
-		task.spawn(function()
-			while getgenv().AutoFishingEventRunning do
-				pcall(function()
-					AutoEquipRod()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
-					if rod and rod:FindFirstChild("Mechanics") then
-						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-						if remoteFolder then
-							RunAutoFishCycle(remoteFolder)
-						end
-					else
-						task.wait(1)
-					end
-				end)
-				task.wait(0.1)
-			end
-		end)
+		StartFishingLoop()
 	end
 end)
 
 AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 	getgenv().AutoFishingEventRunning = v
-	if v then
-		task.spawn(function()
-			while getgenv().AutoFishingEventRunning do
-				pcall(function()
-					AutoEquipRod()
-					local rod = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Withering Rod")
-					if rod and rod:FindFirstChild("Mechanics") then
-						local remoteFolder = rod.Mechanics:FindFirstChild("Remotes")
-						if remoteFolder then
-							RunAutoFishCycle(remoteFolder)
-						end
-					else
-						task.wait(1)
-					end
-				end)
-				task.wait(0.1)
-			end
-		end)
-	end
+	if v then StartFishingLoop() end
 end)
 
 local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
 BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5)"
+BiteDelayBox.PlaceholderText = "Bite Delay (Detik, Cth: 0.5) - Mode Instant"
 BiteDelayBox.Text = tostring(getgenv().UbeyConfig.BiteDelay)
 BiteDelayBox.TextColor3 = Color3.new(1,1,1)
 BiteDelayBox.Font = Enum.Font.Gotham
@@ -1053,6 +1292,23 @@ bdCorner.Parent = BiteDelayBox
 BiteDelayBox.FocusLost:Connect(function()
 	getgenv().BiteDelayInput = BiteDelayBox.Text
 	getgenv().UbeyConfig.BiteDelay = BiteDelayBox.Text
+	SaveConfig()
+end)
+
+local TapDelayBox = Instance.new("TextBox")
+TapDelayBox.Parent = FishingPage
+TapDelayBox.Size = UDim2.new(1,0,0,35)
+TapDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+TapDelayBox.PlaceholderText = "Jeda Tap (Detik, Cth: 0.12) - Mode Legit"
+TapDelayBox.Text = tostring(getgenv().UbeyConfig.TapDelay or "0.12")
+TapDelayBox.TextColor3 = Color3.new(1,1,1)
+TapDelayBox.Font = Enum.Font.Gotham
+TapDelayBox.TextSize = 12
+local tdCorner = Instance.new("UICorner")
+tdCorner.Parent = TapDelayBox
+
+TapDelayBox.FocusLost:Connect(function()
+	getgenv().UbeyConfig.TapDelay = TapDelayBox.Text
 	SaveConfig()
 end)
 
@@ -1157,7 +1413,7 @@ task.spawn(function()
 				local cfg = getgenv().SpotLoopConfig[name]
 				if getgenv().LoopSpotEnabled and cfg and cfg.Enabled then
 					getgenv().SelectedFishingSpot = name
-					SpotLabel.Text = "Lokasi Saat Ini: " .. name
+					SetSpotDisplay(name)
 					pcall(function()
 						local character = LocalPlayer.Character
 						local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1418,7 +1674,7 @@ task.spawn(function()
 						IsAtCoreEvent = true
 					end
 					getgenv().SelectedFishingSpot = "Spot Mancing Core"
-					if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ JADWAL EVENT CORE AKTIF!)" end
+					SetSpotDisplay("Spot Mancing Core (⚡ Event Core)")
 					
 					local character = LocalPlayer.Character
 					local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1433,7 +1689,7 @@ task.spawn(function()
 						IsAtCoreEvent = false
 						if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
 							getgenv().SelectedFishingSpot = SavedPreviousSpot
-							if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Kembali)" end
+							SetSpotDisplay(SavedPreviousSpot)
 							
 							local character = LocalPlayer.Character
 							local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1484,7 +1740,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIXED ANTI-STUCK ENGINE)
+-- 5. SUMMIT PAGE
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -2024,7 +2280,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE (FIXED FULL BLACK SCREEN)
+-- 10. SETTINGS & WEBHOOK PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -2054,7 +2310,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- FIXED FULL BLACK SCREEN / BATTERY SAVER MODE
+-- FULL BLACK SCREEN / BATTERY SAVER MODE
 local BlackScreenGui = nil
 local BlackScreenToggleBtn = Instance.new("TextButton")
 BlackScreenToggleBtn.Parent = SettingsPage
@@ -2078,7 +2334,7 @@ BlackScreenToggleBtn.MouseButton1Click:Connect(function()
 			BlackScreenGui = Instance.new("ScreenGui")
 			BlackScreenGui.Name = "UbeyBlackScreen"
 			BlackScreenGui.Parent = PlayerGui
-			BlackScreenGui.DisplayOrder = 999999 -- Pastikan berada di layer paling atas menutupi semua tombol game
+			BlackScreenGui.DisplayOrder = 999999
 			BlackScreenGui.IgnoreGuiInset = true
 			
 			local frame = Instance.new("Frame")
@@ -2264,7 +2520,6 @@ task.spawn(function()
 				timeStr = string.format("%02ds", secs)
 			end
 			
-			StatLabel.Text = "📊 Total Ikan: " .. tostring(getgenv().TotalFishCaught) .. "  |  ⏱️ Play: " + timeStr
 			StatLabel.Text = string.format("📊 Total Ikan: %d  |  ⏱️ Play: %s", getgenv().TotalFishCaught, timeStr)
 		end)
 		task.wait(1)
