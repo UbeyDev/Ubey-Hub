@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | VIP FULL SCRIPT (FIXED FULL BLACK SCREEN & CLEAN UI)
+-- UBEY HUB V3 | VIP FULL SCRIPT (FIXED FULL BLACK SCREEN, INSTANT/LEGIT FISHING & CLEAN UI)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -33,10 +33,13 @@ getgenv().UbeyConfig = {
 	BiteDelay = "0.5",
 	SelectedSpot = "Spot Mancing Jembatan",
 	AutoSellTimer = "5",
+	MinigameMode = "Instant", -- "Instant" atau "Legit"
 	AntiAdminEnabled = false,
 	TargetGroupId = 7019573,
 	WebhookEnabled = false,
-	WebhookUrl = ""
+	WebhookUrl = "",
+	TikTokUser = "ubey.official",
+	DiscordServer = "discord.gg/YXuYeEpnXE"
 }
 
 local function SaveConfig()
@@ -52,15 +55,11 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONEncode(content)
+			local data = HttpService:JSONDecode(content)
 			if data then
-				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
-				if data.SelectedSpot then getgenv().UbeyConfig.SelectedSpot = data.SelectedSpot end
-				if data.AutoSellTimer then getgenv().UbeyConfig.AutoSellTimer = data.AutoSellTimer end
-				if data.AntiAdminEnabled ~= nil then getgenv().UbeyConfig.AntiAdminEnabled = data.AntiAdminEnabled end
-				if data.TargetGroupId then getgenv().UbeyConfig.TargetGroupId = data.TargetGroupId end
-				if data.WebhookEnabled ~= nil then getgenv().UbeyConfig.WebhookEnabled = data.WebhookEnabled end
-				if data.WebhookUrl then getgenv().UbeyConfig.WebhookUrl = data.WebhookUrl end
+				for k, v in pairs(data) do
+					getgenv().UbeyConfig[k] = v
+				end
 			end
 		end
 	end)
@@ -72,10 +71,13 @@ local function ResetConfig()
 			BiteDelay = "0.5",
 			SelectedSpot = "Spot Mancing Jembatan",
 			AutoSellTimer = "5",
+			MinigameMode = "Instant",
 			AntiAdminEnabled = false,
 			TargetGroupId = 7019573,
 			WebhookEnabled = false,
-			WebhookUrl = ""
+			WebhookUrl = "",
+			TikTokUser = "ubey.official",
+			DiscordServer = "discord.gg/YXuYeEpnXE"
 		}
 		if delfile and isfile then
 			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
@@ -165,19 +167,20 @@ end
 local hookedRemotes = {}
 
 local function ProcessNotifyClient(actionType, fishDataArg)
-	if actionType == "GotFish" and type(fishDataArg) == "table" then
+	if actionType == "GotFish" then
 		pcall(function()
 			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
-			
-			local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
-			local rarity = fishDataArg.rarity or "Common"
-			local mutation = fishDataArg.mutation or "Normal"
-			local grade = fishDataArg.grade or "N/A"
-			local weight = fishDataArg.weight or "0"
-			local chance = fishDataArg.chance or "N/A"
-			
-			if name ~= "Unknown Fish" and name ~= "" then
-				SendFilteredWebhook(name, rarity, mutation, grade, weight, chance)
+			if type(fishDataArg) == "table" then
+				local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
+				local rarity = fishDataArg.rarity or "Common"
+				local mutation = fishDataArg.mutation or "Normal"
+				local grade = fishDataArg.grade or "N/A"
+				local weight = fishDataArg.weight or "0"
+				local chance = fishDataArg.chance or "N/A"
+				
+				if name ~= "Unknown Fish" and name ~= "" then
+					SendFilteredWebhook(name, rarity, mutation, grade, weight, chance)
+				end
 			end
 		end)
 	end
@@ -274,7 +277,6 @@ end)
 
 -- GLOBAL STATES
 getgenv().AutoFishingEventRunning = false
-getgenv().BiteDelayInput = getgenv().UbeyConfig.BiteDelay
 getgenv().SelectedFishingSpot = getgenv().UbeyConfig.SelectedSpot
 getgenv().AutoSellRunning = false
 getgenv().AutoSellTimerInput = getgenv().UbeyConfig.AutoSellTimer
@@ -346,7 +348,7 @@ local function OptimizeRodSettings()
 end
 
 ------------------------------------------------------------------
--- POST-UPDATE AUTO FISHING FUNCTION
+-- AUTO FISHING CYCLE (SUPPORT INSTANT & LEGIT MODE)
 ------------------------------------------------------------------
 local function RunAutoFishCycle(remoteFolder)
 	pcall(function()
@@ -372,7 +374,7 @@ local function RunAutoFishCycle(remoteFolder)
 		if conn then conn:Disconnect() end
 		
 		if hooked and getgenv().AutoFishingEventRunning then
-			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
+			task.wait(tonumber(getgenv().UbeyConfig.BiteDelay) or 0.5)
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
 			if tandaSeruRemote then
@@ -386,7 +388,19 @@ local function RunAutoFishCycle(remoteFolder)
 			end
 			
 			task.wait(0.1)
-			remoteFolder.MiniGame:FireServer(true)
+			
+			local mode = getgenv().UbeyConfig.MinigameMode or "Instant"
+			if mode == "Instant" then
+				remoteFolder.MiniGame:FireServer(true)
+			else
+				-- LEGIT MODE: Mengirimkan progres secara berbertahap
+				for i = 1, 4 do
+					if not getgenv().AutoFishingEventRunning then break end
+					remoteFolder.MiniGame:FireServer(false, i * 25)
+					task.wait(0.2)
+				end
+				remoteFolder.MiniGame:FireServer(true)
+			end
 			task.wait(0.3)
 		end
 	end)
@@ -958,35 +972,63 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
-local SpotLabel = Instance.new("TextLabel")
-SpotLabel.Parent = FishingPage
-SpotLabel.Size = UDim2.new(1,0,0,25)
-SpotLabel.BackgroundTransparency = 1
-SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
-SpotLabel.TextColor3 = Color3.new(1,1,1)
-SpotLabel.Font = Enum.Font.Gotham
-SpotLabel.TextSize = 12
+-- DROPDOWN SPOT MANCING
+local SpotDropdownFrame = Instance.new("Frame")
+SpotDropdownFrame.Parent = FishingPage
+SpotDropdownFrame.Size = UDim2.new(1,0,0,35)
+SpotDropdownFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+SpotDropdownFrame.ClipsDescendants = true
+local sdc = Instance.new("UICorner")
+sdc.Parent = SpotDropdownFrame
 
-local ChangeSpotBtn = Instance.new("TextButton")
-ChangeSpotBtn.Parent = FishingPage
-ChangeSpotBtn.Size = UDim2.new(1,0,0,32)
-ChangeSpotBtn.BackgroundColor3 = Color3.fromRGB(35,35,45)
-ChangeSpotBtn.Text = "Ganti Spot Manual"
-ChangeSpotBtn.TextColor3 = Color3.new(1,1,1)
-ChangeSpotBtn.Font = Enum.Font.GothamMedium
-ChangeSpotBtn.TextSize = 12
-local csCorner = Instance.new("UICorner")
-csCorner.Parent = ChangeSpotBtn
+local DropHeader = Instance.new("TextButton")
+DropHeader.Parent = SpotDropdownFrame
+DropHeader.Size = UDim2.new(1,0,0,35)
+DropHeader.BackgroundTransparency = 1
+DropHeader.Text = "  📍 Spot: " .. (getgenv().SelectedFishingSpot or "Spot Mancing Jembatan") .. " 🔽"
+DropHeader.TextColor3 = Color3.fromRGB(0, 170, 255)
+DropHeader.Font = Enum.Font.GothamBold
+DropHeader.TextSize = 11
+DropHeader.TextXAlignment = Enum.TextXAlignment.Left
 
-local spotList = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
-local spotIndex = 1
-ChangeSpotBtn.MouseButton1Click:Connect(function()
-	spotIndex = spotIndex % #spotList + 1
-	getgenv().SelectedFishingSpot = spotList[spotIndex]
-	SpotLabel.Text = "Lokasi Saat Ini: " .. getgenv().SelectedFishingSpot
-	getgenv().UbeyConfig.SelectedSpot = getgenv().SelectedFishingSpot
-	SaveConfig()
+local DropContainer = Instance.new("Frame")
+DropContainer.Parent = SpotDropdownFrame
+DropContainer.Position = UDim2.new(0, 5, 0, 35)
+DropContainer.Size = UDim2.new(1, -10, 0, 95)
+DropContainer.BackgroundTransparency = 1
+
+local DropLayout = Instance.new("UIListLayout")
+DropLayout.Parent = DropContainer
+DropLayout.Padding = UDim.new(0, 4)
+
+local isDropOpen = false
+DropHeader.MouseButton1Click:Connect(function()
+	isDropOpen = not isDropOpen
+	SpotDropdownFrame:TweenSize(isDropOpen and UDim2.new(1,0,0,135) or UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
 end)
+
+for spotName, cf in pairs(FishingSpots) do
+	local optBtn = Instance.new("TextButton")
+	optBtn.Parent = DropContainer
+	optBtn.Size = UDim2.new(1,0,0,26)
+	optBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
+	optBtn.Text = "  " .. spotName
+	optBtn.TextColor3 = Color3.new(1,1,1)
+	optBtn.Font = Enum.Font.Gotham
+	optBtn.TextSize = 11
+	optBtn.TextXAlignment = Enum.TextXAlignment.Left
+	local obc = Instance.new("UICorner")
+	obc.Parent = optBtn
+	
+	optBtn.MouseButton1Click:Connect(function()
+		getgenv().SelectedFishingSpot = spotName
+		getgenv().UbeyConfig.SelectedSpot = spotName
+		DropHeader.Text = "  📍 Spot: " .. spotName .. " 🔽"
+		isDropOpen = false
+		SpotDropdownFrame:TweenSize(UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+		SaveConfig()
+	end)
+end
 
 AddToggle(FishingPage, "Smart Auto Fishing + Teleport", function(v)
 	getgenv().AutoFishingEventRunning = v
@@ -1038,6 +1080,30 @@ AddToggle(FishingPage, "Smart Auto Fishing (Di Tempat Saja)", function(v)
 	end
 end)
 
+-- MINIGAME MODE SELECTOR (INSTANT vs LEGIT)
+local MinigameModeBtn = Instance.new("TextButton")
+MinigameModeBtn.Parent = FishingPage
+MinigameModeBtn.Size = UDim2.new(1,0,0,35)
+MinigameModeBtn.BackgroundColor3 = Color3.fromRGB(0,120,180)
+MinigameModeBtn.Text = "🎮 Mode Fishing: " .. (getgenv().UbeyConfig.MinigameMode or "Instant")
+MinigameModeBtn.TextColor3 = Color3.new(1,1,1)
+MinigameModeBtn.Font = Enum.Font.GothamBold
+MinigameModeBtn.TextSize = 12
+local mmc = Instance.new("UICorner")
+mmc.Parent = MinigameModeBtn
+
+MinigameModeBtn.MouseButton1Click:Connect(function()
+	if getgenv().UbeyConfig.MinigameMode == "Instant" then
+		getgenv().UbeyConfig.MinigameMode = "Legit"
+		MinigameModeBtn.BackgroundColor3 = Color3.fromRGB(180, 120, 0)
+	else
+		getgenv().UbeyConfig.MinigameMode = "Instant"
+		MinigameModeBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 180)
+	end
+	MinigameModeBtn.Text = "🎮 Mode Fishing: " .. getgenv().UbeyConfig.MinigameMode
+	SaveConfig()
+end)
+
 local BiteDelayBox = Instance.new("TextBox")
 BiteDelayBox.Parent = FishingPage
 BiteDelayBox.Size = UDim2.new(1,0,0,35)
@@ -1051,7 +1117,6 @@ local bdCorner = Instance.new("UICorner")
 bdCorner.Parent = BiteDelayBox
 
 BiteDelayBox.FocusLost:Connect(function()
-	getgenv().BiteDelayInput = BiteDelayBox.Text
 	getgenv().UbeyConfig.BiteDelay = BiteDelayBox.Text
 	SaveConfig()
 end)
@@ -1157,7 +1222,7 @@ task.spawn(function()
 				local cfg = getgenv().SpotLoopConfig[name]
 				if getgenv().LoopSpotEnabled and cfg and cfg.Enabled then
 					getgenv().SelectedFishingSpot = name
-					SpotLabel.Text = "Lokasi Saat Ini: " .. name
+					if DropHeader then DropHeader.Text = "  📍 Spot: " .. name .. " 🔽" end
 					pcall(function()
 						local character = LocalPlayer.Character
 						local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1418,7 +1483,7 @@ task.spawn(function()
 						IsAtCoreEvent = true
 					end
 					getgenv().SelectedFishingSpot = "Spot Mancing Core"
-					if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: Spot Mancing Core (⚡ JADWAL EVENT CORE AKTIF!)" end
+					if DropHeader then DropHeader.Text = "  📍 Spot: Spot Mancing Core (EVENT CORE)" end
 					
 					local character = LocalPlayer.Character
 					local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1433,7 +1498,7 @@ task.spawn(function()
 						IsAtCoreEvent = false
 						if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
 							getgenv().SelectedFishingSpot = SavedPreviousSpot
-							if SpotLabel then SpotLabel.Text = "Lokasi Saat Ini: " .. SavedPreviousSpot .. " (Event Selesai, Kembali)" end
+							if DropHeader then DropHeader.Text = "  📍 Spot: " .. SavedPreviousSpot .. " 🔽" end
 							
 							local character = LocalPlayer.Character
 							local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -1484,7 +1549,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIXED ANTI-STUCK ENGINE)
+-- 5. SUMMIT PAGE
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -2024,7 +2089,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE (FIXED FULL BLACK SCREEN)
+-- 10. SETTINGS PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -2078,7 +2143,7 @@ BlackScreenToggleBtn.MouseButton1Click:Connect(function()
 			BlackScreenGui = Instance.new("ScreenGui")
 			BlackScreenGui.Name = "UbeyBlackScreen"
 			BlackScreenGui.Parent = PlayerGui
-			BlackScreenGui.DisplayOrder = 999999 -- Pastikan berada di layer paling atas menutupi semua tombol game
+			BlackScreenGui.DisplayOrder = 999999
 			BlackScreenGui.IgnoreGuiInset = true
 			
 			local frame = Instance.new("Frame")
@@ -2214,17 +2279,65 @@ ResetConfigBtn.MouseButton1Click:Connect(function()
 	ResetConfigBtn.Text = "🔄 Reset Konfigurasi & Clear Key"
 end)
 
-local CredLbl = Instance.new("TextLabel")
-CredLbl.Parent = CreditsPage
-CredLbl.Size = UDim2.new(1,0,1,0)
-CredLbl.BackgroundTransparency = 1
-CredLbl.Text = "Created By UBEY"
-CredLbl.TextColor3 = Color3.new(1,1,1)
-CredLbl.Font = Enum.Font.GothamBold
-CredLbl.TextSize = 20
+----------------------------------------------------
+-- 11. CREDITS PAGE
+----------------------------------------------------
+local CredTitle = Instance.new("TextLabel")
+CredTitle.Parent = CreditsPage
+CredTitle.Size = UDim2.new(1,0,0,35)
+CredTitle.BackgroundTransparency = 1
+CredTitle.Text = "👑 UBEY HUB V3 VIP 👑"
+CredTitle.TextColor3 = Color3.fromRGB(0, 170, 255)
+CredTitle.Font = Enum.Font.GothamBold
+CredTitle.TextSize = 16
+
+local CredOwner = Instance.new("TextLabel")
+CredOwner.Parent = CreditsPage
+CredOwner.Size = UDim2.new(1,0,0,25)
+CredOwner.BackgroundTransparency = 1
+CredOwner.Text = "Created By: UBEY"
+CredOwner.TextColor3 = Color3.fromRGB(255, 215, 0)
+CredOwner.Font = Enum.Font.GothamBold
+CredOwner.TextSize = 13
+
+local TikTokBtn = Instance.new("TextButton")
+TikTokBtn.Parent = CreditsPage
+TikTokBtn.Size = UDim2.new(1,0,0,35)
+TikTokBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+TikTokBtn.Text = "🎵 TikTok: ubey.official (Klik Salin)"
+TikTokBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TikTokBtn.Font = Enum.Font.GothamMedium
+TikTokBtn.TextSize = 12
+local ttc = Instance.new("UICorner")
+ttc.Parent = TikTokBtn
+
+TikTokBtn.MouseButton1Click:Connect(function()
+	pcall(function() if setclipboard then setclipboard("ubey.official") end end)
+	TikTokBtn.Text = "✅ TikTok Disalin!"
+	task.wait(1.5)
+	TikTokBtn.Text = "🎵 TikTok: ubey.official (Klik Salin)"
+end)
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Parent = CreditsPage
+DiscordBtn.Size = UDim2.new(1,0,0,35)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+DiscordBtn.Text = "💬 Discord: discord.gg/YXuYeEpnXE"
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 12
+local dcc = Instance.new("UICorner")
+dcc.Parent = DiscordBtn
+
+DiscordBtn.MouseButton1Click:Connect(function()
+	pcall(function() if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end end)
+	DiscordBtn.Text = "✅ Discord Disalin!"
+	task.wait(1.5)
+	DiscordBtn.Text = "💬 Discord: discord.gg/YXuYeEpnXE"
+end)
 
 ----------------------------------------------------
--- 11. BOTTOM PANEL: SESSION STAT TRACKER (LIVE)
+-- BOTTOM PANEL: SESSION STAT TRACKER (LIVE)
 ----------------------------------------------------
 local StatPanel = Instance.new("Frame")
 StatPanel.Parent = Main
@@ -2264,7 +2377,6 @@ task.spawn(function()
 				timeStr = string.format("%02ds", secs)
 			end
 			
-			StatLabel.Text = "📊 Total Ikan: " .. tostring(getgenv().TotalFishCaught) .. "  |  ⏱️ Play: " + timeStr
 			StatLabel.Text = string.format("📊 Total Ikan: %d  |  ⏱️ Play: %s", getgenv().TotalFishCaught, timeStr)
 		end)
 		task.wait(1)
