@@ -1,12 +1,10 @@
 -- ==============================================================================
--- UBEY HUB | AUTO FISHING (FIX INSTANT MODE)
+-- UBEY HUB | AUTO FISHING (PURE INSTANT - MINIGAME BYPASS)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
@@ -19,51 +17,28 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 ------------------------------------------------------------------
--- STAT TRACKER GLOBAL
+-- ⚙️ PENGATURAN (HARDCODE) ⚙️
 ------------------------------------------------------------------
-getgenv().TotalFishCaught = 0
-getgenv().SessionStartTime = os.time()
-
-------------------------------------------------------------------
--- CONFIG & FILE SAVE
-------------------------------------------------------------------
-local CONFIG_FILE = "UbeyHub_Config.json"
-local KEY_FILE = "UbeyHub_SavedKey.txt"
-
 getgenv().UbeyConfig = {
-	FishingBiteDelay = "0.5",
-	FishingTapDelay = "0.12",
-	FishingMode = "Legit", 
+	CastDelay = 0.25,   -- Delay setelah lempar kail
+	MiniDelay = 0.30,   -- Delay minigame
+	GiveDelay = 0.20,   -- Delay klaim ikan
 	AutoSellTimer = "5",
 	WebhookEnabled = false,
 	WebhookUrl = ""
 }
 
-local function SaveConfig()
-	pcall(function()
-		if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode(getgenv().UbeyConfig)) end
-	end)
-end
-
-local function LoadConfig()
-	pcall(function()
-		if readfile and isfile and isfile(CONFIG_FILE) then
-			local data = HttpService:JSONDecode(readfile(CONFIG_FILE))
-			if type(data) == "table" then
-				for k, v in pairs(data) do
-					if getgenv().UbeyConfig[k] ~= nil then getgenv().UbeyConfig[k] = v end
-				end
-			end
-		end
-	end)
-end
-LoadConfig()
+getgenv().AutoFishingRunning = false
+getgenv().AutoSellRunning = false
+getgenv().TotalFishCaught = 0
+getgenv().SessionStartTime = os.time()
 
 ------------------------------------------------------------------
 -- SUPABASE KEY SYSTEM
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
+local KEY_FILE = "UbeyHub_SavedKey.txt"
 
 local function GetDeviceHWID()
 	local hwid = nil
@@ -76,110 +51,88 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- HELPER: AUTO FISHING LOGIC
+-- HELPER: FISHING LOGIC (DARI SCRIPT CONTOH)
 ------------------------------------------------------------------
-local function GetFishingRemote(remoteName)
-	local fs = ReplicatedStorage:FindFirstChild("FishingSystem")
-	return fs and fs:FindFirstChild(remoteName)
-end
-
 local function GetEquippedRodName()
 	local char = LocalPlayer.Character
-	if not char then return nil end
-	local tool = char:FindFirstChildOfClass("Tool")
-	return tool and tool.Name or nil
-end
-
-local function PerformTapClicker()
-	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	if isMobile then
-		pcall(function()
-			local char = LocalPlayer.Character
-			local tool = char and char:FindFirstChildOfClass("Tool")
-			if tool then tool:Activate() end
-		end)
-		return
+	if char then
+		local tool = char:FindFirstChildOfClass("Tool")
+		if tool then return tool.Name end
 	end
-	local cam = Workspace.CurrentCamera
-	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
-	local mousePos = UIS:GetMouseLocation()
-	local pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or Vector2.new(vp.X * 0.5, vp.Y * 0.5)
-	pcall(function()
-		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
-		task.wait(0.02)
-		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
-	end)
-end
-
-getgenv().AutoFishingRunning = false
-getgenv().AutoSellRunning = false
-getgenv().FishLoopId = 0
-
-local function StartFishingLoop()
-	getgenv().FishLoopId = getgenv().FishLoopId + 1
-	local myId = getgenv().FishLoopId
-	
-	task.spawn(function()
-		while getgenv().AutoFishingRunning and getgenv().FishLoopId == myId do
-			local mode = getgenv().UbeyConfig.FishingMode or "Legit"
-			
-			if mode == "Legit" then
-				PerformTapClicker()
-				task.wait(tonumber(getgenv().UbeyConfig.FishingTapDelay) or 0.12)
-			else
-				-- MODE INSTANT (FIX)
-				local castRemote = GetFishingRemote("CastReplication")
-				local fishGiver = GetFishingRemote("FishGiver")
-				local cleanupRemote = GetFishingRemote("CleanupCast")
-				
-				if castRemote and fishGiver then
-					local char = LocalPlayer.Character
-					local hrp = char and char:FindFirstChild("HumanoidRootPart")
-					local currentRod = GetEquippedRodName()
-					
-					if hrp and currentRod then
-						-- 1. Ambil Posisi & Arah Persis seperti manual
-						local castPos = hrp.Position
-						local lookDir = hrp.CFrame.LookVector
-						-- Arah tembakan di game ini menggunakan format (X, Y, Z) dengan Y = 5 (berdasarkan spy)
-						local castDir = Vector3.new(lookDir.X, 5, lookDir.Z) 
-						
-						-- Tembak Cast
-						castRemote:FireServer(castPos, castDir, currentRod, 90)
-						
-						-- 2. Tunggu (Bite Delay)
-						task.wait(tonumber(getgenv().UbeyConfig.FishingBiteDelay) or 0.5)
-						
-						-- 3. FishGiver (Anggap kena di depan posisi kita)
-						if getgenv().AutoFishingRunning then
-							local hookPos = castPos + (lookDir * 20) -- Anggap 20 stud di depan
-							fishGiver:FireServer({
-								hookPosition = hookPos,
-								powerPercent = 0
-							})
-							getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
-						end
-						
-						-- 4. Cleanup
-						if cleanupRemote then cleanupRemote:FireServer() end
-						task.wait(0.5)
-					else
-						task.wait(1)
-					end
-				else
-					task.wait(1)
-				end
-			end
-		end
-	end)
+	return "Basic Rod"
 end
 
 local function TriggerSellAll()
 	pcall(function()
-		local sellRemote = GetFishingRemote("SellFish")
+		local fs = ReplicatedStorage:FindFirstChild("FishingSystem")
+		local sellRemote = fs and fs:FindFirstChild("SellFish")
 		if sellRemote then sellRemote:FireServer() end
 	end)
 end
+
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		
+		if getgenv().AutoFishingRunning then
+			pcall(function()
+				local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+				local hrp = char:WaitForChild("HumanoidRootPart", 3)
+				if not hrp then return end
+				
+				local FS = ReplicatedStorage:WaitForChild("FishingSystem", 3)
+				if not FS then return end
+				
+				local cast = FS:FindFirstChild("CastReplication")
+				local mini = FS:FindFirstChild("MinigameStarted") -- KUNCI UTAMANYA!
+				local clean = FS:FindFirstChild("CleanupCast")
+				local give = FS:FindFirstChild("FishGiver")
+				local currentRod = GetEquippedRodName()
+				
+				local pos = hrp.Position + Vector3.new(0, 2, 0)
+				local lookVec = hrp.CFrame.LookVector * 15
+				local hook = pos + lookVec - Vector3.new(0, 5, 0)
+				
+				-- 1. Lempar Kail
+				if cast then
+					cast:FireServer(pos, Vector3.new(-24.72, 5, 3.71), currentRod, 100)
+				end
+				
+				task.wait(getgenv().UbeyConfig.CastDelay)
+				if not getgenv().AutoFishingRunning then return end
+				
+				-- 2. Minigame (Bypass)
+				if mini then
+					mini:FireServer({
+						hookPosition = hook,
+						power = 50
+					})
+				end
+				
+				task.wait(getgenv().UbeyConfig.MiniDelay)
+				if not getgenv().AutoFishingRunning then return end
+				
+				-- 3. Cleanup Cast
+				if clean then
+					clean:FireServer()
+				end
+				
+				task.wait(0.05)
+				
+				-- 4. Claim Ikan (FishGiver)
+				if give then
+					give:FireServer({
+						hookPosition = hook,
+						power = 50
+					})
+					getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
+				end
+				
+				task.wait(getgenv().UbeyConfig.GiveDelay)
+			end)
+		end
+	end
+end)
 
 ------------------------------------------------------------------
 -- AUTO RECONNECT
@@ -235,7 +188,7 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ------------------------------------------------------------------
--- KEY SYSTEM UI (Sama Persis)
+-- KEY SYSTEM UI
 ------------------------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
@@ -245,12 +198,8 @@ KeyFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 KeyFrame.Visible = false
 MakeDraggable(KeyFrame)
 
-local keyCorner = Instance.new("UICorner")
-keyCorner.CornerRadius = UDim.new(0,15)
-keyCorner.Parent = KeyFrame
-local KeyStroke = Instance.new("UIStroke")
-KeyStroke.Parent = KeyFrame
-KeyStroke.Color = Color3.fromRGB(0,170,255)
+local keyCorner = Instance.new("UICorner") keyCorner.CornerRadius = UDim.new(0,15) keyCorner.Parent = KeyFrame
+local KeyStroke = Instance.new("UIStroke") KeyStroke.Parent = KeyFrame KeyStroke.Color = Color3.fromRGB(0,170,255)
 
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
@@ -306,7 +255,7 @@ StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
 ------------------------------------------------------------------
--- MAIN HUB UI (Sama Persis)
+-- MAIN HUB UI
 ------------------------------------------------------------------
 local Main = Instance.new("Frame")
 Main.Parent = Gui
@@ -317,12 +266,8 @@ Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
 Main.ClipsDescendants = true
 MakeDraggable(Main)
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0,18)
-mainCorner.Parent = Main
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Parent = Main
-MainStroke.Color = Color3.fromRGB(0,170,255)
+local mainCorner = Instance.new("UICorner") mainCorner.CornerRadius = UDim.new(0,18) mainCorner.Parent = Main
+local MainStroke = Instance.new("UIStroke") MainStroke.Parent = Main MainStroke.Color = Color3.fromRGB(0,170,255)
 
 local ControlsFrame = Instance.new("Frame")
 ControlsFrame.Parent = Main
@@ -561,82 +506,23 @@ local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
 TitleFish.Size = UDim2.new(1,0,0,30)
 TitleFish.BackgroundTransparency = 1
-TitleFish.Text = "🎣 AUTO FISHING SYSTEM"
+TitleFish.Text = "🎣 AUTO FISHING (PURE INSTANT)"
 TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
-local ModeDropFrame = Instance.new("Frame")
-ModeDropFrame.Parent = FishingPage
-ModeDropFrame.Size = UDim2.new(1,0,0,35)
-ModeDropFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
-ModeDropFrame.ClipsDescendants = true
-local mdc = Instance.new("UICorner") mdc.Parent = ModeDropFrame
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Parent = FishingPage
+InfoLabel.Size = UDim2.new(1,0,0,40)
+InfoLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
+InfoLabel.Text = "Instan Sequence:\nCast -> Mini -> Clean -> Give."
+InfoLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextSize = 11
+local ilc = Instance.new("UICorner") ilc.Parent = InfoLabel
 
-local ModeHeader = Instance.new("TextButton")
-ModeHeader.Parent = ModeDropFrame
-ModeHeader.Size = UDim2.new(1,0,0,35)
-ModeHeader.BackgroundTransparency = 1
-ModeHeader.Text = "  🎮 Mode: " .. getgenv().UbeyConfig.FishingMode .. " 🔽"
-ModeHeader.TextColor3 = Color3.fromRGB(255, 200, 0)
-ModeHeader.Font = Enum.Font.GothamBold
-ModeHeader.TextSize = 11
-ModeHeader.TextXAlignment = Enum.TextXAlignment.Left
-
-local ModeContainer = Instance.new("Frame")
-ModeContainer.Parent = ModeDropFrame
-ModeContainer.Position = UDim2.new(0, 5, 0, 35)
-ModeContainer.Size = UDim2.new(1, -10, 0, 60)
-ModeContainer.BackgroundTransparency = 1
-local ModeLayout = Instance.new("UIListLayout") ModeLayout.Parent = ModeContainer ModeLayout.Padding = UDim.new(0, 4)
-
-local isModeOpen = false
-ModeHeader.MouseButton1Click:Connect(function()
-	isModeOpen = not isModeOpen
-	ModeDropFrame:TweenSize(isModeOpen and UDim2.new(1,0,0,100) or UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-end)
-
-for _, modeData in ipairs({{Name = "Legit (Tap Manual)", Value = "Legit"}, {Name = "Instant (Bypass Remote)", Value = "Instant"}}) do
-	local mOptBtn = Instance.new("TextButton")
-	mOptBtn.Parent = ModeContainer
-	mOptBtn.Size = UDim2.new(1,0,0,26)
-	mOptBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
-	mOptBtn.Text = "  " .. modeData.Name
-	mOptBtn.TextColor3 = Color3.new(1,1,1)
-	mOptBtn.Font = Enum.Font.Gotham
-	mOptBtn.TextSize = 11
-	mOptBtn.TextXAlignment = Enum.TextXAlignment.Left
-	local mobc = Instance.new("UICorner") mobc.Parent = mOptBtn
-	
-	mOptBtn.MouseButton1Click:Connect(function()
-		getgenv().UbeyConfig.FishingMode = modeData.Value
-		ModeHeader.Text = "  🎮 Mode: " .. modeData.Value .. " 🔽"
-		isModeOpen = false
-		ModeDropFrame:TweenSize(UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
-		SaveConfig()
-		getgenv().FishLoopId = getgenv().FishLoopId + 1
-		if getgenv().AutoFishingRunning then StartFishingLoop() end
-	end)
-end
-
-AddToggle(FishingPage, "Auto Fishing", function(v)
+AddToggle(FishingPage, "Auto Fishing (Instant)", function(v)
 	getgenv().AutoFishingRunning = v
-	if v then StartFishingLoop() end
-end)
-
-local BiteDelayBox = Instance.new("TextBox")
-BiteDelayBox.Parent = FishingPage
-BiteDelayBox.Size = UDim2.new(1,0,0,35)
-BiteDelayBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-BiteDelayBox.PlaceholderText = "Jeda Tarik Ikan (Cth: 0.5 detik)"
-BiteDelayBox.Text = tostring(getgenv().UbeyConfig.FishingBiteDelay)
-BiteDelayBox.TextColor3 = Color3.new(1,1,1)
-BiteDelayBox.Font = Enum.Font.Gotham
-BiteDelayBox.TextSize = 12
-local bdCorner = Instance.new("UICorner") bdCorner.Parent = BiteDelayBox
-BiteDelayBox.FocusLost:Connect(function()
-	getgenv().UbeyConfig.FishingBiteDelay = BiteDelayBox.Text
-	SaveConfig()
 end)
 
 AddToggle(FishingPage, "Auto Sell Ikan (Timer)", function(v)
@@ -653,21 +539,6 @@ AddToggle(FishingPage, "Auto Sell Ikan (Timer)", function(v)
 			end
 		end)
 	end
-end)
-
-local SellTimerBox = Instance.new("TextBox")
-SellTimerBox.Parent = FishingPage
-SellTimerBox.Size = UDim2.new(1,0,0,35)
-SellTimerBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-SellTimerBox.PlaceholderText = "Jeda Jual (Menit, Cth: 5)"
-SellTimerBox.Text = tostring(getgenv().UbeyConfig.AutoSellTimer)
-SellTimerBox.TextColor3 = Color3.new(1,1,1)
-SellTimerBox.Font = Enum.Font.Gotham
-SellTimerBox.TextSize = 12
-local stCorner = Instance.new("UICorner") stCorner.Parent = SellTimerBox
-SellTimerBox.FocusLost:Connect(function()
-	getgenv().UbeyConfig.AutoSellTimer = SellTimerBox.Text
-	SaveConfig()
 end)
 
 ------------------------------------------------------------------
@@ -692,71 +563,6 @@ AntiLagBtn.Font = Enum.Font.GothamBold
 local alc = Instance.new("UICorner") alc.Parent = AntiLagBtn
 AntiLagBtn.MouseButton1Click:Connect(function()
 	pcall(function() Lighting.GlobalShadows = false; Lighting.FogEnd = 999999; AntiLagBtn.Text = "⚡ Anti-Lag Aktif!" end)
-end)
-
-local WebhookToggleBtn = Instance.new("TextButton")
-WebhookToggleBtn.Parent = SettingsPage
-WebhookToggleBtn.Size = UDim2.new(1,0,0,35)
-WebhookToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.WebhookEnabled and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
-WebhookToggleBtn.Text = "  Webhook Discord: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
-WebhookToggleBtn.TextColor3 = Color3.new(1,1,1)
-WebhookToggleBtn.Font = Enum.Font.Gotham
-WebhookToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-local wtc = Instance.new("UICorner") wtc.Parent = WebhookToggleBtn
-WebhookToggleBtn.MouseButton1Click:Connect(function()
-	getgenv().UbeyConfig.WebhookEnabled = not getgenv().UbeyConfig.WebhookEnabled
-	WebhookToggleBtn.Text = "  Webhook Discord: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
-	WebhookToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.WebhookEnabled and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
-	SaveConfig()
-end)
-
-local WebhookBox = Instance.new("TextBox")
-WebhookBox.Parent = SettingsPage
-WebhookBox.Size = UDim2.new(1,0,0,35)
-WebhookBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-WebhookBox.PlaceholderText = "Paste Discord Webhook URL..."
-WebhookBox.Text = tostring(getgenv().UbeyConfig.WebhookUrl or "")
-WebhookBox.TextColor3 = Color3.new(1,1,1)
-local wbc = Instance.new("UICorner") wbc.Parent = WebhookBox
-WebhookBox.FocusLost:Connect(function()
-	getgenv().UbeyConfig.WebhookUrl = WebhookBox.Text
-	SaveConfig()
-end)
-
-local TestWebhookBtn = Instance.new("TextButton")
-TestWebhookBtn.Parent = SettingsPage
-TestWebhookBtn.Size = UDim2.new(1,0,0,35)
-TestWebhookBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
-TestWebhookBtn.Text = "🧪 Test Kirim Webhook"
-TestWebhookBtn.TextColor3 = Color3.new(1,1,1)
-TestWebhookBtn.Font = Enum.Font.GothamBold
-local twc = Instance.new("UICorner") twc.Parent = TestWebhookBtn
-TestWebhookBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		local url = getgenv().UbeyConfig.WebhookUrl
-		if not url or url == "" or not string.find(url, "api/webhooks") then
-			TestWebhookBtn.Text = "❌ URL Salah / Kosong!"
-			task.wait(2); TestWebhookBtn.Text = "🧪 Test Kirim Webhook"; return
-		end
-		local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
-		if requestFunc then
-			requestFunc({Url = url, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode({ ["content"] = "✅ **UBEY HUB Webhook Test Berhasil!**" })})
-			TestWebhookBtn.Text = "✅ Terkirim!"
-		else TestWebhookBtn.Text = "❌ Executor Tidak Support!" end
-		task.wait(2); TestWebhookBtn.Text = "🧪 Test Kirim Webhook"
-	end)
-end)
-
-local SaveConfigBtn = Instance.new("TextButton")
-SaveConfigBtn.Parent = SettingsPage
-SaveConfigBtn.Size = UDim2.new(1,0,0,35)
-SaveConfigBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-SaveConfigBtn.Text = "💾 Simpan Konfigurasi"
-SaveConfigBtn.TextColor3 = Color3.new(1,1,1)
-SaveConfigBtn.Font = Enum.Font.GothamBold
-local scc = Instance.new("UICorner") scc.Parent = SaveConfigBtn
-SaveConfigBtn.MouseButton1Click:Connect(function()
-	SaveConfig(); SaveConfigBtn.Text = "✅ Tersimpan!"; task.wait(1.5); SaveConfigBtn.Text = "💾 Simpan Konfigurasi"
 end)
 
 ------------------------------------------------------------------
