@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | AUTO FISHING (AUTO DETECT ROD NAME)
+-- UBEY HUB | AUTO FISHING (FIX INSTANT MODE)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -33,7 +33,7 @@ local KEY_FILE = "UbeyHub_SavedKey.txt"
 getgenv().UbeyConfig = {
 	FishingBiteDelay = "0.5",
 	FishingTapDelay = "0.12",
-	FishingMode = "Legit", -- "Legit" atau "Instant"
+	FishingMode = "Legit", 
 	AutoSellTimer = "5",
 	WebhookEnabled = false,
 	WebhookUrl = ""
@@ -41,18 +41,14 @@ getgenv().UbeyConfig = {
 
 local function SaveConfig()
 	pcall(function()
-		if writefile then
-			local data = HttpService:JSONEncode(getgenv().UbeyConfig)
-			writefile(CONFIG_FILE, data)
-		end
+		if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode(getgenv().UbeyConfig)) end
 	end)
 end
 
 local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
-			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
+			local data = HttpService:JSONDecode(readfile(CONFIG_FILE))
 			if type(data) == "table" then
 				for k, v in pairs(data) do
 					if getgenv().UbeyConfig[k] ~= nil then getgenv().UbeyConfig[k] = v end
@@ -80,41 +76,18 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- HELPER: AUTO FISHING LOGIC (FIX ROD DETECTION)
+-- HELPER: AUTO FISHING LOGIC
 ------------------------------------------------------------------
 local function GetFishingRemote(remoteName)
 	local fs = ReplicatedStorage:FindFirstChild("FishingSystem")
 	return fs and fs:FindFirstChild(remoteName)
 end
 
--- FUNGSI BARU: Deteksi nama rod secara otomatis
 local function GetEquippedRodName()
 	local char = LocalPlayer.Character
 	if not char then return nil end
-	
-	-- 1. Cek tool yang sedang di tangan
-	local equippedTool = char:FindFirstChildOfClass("Tool")
-	if equippedTool then
-		return equippedTool.Name
-	end
-	
-	-- 2. Kalau tidak ada, equip dari backpack
-	local backpack = LocalPlayer:FindFirstChild("Backpack")
-	local humanoid = char:FindFirstChildOfClass("Humanoid")
-	if backpack and humanoid then
-		for _, item in ipairs(backpack:GetChildren()) do
-			if item:IsA("Tool") then
-				-- Bisa disesuaikan: pastikan ini rod (bukan pedang/pickaxe)
-				local lname = string.lower(item.Name)
-				if string.find(lname, "rod") or string.find(lname, "pancing") or string.find(lname, "katana") or string.find(lname, "pole") then
-					humanoid:EquipTool(item)
-					task.wait(0.2) -- beri waktu server untuk sync
-					return item.Name
-				end
-			end
-		end
-	end
-	return nil
+	local tool = char:FindFirstChildOfClass("Tool")
+	return tool and tool.Name or nil
 end
 
 local function PerformTapClicker()
@@ -151,12 +124,10 @@ local function StartFishingLoop()
 			local mode = getgenv().UbeyConfig.FishingMode or "Legit"
 			
 			if mode == "Legit" then
-				-- Pastikan rod di tangan sebelum tap
-				if not LocalPlayer.Character:FindFirstChildOfClass("Tool") then GetEquippedRodName() end
 				PerformTapClicker()
 				task.wait(tonumber(getgenv().UbeyConfig.FishingTapDelay) or 0.12)
 			else
-				-- MODE INSTANT
+				-- MODE INSTANT (FIX)
 				local castRemote = GetFishingRemote("CastReplication")
 				local fishGiver = GetFishingRemote("FishGiver")
 				local cleanupRemote = GetFishingRemote("CleanupCast")
@@ -164,23 +135,26 @@ local function StartFishingLoop()
 				if castRemote and fishGiver then
 					local char = LocalPlayer.Character
 					local hrp = char and char:FindFirstChild("HumanoidRootPart")
+					local currentRod = GetEquippedRodName()
 					
-					-- Ambil nama rod (Otomatis)
-					local currentRodName = GetEquippedRodName()
-					
-					if hrp and currentRodName then
-						-- 1. Cast Pancing
+					if hrp and currentRod then
+						-- 1. Ambil Posisi & Arah Persis seperti manual
 						local castPos = hrp.Position
-						local castDir = Vector3.new(-0.332, 5, 24.998) -- Arah default
-						castRemote:FireServer(castPos, castDir, currentRodName, 90.593)
+						local lookDir = hrp.CFrame.LookVector
+						-- Arah tembakan di game ini menggunakan format (X, Y, Z) dengan Y = 5 (berdasarkan spy)
+						local castDir = Vector3.new(lookDir.X, 5, lookDir.Z) 
+						
+						-- Tembak Cast
+						castRemote:FireServer(castPos, castDir, currentRod, 90)
 						
 						-- 2. Tunggu (Bite Delay)
 						task.wait(tonumber(getgenv().UbeyConfig.FishingBiteDelay) or 0.5)
 						
-						-- 3. Tarik Ikan (FishGiver)
+						-- 3. FishGiver (Anggap kena di depan posisi kita)
 						if getgenv().AutoFishingRunning then
+							local hookPos = castPos + (lookDir * 20) -- Anggap 20 stud di depan
 							fishGiver:FireServer({
-								hookPosition = castPos + Vector3.new(0, -10, 0),
+								hookPosition = hookPos,
 								powerPercent = 0
 							})
 							getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
@@ -203,12 +177,7 @@ end
 local function TriggerSellAll()
 	pcall(function()
 		local sellRemote = GetFishingRemote("SellFish")
-		if sellRemote then
-			sellRemote:FireServer()
-			return
-		end
-		local sellRemote2 = ReplicatedStorage:FindFirstChild("SellFish")
-		if sellRemote2 then sellRemote2:FireServer() end
+		if sellRemote then sellRemote:FireServer() end
 	end)
 end
 
@@ -266,7 +235,7 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ------------------------------------------------------------------
--- KEY SYSTEM UI
+-- KEY SYSTEM UI (Sama Persis)
 ------------------------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
@@ -302,8 +271,7 @@ KeyBox.Text = ""
 KeyBox.TextColor3 = Color3.new(1,1,1)
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextSize = 13
-local kbCorner = Instance.new("UICorner")
-kbCorner.Parent = KeyBox
+local kbCorner = Instance.new("UICorner") kbCorner.Parent = KeyBox
 
 local SubmitKeyBtn = Instance.new("TextButton")
 SubmitKeyBtn.Parent = KeyFrame
@@ -314,8 +282,7 @@ SubmitKeyBtn.Text = "Verifikasi Perangkat"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
 SubmitKeyBtn.Font = Enum.Font.GothamBold
 SubmitKeyBtn.TextSize = 12
-local skCorner = Instance.new("UICorner")
-skCorner.Parent = SubmitKeyBtn
+local skCorner = Instance.new("UICorner") skCorner.Parent = SubmitKeyBtn
 
 local GetKeyDiscordBtn = Instance.new("TextButton")
 GetKeyDiscordBtn.Parent = KeyFrame
@@ -326,8 +293,7 @@ GetKeyDiscordBtn.Text = "Get Key via Discord"
 GetKeyDiscordBtn.TextColor3 = Color3.new(1,1,1)
 GetKeyDiscordBtn.Font = Enum.Font.GothamBold
 GetKeyDiscordBtn.TextSize = 12
-local gkCorner = Instance.new("UICorner")
-gkCorner.Parent = GetKeyDiscordBtn
+local gkCorner = Instance.new("UICorner") gkCorner.Parent = GetKeyDiscordBtn
 
 local StatusKey = Instance.new("TextLabel")
 StatusKey.Parent = KeyFrame
@@ -340,7 +306,7 @@ StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
 StatusKey.TextSize = 12
 
 ------------------------------------------------------------------
--- MAIN HUB UI
+-- MAIN HUB UI (Sama Persis)
 ------------------------------------------------------------------
 local Main = Instance.new("Frame")
 Main.Parent = Gui
@@ -380,9 +346,7 @@ MinimizeBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
 MinimizeBtn.Font = Enum.Font.GothamBold
 MinimizeBtn.TextSize = 18
 MinimizeBtn.ZIndex = 11
-local minCorner = Instance.new("UICorner")
-minCorner.CornerRadius = UDim.new(0, 6)
-minCorner.Parent = MinimizeBtn
+local minCorner = Instance.new("UICorner") minCorner.CornerRadius = UDim.new(0, 6) minCorner.Parent = MinimizeBtn
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = ControlsFrame
@@ -393,9 +357,7 @@ CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 18
 CloseBtn.ZIndex = 11
-local clsCorner = Instance.new("UICorner")
-clsCorner.CornerRadius = UDim.new(0, 6)
-clsCorner.Parent = CloseBtn
+local clsCorner = Instance.new("UICorner") clsCorner.CornerRadius = UDim.new(0, 6) clsCorner.Parent = CloseBtn
 
 local PingLabel = Instance.new("TextLabel")
 PingLabel.Parent = Main
@@ -424,8 +386,7 @@ Sidebar.Size = UDim2.new(0,140,1,0)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15,15,20)
 Sidebar.CanvasSize = UDim2.new(0,0,2.6,0)
 Sidebar.ScrollBarThickness = 2
-local sbCorner = Instance.new("UICorner")
-sbCorner.Parent = Sidebar
+local sbCorner = Instance.new("UICorner") sbCorner.Parent = Sidebar
 
 local HubTitle = Instance.new("TextLabel")
 HubTitle.Parent = Sidebar
@@ -474,8 +435,7 @@ local function CreateNavButton(text, yPos)
 	btn.TextColor3 = Color3.new(1, 1, 1)
 	btn.Font = Enum.Font.GothamMedium
 	btn.TextSize = 12
-	local corner = Instance.new("UICorner")
-	corner.Parent = btn
+	local corner = Instance.new("UICorner") corner.Parent = btn
 	return btn
 end
 
@@ -491,13 +451,8 @@ local function MakePage()
 	f.Visible = false
 	f.CanvasSize = UDim2.new(0,0,6,0)
 	f.ScrollBarThickness = 4
-	local pad = Instance.new("UIPadding")
-	pad.Parent = f
-	pad.PaddingTop = UDim.new(0, 10)
-	local l = Instance.new("UIListLayout")
-	l.Parent = f
-	l.SortOrder = Enum.SortOrder.LayoutOrder
-	l.Padding = UDim.new(0, 8)
+	local pad = Instance.new("UIPadding") pad.Parent = f pad.PaddingTop = UDim.new(0, 10)
+	local l = Instance.new("UIListLayout") l.Parent = f l.SortOrder = Enum.SortOrder.LayoutOrder l.Padding = UDim.new(0, 8)
 	return f
 end
 
@@ -523,8 +478,7 @@ local function AddToggle(parent, text, callback)
 	b.Font = Enum.Font.Gotham
 	b.TextSize = 13
 	b.TextXAlignment = Enum.TextXAlignment.Left
-	local c = Instance.new("UICorner")
-	c.Parent = b
+	local c = Instance.new("UICorner") c.Parent = b
 	local state = false
 	b.MouseButton1Click:Connect(function()
 		state = not state
@@ -612,7 +566,6 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
--- Dropdown Mode
 local ModeDropFrame = Instance.new("Frame")
 ModeDropFrame.Parent = FishingPage
 ModeDropFrame.Size = UDim2.new(1,0,0,35)
@@ -635,9 +588,7 @@ ModeContainer.Parent = ModeDropFrame
 ModeContainer.Position = UDim2.new(0, 5, 0, 35)
 ModeContainer.Size = UDim2.new(1, -10, 0, 60)
 ModeContainer.BackgroundTransparency = 1
-local ModeLayout = Instance.new("UIListLayout")
-ModeLayout.Parent = ModeContainer
-ModeLayout.Padding = UDim.new(0, 4)
+local ModeLayout = Instance.new("UIListLayout") ModeLayout.Parent = ModeContainer ModeLayout.Padding = UDim.new(0, 4)
 
 local isModeOpen = false
 ModeHeader.MouseButton1Click:Connect(function()
@@ -740,11 +691,7 @@ AntiLagBtn.TextColor3 = Color3.new(1,1,1)
 AntiLagBtn.Font = Enum.Font.GothamBold
 local alc = Instance.new("UICorner") alc.Parent = AntiLagBtn
 AntiLagBtn.MouseButton1Click:Connect(function()
-	pcall(function()
-		Lighting.GlobalShadows = false
-		Lighting.FogEnd = 999999
-		AntiLagBtn.Text = "⚡ Anti-Lag Aktif!"
-	end)
+	pcall(function() Lighting.GlobalShadows = false; Lighting.FogEnd = 999999; AntiLagBtn.Text = "⚡ Anti-Lag Aktif!" end)
 end)
 
 local WebhookToggleBtn = Instance.new("TextButton")
@@ -789,22 +736,14 @@ TestWebhookBtn.MouseButton1Click:Connect(function()
 		local url = getgenv().UbeyConfig.WebhookUrl
 		if not url or url == "" or not string.find(url, "api/webhooks") then
 			TestWebhookBtn.Text = "❌ URL Salah / Kosong!"
-			task.wait(2)
-			TestWebhookBtn.Text = "🧪 Test Kirim Webhook"
-			return
+			task.wait(2); TestWebhookBtn.Text = "🧪 Test Kirim Webhook"; return
 		end
 		local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
 		if requestFunc then
-			requestFunc({
-				Url = url, Method = "POST", Headers = { ["Content-Type"] = "application/json" },
-				Body = HttpService:JSONEncode({ ["content"] = "✅ **UBEY HUB Webhook Test Berhasil!**" })
-			})
+			requestFunc({Url = url, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode({ ["content"] = "✅ **UBEY HUB Webhook Test Berhasil!**" })})
 			TestWebhookBtn.Text = "✅ Terkirim!"
-		else
-			TestWebhookBtn.Text = "❌ Executor Tidak Support!"
-		end
-		task.wait(2)
-		TestWebhookBtn.Text = "🧪 Test Kirim Webhook"
+		else TestWebhookBtn.Text = "❌ Executor Tidak Support!" end
+		task.wait(2); TestWebhookBtn.Text = "🧪 Test Kirim Webhook"
 	end)
 end)
 
@@ -817,10 +756,7 @@ SaveConfigBtn.TextColor3 = Color3.new(1,1,1)
 SaveConfigBtn.Font = Enum.Font.GothamBold
 local scc = Instance.new("UICorner") scc.Parent = SaveConfigBtn
 SaveConfigBtn.MouseButton1Click:Connect(function()
-	SaveConfig()
-	SaveConfigBtn.Text = "✅ Tersimpan!"
-	task.wait(1.5)
-	SaveConfigBtn.Text = "💾 Simpan Konfigurasi"
+	SaveConfig(); SaveConfigBtn.Text = "✅ Tersimpan!"; task.wait(1.5); SaveConfigBtn.Text = "💾 Simpan Konfigurasi"
 end)
 
 ------------------------------------------------------------------
@@ -844,9 +780,7 @@ StatPanel.Size = UDim2.new(1, -160, 0, 24)
 StatPanel.Position = UDim2.new(0, 150, 1, -28)
 StatPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 StatPanel.BorderSizePixel = 0
-local stpCorner = Instance.new("UICorner")
-stpCorner.CornerRadius = UDim.new(0, 6)
-stpCorner.Parent = StatPanel
+local stpCorner = Instance.new("UICorner") stpCorner.CornerRadius = UDim.new(0, 6) stpCorner.Parent = StatPanel
 
 local StatLabel = Instance.new("TextLabel")
 StatLabel.Parent = StatPanel
@@ -885,9 +819,7 @@ Float.Size = UDim2.new(0,65,0,65)
 Float.Position = UDim2.new(0,20,0,120)
 Float.Image = "rbxassetid://90770802417381"
 Float.BackgroundColor3 = Color3.fromRGB(20,20,25)
-local flCorner = Instance.new("UICorner")
-flCorner.CornerRadius = UDim.new(1,0)
-flCorner.Parent = Float
+local flCorner = Instance.new("UICorner") flCorner.CornerRadius = UDim.new(1,0) flCorner.Parent = Float
 MakeDraggable(Float)
 
 Float.MouseButton1Click:Connect(function()
