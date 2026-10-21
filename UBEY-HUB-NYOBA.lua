@@ -1,5 +1,6 @@
 -- ==============================================================================
 -- UBEY HUB V3 | VIP FULL SCRIPT (LEGIT = AUTO BAWAAN GAME + AUTO TAP / INSTANT)
+-- FIXED: switch mode Instant <-> Legit tidak lagi bikin ikan tidak tertarik
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -55,7 +56,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content) -- FIX: sebelumnya JSONEncode
+			local data = HttpService:JSONDecode(content)
 			if type(data) == "table" then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.TapDelay then getgenv().UbeyConfig.TapDelay = data.TapDelay end
@@ -167,14 +168,13 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade
 end
 
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR & STATS COUNTER (FIXED)
+-- REAL-TIME CATCH MONITOR & STATS COUNTER
 ------------------------------------------------------------------
 local hookedRemotes = {}
 
 local function ProcessNotifyClient(actionType, fishDataArg)
 	if actionType == "GotFish" then
 		pcall(function()
-			-- FIX: hitung ikan setiap GotFish, tidak harus berupa table
 			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
 			
 			if type(fishDataArg) == "table" then
@@ -232,7 +232,7 @@ local function ListenToFishCatch()
 		LocalPlayer.CharacterAdded:Connect(ScanCharacter)
 	end)
 
-	-- FIX: rescan berkala (rod bisa ter-equip / respawn setelah script jalan)
+	-- rescan berkala (rod bisa ter-equip / respawn setelah script jalan)
 	task.spawn(function()
 		while true do
 			pcall(function()
@@ -282,8 +282,6 @@ end
 ------------------------------------------------------------------
 -- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (LEGIT MODE)
 ------------------------------------------------------------------
--- Menyalakan/mematikan auto fishing bawaan game lewat remote.
--- Return true jika remote ditemukan & ditembak.
 local function EnableGameAutoFishing(state)
 	if state == nil then state = true end
 	local fired = false
@@ -298,7 +296,7 @@ local function EnableGameAutoFishing(state)
 	return fired
 end
 
--- Fallback: klik tombol "Auto" di GUI game (hanya dipanggil sekali per sesi toggle)
+-- Fallback: klik tombol "Auto" di GUI game
 local function ClickGameAutoButton()
 	pcall(function()
 		local hub = PlayerGui:FindFirstChild("UbeyHub")
@@ -417,20 +415,40 @@ local function GetEquippedRod()
 	return nil
 end
 
+------------------------------------------------------------------
+-- ROD SETTINGS (FIXED: simpan nilai asli + bisa di-restore)
+------------------------------------------------------------------
+local OriginalRodValues = {}
+
 local function OptimizeRodSettings()
 	pcall(function()
 		local rod = GetEquippedRod()
-		if rod then
-			local settingsFolder = rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
-			if settingsFolder then
-				local timeSetting = settingsFolder:FindFirstChild("Time_before_getfish")
-				if timeSetting then timeSetting.Value = 0.05 end
-				local enableMiniGame = settingsFolder:FindFirstChild("EnableMiniGame")
-				if enableMiniGame and getgenv().UbeyConfig.MinigameMode == "Instant" then
-					enableMiniGame.Value = false
-				end
-			end
+		local s = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+		if not s then return end
+		local t = s:FindFirstChild("Time_before_getfish")
+		if t then
+			if OriginalRodValues[t] == nil then OriginalRodValues[t] = t.Value end
+			t.Value = 0.05
 		end
+		local m = s:FindFirstChild("EnableMiniGame")
+		if m then
+			if OriginalRodValues[m] == nil then OriginalRodValues[m] = m.Value end
+			m.Value = false
+		end
+	end)
+end
+
+local function RestoreRodSettings()
+	pcall(function()
+		for inst, val in pairs(OriginalRodValues) do
+			if inst and inst.Parent then inst.Value = val end
+			OriginalRodValues[inst] = nil
+		end
+		-- fallback kalau nilai asli tidak tersimpan (mis. script dijalankan ulang)
+		local rod = GetEquippedRod()
+		local s = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+		local m = s and s:FindFirstChild("EnableMiniGame")
+		if m then m.Value = true end
 	end)
 end
 
@@ -455,14 +473,19 @@ local function RunAutoFishCycle(remoteFolder)
 		end)
 		
 		local start = tick()
-		while not hooked and getgenv().AutoFishingEventRunning do
+		while not hooked and getgenv().AutoFishingEventRunning
+			and getgenv().UbeyConfig.MinigameMode == "Instant" do
 			if tick() - start > 8 then break end
 			task.wait(0.05)
 		end
 		if conn then conn:Disconnect() end
 		
-		if hooked and getgenv().AutoFishingEventRunning then
+		if hooked and getgenv().AutoFishingEventRunning
+			and getgenv().UbeyConfig.MinigameMode == "Instant" then
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
+			
+			-- cek ulang: mode bisa saja berubah selama jeda
+			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
 			if tandaSeruRemote then
@@ -476,6 +499,7 @@ local function RunAutoFishCycle(remoteFolder)
 			end
 			
 			task.wait(0.1)
+			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
 			remoteFolder.MiniGame:FireServer(true)
 			task.wait(0.3)
 		end
@@ -491,11 +515,17 @@ local function StartFishingLoop()
 	getgenv().FishLoopId = getgenv().FishLoopId + 1
 	local myId = getgenv().FishLoopId
 	task.spawn(function()
-		local lastAuto, clickedGui = 0, false
+		local lastAuto, clickedGui, restored = 0, false, false
 		while getgenv().AutoFishingEventRunning and getgenv().FishLoopId == myId do
 			local mode = getgenv().UbeyConfig.MinigameMode or "Legit"
 			AutoEquipRod()
 			if mode == "Legit" then
+				-- kembalikan setting rod (minigame ON) sekali saat masuk Legit
+				if not restored then
+					restored = true
+					RestoreRodSettings()
+					lastAuto = 0 -- paksa nyalakan auto bawaan lagi
+				end
 				if tick() - lastAuto > 10 then
 					lastAuto = tick()
 					local viaRemote = EnableGameAutoFishing(true)
@@ -507,6 +537,7 @@ local function StartFishingLoop()
 				PerformTapClicker()
 				task.wait(tonumber(getgenv().UbeyConfig.TapDelay) or 0.12)
 			else
+				restored = false
 				pcall(function()
 					local rod = GetEquippedRod()
 					local rf = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Remotes")
@@ -1106,7 +1137,6 @@ DropHeader.Font = Enum.Font.GothamBold
 DropHeader.TextSize = 11
 DropHeader.TextXAlignment = Enum.TextXAlignment.Left
 
--- Dipanggil juga oleh rotasi spot & auto event core untuk memperbarui tampilan
 local function SetSpotDisplay(text)
 	DropHeader.Text = "  📍 Spot: " .. tostring(text) .. " 🔽"
 end
@@ -1204,11 +1234,30 @@ for _, modeData in ipairs(fishingModes) do
 	mobc.Parent = mOptBtn
 	
 	mOptBtn.MouseButton1Click:Connect(function()
+		local oldMode = getgenv().UbeyConfig.MinigameMode
 		getgenv().UbeyConfig.MinigameMode = modeData.Value
 		ModeDropHeader.Text = "  🎮 Mode Fishing: " .. modeData.Value .. " 🔽"
 		isModeDropOpen = false
 		ModeDropdownFrame:TweenSize(UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
 		SaveConfig()
+
+		-- FIX: reset sistem saat ganti mode supaya state mancing tidak nyangkut
+		if oldMode ~= modeData.Value then
+			task.spawn(function()
+				local wasRunning = getgenv().AutoFishingEventRunning
+				getgenv().FishLoopId = getgenv().FishLoopId + 1 -- hentikan loop lama
+				EnableGameAutoFishing(false)
+				task.wait(0.6)
+				RestoreRodSettings()
+				pcall(function()
+					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+					if hum then hum:UnequipTools() end -- reset state cast
+				end)
+				task.wait(0.4)
+				AutoEquipRod()
+				if wasRunning and getgenv().AutoFishingEventRunning then StartFishingLoop() end
+			end)
+		end
 	end)
 end
 
@@ -1691,7 +1740,7 @@ AddShopTeleportBtn(TeleportShopPage, "Rod Shop", CFrame.new(-6638.09521, 1312.69
 AddShopTeleportBtn(TeleportShopPage, "Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ----------------------------------------------------
--- 5. SUMMIT PAGE (FIXED ANTI-STUCK ENGINE)
+-- 5. SUMMIT PAGE
 ----------------------------------------------------
 local TitleSum = Instance.new("TextLabel")
 TitleSum.Parent = SummitPage
@@ -2231,7 +2280,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ----------------------------------------------------
--- 10. SETTINGS & WEBHOOK PAGE (FIXED FULL BLACK SCREEN)
+-- 10. SETTINGS & WEBHOOK PAGE
 ----------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -2261,7 +2310,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- FIXED FULL BLACK SCREEN / BATTERY SAVER MODE
+-- FULL BLACK SCREEN / BATTERY SAVER MODE
 local BlackScreenGui = nil
 local BlackScreenToggleBtn = Instance.new("TextButton")
 BlackScreenToggleBtn.Parent = SettingsPage
@@ -2285,7 +2334,7 @@ BlackScreenToggleBtn.MouseButton1Click:Connect(function()
 			BlackScreenGui = Instance.new("ScreenGui")
 			BlackScreenGui.Name = "UbeyBlackScreen"
 			BlackScreenGui.Parent = PlayerGui
-			BlackScreenGui.DisplayOrder = 999999 -- Pastikan berada di layer paling atas menutupi semua tombol game
+			BlackScreenGui.DisplayOrder = 999999
 			BlackScreenGui.IgnoreGuiInset = true
 			
 			local frame = Instance.new("Frame")
@@ -2431,7 +2480,7 @@ CredLbl.Font = Enum.Font.GothamBold
 CredLbl.TextSize = 20
 
 ----------------------------------------------------
--- 11. BOTTOM PANEL: SESSION STAT TRACKER (LIVE) - FIXED
+-- 11. BOTTOM PANEL: SESSION STAT TRACKER (LIVE)
 ----------------------------------------------------
 local StatPanel = Instance.new("Frame")
 StatPanel.Parent = Main
@@ -2471,7 +2520,6 @@ task.spawn(function()
 				timeStr = string.format("%02ds", secs)
 			end
 			
-			-- FIX: baris lama memakai "+" pada string sehingga error dan baris ini tidak pernah jalan
 			StatLabel.Text = string.format("📊 Total Ikan: %d  |  ⏱️ Play: %s", getgenv().TotalFishCaught, timeStr)
 		end)
 		task.wait(1)
