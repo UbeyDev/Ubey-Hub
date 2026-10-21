@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- UBEY HUB V3 | VIP FULL SCRIPT (LEGIT = AUTO BAWAAN GAME + AUTO TAP / INSTANT)
--- FIXED: Aman untuk Mobile & Responsif di PC
+-- FIXED: Mobile tidak akan lagi ter-klik seluruh layarnya & PC tetap lancar
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -56,7 +56,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
+			local data = HttpService:JSONEncode(content)
 			if type(data) == "table" then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.TapDelay then getgenv().UbeyConfig.TapDelay = data.TapDelay end
@@ -279,7 +279,7 @@ local function AutoEquipRod()
 end
 
 ------------------------------------------------------------------
--- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (FIX MOBILE/PC)
+-- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (FIXED)
 ------------------------------------------------------------------
 local function EnableGameAutoFishing(state)
 	if state == nil then state = true end
@@ -316,31 +316,34 @@ local function ClickGameAutoButton()
 	end)
 end
 
--- Diperbaiki agar aman di Mobile (tidak mengklik area UI Hub) dan responsif di PC
+-- FIX: Menghindari pengklikan layar membabi buta di Mobile
 local function PerformTapClicker()
-	local cam = Workspace.CurrentCamera
-	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
-	
 	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	local pos
 	
+	-- Jika di Mobile, jangan gunakan Virtual Input Klik Layar (supaya layar/UI tidak terklik acak)
 	if isMobile then
-		-- Di mobile, klik diarahkan ke area kosong di sebelah kanan/atas luar UI Hub
-		pos = getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.3)
-	else
-		-- Di PC, gunakan posisi mouse aktif jika ada
-		local mousePos = UIS:GetMouseLocation()
-		pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or (getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.5))
+		-- Panggil tool/rod trigger bawaan jika ter-equip
+		pcall(function()
+			local char = LocalPlayer.Character
+			local tool = char and char:FindFirstChildOfClass("Tool")
+			if tool then
+				tool:Activate()
+			end
+		end)
+		return
 	end
 	
-	local ok = pcall(function()
+	-- Jika di PC, jalankan klik Virtual User
+	local cam = Workspace.CurrentCamera
+	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
+	local mousePos = UIS:GetMouseLocation()
+	local pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or Vector2.new(vp.X * 0.5, vp.Y * 0.5)
+	
+	pcall(function()
 		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
 		task.wait(0.02)
 		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
 	end)
-	if not ok then
-		pcall(function() VirtualUser:ClickButton1(pos) end)
-	end
 end
 
 ------------------------------------------------------------------
