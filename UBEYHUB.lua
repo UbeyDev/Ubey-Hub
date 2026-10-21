@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- UBEY HUB V3 | VIP FULL SCRIPT (LEGIT = AUTO BAWAAN GAME + AUTO TAP / INSTANT)
--- FIXED: switch mode Instant <-> Legit tidak lagi bikin ikan tidak tertarik
+-- FIXED: Mobile tidak akan lagi ter-klik seluruh layarnya & PC tetap lancar
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -56,7 +56,7 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONDecode(content)
+			local data = HttpService:JSONEncode(content)
 			if type(data) == "table" then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.TapDelay then getgenv().UbeyConfig.TapDelay = data.TapDelay end
@@ -232,7 +232,6 @@ local function ListenToFishCatch()
 		LocalPlayer.CharacterAdded:Connect(ScanCharacter)
 	end)
 
-	-- rescan berkala (rod bisa ter-equip / respawn setelah script jalan)
 	task.spawn(function()
 		while true do
 			pcall(function()
@@ -280,7 +279,7 @@ local function AutoEquipRod()
 end
 
 ------------------------------------------------------------------
--- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (LEGIT MODE)
+-- HELPER: AUTO FISHING BAWAAN GAME & AUTO TAP CLICKER (FIXED)
 ------------------------------------------------------------------
 local function EnableGameAutoFishing(state)
 	if state == nil then state = true end
@@ -296,7 +295,6 @@ local function EnableGameAutoFishing(state)
 	return fired
 end
 
--- Fallback: klik tombol "Auto" di GUI game
 local function ClickGameAutoButton()
 	pcall(function()
 		local hub = PlayerGui:FindFirstChild("UbeyHub")
@@ -318,19 +316,34 @@ local function ClickGameAutoButton()
 	end)
 end
 
--- Auto tap/klik layar. Atur posisi manual: getgenv().TapPosition = Vector2.new(x, y)
+-- FIX: Menghindari pengklikan layar membabi buta di Mobile
 local function PerformTapClicker()
+	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+	
+	-- Jika di Mobile, jangan gunakan Virtual Input Klik Layar (supaya layar/UI tidak terklik acak)
+	if isMobile then
+		-- Panggil tool/rod trigger bawaan jika ter-equip
+		pcall(function()
+			local char = LocalPlayer.Character
+			local tool = char and char:FindFirstChildOfClass("Tool")
+			if tool then
+				tool:Activate()
+			end
+		end)
+		return
+	end
+	
+	-- Jika di PC, jalankan klik Virtual User
 	local cam = Workspace.CurrentCamera
 	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
-	local pos = getgenv().TapPosition or Vector2.new(vp.X * 0.85, vp.Y * 0.5)
-	local ok = pcall(function()
+	local mousePos = UIS:GetMouseLocation()
+	local pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or Vector2.new(vp.X * 0.5, vp.Y * 0.5)
+	
+	pcall(function()
 		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
 		task.wait(0.02)
 		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
 	end)
-	if not ok then
-		pcall(function() VirtualUser:ClickButton1(pos) end)
-	end
 end
 
 ------------------------------------------------------------------
@@ -416,7 +429,7 @@ local function GetEquippedRod()
 end
 
 ------------------------------------------------------------------
--- ROD SETTINGS (FIXED: simpan nilai asli + bisa di-restore)
+-- ROD SETTINGS
 ------------------------------------------------------------------
 local OriginalRodValues = {}
 
@@ -444,7 +457,6 @@ local function RestoreRodSettings()
 			if inst and inst.Parent then inst.Value = val end
 			OriginalRodValues[inst] = nil
 		end
-		-- fallback kalau nilai asli tidak tersimpan (mis. script dijalankan ulang)
 		local rod = GetEquippedRod()
 		local s = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
 		local m = s and s:FindFirstChild("EnableMiniGame")
@@ -455,7 +467,6 @@ end
 ------------------------------------------------------------------
 -- AUTO FISHING (INSTANT / LEGIT)
 ------------------------------------------------------------------
--- Satu siklus mancing MODE INSTANT
 local function RunAutoFishCycle(remoteFolder)
 	pcall(function()
 		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -484,7 +495,6 @@ local function RunAutoFishCycle(remoteFolder)
 			and getgenv().UbeyConfig.MinigameMode == "Instant" then
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
 			
-			-- cek ulang: mode bisa saja berubah selama jeda
 			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
 			
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
@@ -506,9 +516,6 @@ local function RunAutoFishCycle(remoteFolder)
 	end)
 end
 
--- Loop utama fishing.
--- LEGIT   : nyalakan auto bawaan game + tap/klik terus-menerus
--- INSTANT : cast + minigame via remote (RunAutoFishCycle)
 getgenv().FishLoopId = 0
 
 local function StartFishingLoop()
@@ -520,11 +527,10 @@ local function StartFishingLoop()
 			local mode = getgenv().UbeyConfig.MinigameMode or "Legit"
 			AutoEquipRod()
 			if mode == "Legit" then
-				-- kembalikan setting rod (minigame ON) sekali saat masuk Legit
 				if not restored then
 					restored = true
 					RestoreRodSettings()
-					lastAuto = 0 -- paksa nyalakan auto bawaan lagi
+					lastAuto = 0
 				end
 				if tick() - lastAuto > 10 then
 					lastAuto = tick()
@@ -1118,7 +1124,6 @@ TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
 
--- DROPDOWN SPOT MANCING
 local SpotDropdownFrame = Instance.new("Frame")
 SpotDropdownFrame.Parent = FishingPage
 SpotDropdownFrame.Size = UDim2.new(1,0,0,35)
@@ -1180,7 +1185,6 @@ for _, spotName in ipairs({"Spot Mancing Jembatan", "Spot Mancing Core", "Spot M
 	end)
 end
 
--- DROPDOWN MODE FISHING (LEGIT vs INSTANT)
 local ModeDropdownFrame = Instance.new("Frame")
 ModeDropdownFrame.Parent = FishingPage
 ModeDropdownFrame.Size = UDim2.new(1,0,0,35)
@@ -1241,17 +1245,16 @@ for _, modeData in ipairs(fishingModes) do
 		ModeDropdownFrame:TweenSize(UDim2.new(1,0,0,35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
 		SaveConfig()
 
-		-- FIX: reset sistem saat ganti mode supaya state mancing tidak nyangkut
 		if oldMode ~= modeData.Value then
 			task.spawn(function()
 				local wasRunning = getgenv().AutoFishingEventRunning
-				getgenv().FishLoopId = getgenv().FishLoopId + 1 -- hentikan loop lama
+				getgenv().FishLoopId = getgenv().FishLoopId + 1
 				EnableGameAutoFishing(false)
 				task.wait(0.6)
 				RestoreRodSettings()
 				pcall(function()
 					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-					if hum then hum:UnequipTools() end -- reset state cast
+					if hum then hum:UnequipTools() end
 				end)
 				task.wait(0.4)
 				AutoEquipRod()
@@ -1603,7 +1606,7 @@ uac.Parent = UnfavBtn
 UnfavBtn.MouseButton1Click:Connect(function() UnfavoriteAllFish() end)
 
 ----------------------------------------------------
--- 3. GALATAMA PAGE (AUTO DETEKSI CORE EVENT)
+-- 3. GALATAMA PAGE
 ----------------------------------------------------
 local TitleGal = Instance.new("TextLabel")
 TitleGal.Parent = GalatamaPage
@@ -2310,7 +2313,6 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- FULL BLACK SCREEN / BATTERY SAVER MODE
 local BlackScreenGui = nil
 local BlackScreenToggleBtn = Instance.new("TextButton")
 BlackScreenToggleBtn.Parent = SettingsPage
