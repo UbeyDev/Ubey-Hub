@@ -1,6 +1,5 @@
 -- ==============================================================================
--- UBEY HUB V3 | VIP FULL SCRIPT (LEGIT = AUTO BAWAAN GAME + AUTO TAP / INSTANT)
--- FIXED: Mobile tidak akan lagi ter-klik seluruh layarnya & PC tetap lancar
+-- UBEY HUB V3 | VIP FULL SCRIPT (SERVER-WIDE WEBHOOK + KEY & MULTI-ACCOUNT SYSTEM)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -115,43 +114,47 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- DISCORD WEBHOOK SYSTEM
+-- DISCORD WEBHOOK SYSTEM (SERVER-WIDE CUTSCENE BROADCAST)
 ------------------------------------------------------------------
-local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade, fishWeight, fishChance)
+local function SendServerWideWebhook(playerName, catchType, position)
 	pcall(function()
 		if not getgenv().UbeyConfig.WebhookEnabled then return end
 		local url = getgenv().UbeyConfig.WebhookUrl
 		if not url or url == "" or not string.find(url, "api/webhooks") then return end
 		
-		local targetName = tostring(fishName or "Unknown Fish")
-		local targetRarity = tostring(fishRarity or "Common")
-		local targetMutation = tostring(fishMutation or "Normal")
-		local targetGrade = tostring(fishGrade or "N/A")
-		local targetWeight = tostring(fishWeight or "0") .. " kg"
-		local targetChance = tostring(fishChance or "N/A")
+		local typeLower = string.lower(tostring(catchType))
+		local targetPlayer = tostring(playerName or "Unknown Player")
 		
-		local targetRarityLower = string.lower(targetRarity)
-		
-		if targetRarityLower == "secret" or targetRarityLower == "forgotten" then
+		-- Filter event langka: Secret, Forgotten, Core, dll
+		if string.find(typeLower, "secret") or string.find(typeLower, "forgotten") or string.find(typeLower, "core") or string.find(typeLower, "catch") then
 			local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
 			if not requestFunc then return end
 			
+			local embedTitle = "👑 Ubey Hub V3 - Server Rare Catch Tracker!"
+			local alertContent = string.format("@everyone 🚨 **%s Berhasil Mendapatkan Tangkapan Langka!**", targetPlayer)
+			local embedColor = 16711935 -- Warna Pink/Magenta untuk Secret/Forgotten
+			
+			if string.find(typeLower, "core") then
+				alertContent = string.format("@everyone ⚡ **%s Mendapatkan Withering Core!**", targetPlayer)
+				embedTitle = "💎 Ubey Hub V3 - Core Event Tracker!"
+				embedColor = 16776960 -- Warna Kuning Emas untuk Core
+			end
+			
+			local posStr = position and string.format("%.1f, %.1f, %.1f", position.X, position.Y, position.Z) or "N/A"
+			
 			local data = {
-				["content"] = "@everyone 🚨 **FISH SECRET / FORGOTTEN CATCH!**",
+				["content"] = alertContent,
 				["embeds"] = {
 					{
-						["title"] = "👑 Ubey Hub V3 - Secret & Forgotten Tracker!",
-						["description"] = "Pemain **" .. LocalPlayer.Name .. "** baru saja mendapatkan ikan langka!",
-						["color"] = 16711935,
+						["title"] = embedTitle,
+						["description"] = string.format("Pemain **%s** di dalam server ini baru saja mendapatkan item spesial!", targetPlayer),
+						["color"] = embedColor,
 						["fields"] = {
-							{ ["name"] = "🐟 Nama Ikan", ["value"] = targetName, ["inline"] = true },
-							{ ["name"] = "⭐ Rarity", ["value"] = targetRarity, ["inline"] = true },
-							{ ["name"] = "🧬 Mutasi", ["value"] = targetMutation, ["inline"] = true },
-							{ ["name"] = "🏆 Grade", ["value"] = targetGrade, ["inline"] = true },
-							{ ["name"] = "⚖️ Berat (Weight)", ["value"] = targetWeight, ["inline"] = true },
-							{ ["name"] = "🎲 Chance", ["value"] = targetChance, ["inline"] = true }
+							{ ["name"] = "👤 Nama Player", ["value"] = targetPlayer, ["inline"] = true },
+							{ ["name"] = "🎯 Tipe Tangkapan", ["value"] = tostring(catchType), ["inline"] = true },
+							{ ["name"] = "📍 Koordinat", ["value"] = posStr, ["inline"] = true }
 						},
-						["footer"] = { ["text"] = "Ubey Hub V3 • Secret & Forgotten Notification" },
+						["footer"] = { ["text"] = "Ubey Hub V3 • Server-Wide Broadcast Monitor" },
 						["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
 					}
 				}
@@ -167,8 +170,21 @@ local function SendFilteredWebhook(fishName, fishRarity, fishMutation, fishGrade
 	end)
 end
 
+-- Mendengarkan CutsceneBroadcast dari Server secara Global di Server tersebut[span_0](start_span)[span_0](end_span)
+task.spawn(function()
+	pcall(function()
+		local CutsceneBroadcastRemote = ReplicatedStorage:FindFirstChild("CutsceneBroadcast")
+		if CutsceneBroadcastRemote and CutsceneBroadcastRemote:IsA("RemoteEvent") then
+			CutsceneBroadcastRemote.OnClientEvent:Connect(function(catchType, position, targetPlayer)
+				local playerName = targetPlayer and targetPlayer.Name or "Unknown Player"
+				SendServerWideWebhook(playerName, catchType, position)
+			end)
+		end
+	end)
+end)
+
 ------------------------------------------------------------------
--- REAL-TIME CATCH MONITOR & STATS COUNTER
+-- REAL-TIME CATCH MONITOR & STATS COUNTER (LOCAL PLAYER)
 ------------------------------------------------------------------
 local hookedRemotes = {}
 
@@ -176,19 +192,6 @@ local function ProcessNotifyClient(actionType, fishDataArg)
 	if actionType == "GotFish" then
 		pcall(function()
 			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
-			
-			if type(fishDataArg) == "table" then
-				local name = fishDataArg.baseName or fishDataArg.originalName or "Unknown Fish"
-				local rarity = fishDataArg.rarity or "Common"
-				local mutation = fishDataArg.mutation or "Normal"
-				local grade = fishDataArg.grade or "N/A"
-				local weight = fishDataArg.weight or "0"
-				local chance = fishDataArg.chance or "N/A"
-				
-				if name ~= "Unknown Fish" and name ~= "" then
-					SendFilteredWebhook(name, rarity, mutation, grade, weight, chance)
-				end
-			end
 		end)
 	end
 end
@@ -230,16 +233,6 @@ local function ListenToFishCatch()
 
 		if LocalPlayer.Character then ScanCharacter(LocalPlayer.Character) end
 		LocalPlayer.CharacterAdded:Connect(ScanCharacter)
-	end)
-
-	task.spawn(function()
-		while true do
-			pcall(function()
-				ScanContainerForNotify(LocalPlayer.Character)
-				ScanContainerForNotify(LocalPlayer:FindFirstChild("Backpack"))
-			end)
-			task.wait(3)
-		end
 	end)
 end
 
@@ -316,24 +309,17 @@ local function ClickGameAutoButton()
 	end)
 end
 
--- FIX: Menghindari pengklikan layar membabi buta di Mobile
 local function PerformTapClicker()
 	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	
-	-- Jika di Mobile, jangan gunakan Virtual Input Klik Layar (supaya layar/UI tidak terklik acak)
 	if isMobile then
-		-- Panggil tool/rod trigger bawaan jika ter-equip
 		pcall(function()
 			local char = LocalPlayer.Character
 			local tool = char and char:FindFirstChildOfClass("Tool")
-			if tool then
-				tool:Activate()
-			end
+			if tool then tool:Activate() end
 		end)
 		return
 	end
 	
-	-- Jika di PC, jalankan klik Virtual User
 	local cam = Workspace.CurrentCamera
 	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
 	local mousePos = UIS:GetMouseLocation()
@@ -723,7 +709,7 @@ local function MakeDraggable(guiObject, handleObject)
 end
 
 ----------------------------------------------------
--- KEY SYSTEM UI
+-- KEY & ROBLOX USERNAME VALIDATION SYSTEM
 ----------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
@@ -1030,7 +1016,7 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- KEY & ROBLOX USERNAME VALIDATION (UPDATED)
+-- VALIDASI KEY & MULTI-AKUN USERNAME ROBLOX
 ----------------------------------------------------
 GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	pcall(function() if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end end)
@@ -1091,7 +1077,6 @@ local function ValidateKey(enteredKey, isAutoLogin)
 				local record = data[1]
 				local currentRobloxUser = LocalPlayer.Name
 				
-				-- 1. Cek Status Key
 				if record.status == false or record.status == "inactive" or record.status == "used" then
 					if not isAutoLogin then 
 						StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
@@ -1101,7 +1086,6 @@ local function ValidateKey(enteredKey, isAutoLogin)
 					return
 				end
 				
-				-- 2. VALIDASI & AUTO-REGISTER USERNAME ROBLOX (Support Multi Akun & User Lama)
 				if record.roblox_username and record.roblox_username ~= "" then
 					if not CheckUsernameInList(record.roblox_username, currentRobloxUser) then
 						if not isAutoLogin then 
@@ -1112,7 +1096,6 @@ local function ValidateKey(enteredKey, isAutoLogin)
 						return
 					end
 				else
-					-- Auto-register jika user lama/baru belum terdaftar username-nya
 					pcall(function()
 						if requestFunc then
 							requestFunc({
@@ -1129,7 +1112,6 @@ local function ValidateKey(enteredKey, isAutoLogin)
 					end)
 				end
 
-				-- 3. VALIDASI HWID (OPSIONAL)
 				if record.hwid_value and record.hwid_value ~= "" then
 					if record.hwid_value ~= CurrentHWID then
 						if not isAutoLogin then 
@@ -1156,7 +1138,6 @@ local function ValidateKey(enteredKey, isAutoLogin)
 					end)
 				end
 				
-				-- JIKA LOLOS
 				pcall(function() if writefile then writefile(KEY_FILE, enteredKey) end end)
 				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
@@ -2453,7 +2434,7 @@ local WebhookToggleBtn = Instance.new("TextButton")
 WebhookToggleBtn.Parent = SettingsPage
 WebhookToggleBtn.Size = UDim2.new(1,0,0,35)
 WebhookToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.WebhookEnabled and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
-WebhookToggleBtn.Text = "  Webhook Secret & Forgotten: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
+WebhookToggleBtn.Text = "  Webhook Server-Wide (Rare & Core): " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
 WebhookToggleBtn.TextColor3 = Color3.new(1,1,1)
 WebhookToggleBtn.Font = Enum.Font.Gotham
 WebhookToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -2462,7 +2443,7 @@ wtc.Parent = WebhookToggleBtn
 
 WebhookToggleBtn.MouseButton1Click:Connect(function()
 	getgenv().UbeyConfig.WebhookEnabled = not getgenv().UbeyConfig.WebhookEnabled
-	WebhookToggleBtn.Text = "  Webhook Secret & Forgotten: " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
+	WebhookToggleBtn.Text = "  Webhook Server-Wide (Rare & Core): " .. (getgenv().UbeyConfig.WebhookEnabled and "[ON]" or "[OFF]")
 	WebhookToggleBtn.BackgroundColor3 = getgenv().UbeyConfig.WebhookEnabled and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(30, 30, 40)
 	SaveConfig()
 end)
@@ -2509,7 +2490,7 @@ TestWebhookBtn.MouseButton1Click:Connect(function()
 				Method = "POST",
 				Headers = { ["Content-Type"] = "application/json" },
 				Body = HttpService:JSONEncode({
-					["content"] = "✅ **Ubey Hub V3 Webhook Test Berhasil!** Koneksi ke Discord normal."
+					["content"] = "✅ **Ubey Hub V3 Server-Wide Webhook Test Berhasil!**"
 				})
 			})
 			TestWebhookBtn.Text = "✅ Pesan Test Berhasil Dikirim!"
