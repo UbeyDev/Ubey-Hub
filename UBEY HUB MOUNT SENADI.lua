@@ -66,7 +66,7 @@ end)
 -- SUPABASE KEY SYSTEM & USERNAME VALIDATION
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
-local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
+local SUPABASE_ANON_KEY = "sb_publishable_rMWL7Qrjw9iG0c29vGZ0bw_O3swXT6n"
 
 local function GetDeviceHWID()
 	local hwid = nil
