@@ -745,10 +745,10 @@ local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
 KeyTitle.Size = UDim2.new(1,0,0,50)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "UBEY HUB V3 - HWID KEY SYSTEM"
+KeyTitle.Text = "UBEY HUB V3 - KEY & ROBLOX USERNAME SYSTEM"
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.TextColor3 = Color3.fromRGB(0,170,255)
-KeyTitle.TextSize = 14
+KeyTitle.TextSize = 13
 
 local KeyBox = Instance.new("TextBox")
 KeyBox.Parent = KeyFrame
@@ -768,7 +768,7 @@ SubmitKeyBtn.Parent = KeyFrame
 SubmitKeyBtn.Size = UDim2.new(0,165,0,35)
 SubmitKeyBtn.Position = UDim2.new(0,20,0,110)
 SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
-SubmitKeyBtn.Text = "Verifikasi Perangkat"
+SubmitKeyBtn.Text = "Verifikasi Key"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
 SubmitKeyBtn.Font = Enum.Font.GothamBold
 SubmitKeyBtn.TextSize = 12
@@ -1030,7 +1030,7 @@ local function AddToggle(parent, text, callback)
 end
 
 ----------------------------------------------------
--- KEY VALIDATION
+-- KEY & ROBLOX USERNAME VALIDATION (UPDATED)
 ----------------------------------------------------
 GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	pcall(function() if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end end)
@@ -1038,33 +1038,50 @@ GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	StatusKey.Text = "Link Discord disalin!"
 end)
 
+local function CheckUsernameInList(allowedUsersStr, currentUsername)
+	if not allowedUsersStr or allowedUsersStr == "" then return false end
+	for name in string.gmatch(allowedUsersStr, "[^,%s]+") do
+		if string.lower(name) == string.lower(currentUsername) then
+			return true
+		end
+	end
+	return false
+end
+
 local function ValidateKey(enteredKey, isAutoLogin)
 	if enteredKey == "" then
 		if not isAutoLogin then
-			StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-			StatusKey.Text = "Masukkan key terlebih dahulu!"
+			StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50)
+			StatusKey.Text = "Masukkan Key terlebih dahulu!"
 		end
 		KeyFrame.Visible = true
 		return
 	end
 	
 	if not isAutoLogin then
-		StatusKey.TextColor3 = Color3.fromRGB(255,200,0)
-		StatusKey.Text = "Memeriksa HWID & Key ke Server..."
+		StatusKey.TextColor3 = Color3.fromRGB(255, 200, 0)
+		StatusKey.Text = "Memeriksa Validasi Akun & Key..."
 	end
 	
 	task.spawn(function()
-		local requestFunc = syn and syn.request or http and http.request or request
+		local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
 		local success, response = pcall(function()
 			if requestFunc then
 				local res = requestFunc({
-					Url = SUPABASE_URL .. enteredKey,
+					Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
 					Method = "GET",
-					Headers = { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, ["Content-Type"] = "application/json" }
+					Headers = { 
+						["apikey"] = SUPABASE_ANON_KEY, 
+						["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
+						["Content-Type"] = "application/json" 
+					}
 				})
 				return res.Body
 			else
-				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY })
+				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, { 
+					["apikey"] = SUPABASE_ANON_KEY, 
+					["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY 
+				})
 			end
 		end)
 		
@@ -1072,26 +1089,90 @@ local function ValidateKey(enteredKey, isAutoLogin)
 			local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(response) end)
 			if decodeSuccess and data and #data > 0 then
 				local record = data[1]
+				local currentRobloxUser = LocalPlayer.Name
+				
+				-- 1. Cek Status Key
 				if record.status == false or record.status == "inactive" or record.status == "used" then
-					if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Key sudah tidak aktif!" end
+					if not isAutoLogin then 
+						StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+						StatusKey.Text = "Key sudah tidak aktif / kadaluwarsa!" 
+					end
 					KeyFrame.Visible = true
 					return
 				end
-				if record.hwid_value and record.hwid_value ~= "" and record.hwid_value ~= CurrentHWID then
-					if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Key terikat di perangkat lain!" end
-					KeyFrame.Visible = true
-					return
+				
+				-- 2. VALIDASI & AUTO-REGISTER USERNAME ROBLOX (Support Multi Akun & User Lama)
+				if record.roblox_username and record.roblox_username ~= "" then
+					if not CheckUsernameInList(record.roblox_username, currentRobloxUser) then
+						if not isAutoLogin then 
+							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+							StatusKey.Text = "Username (" .. currentRobloxUser .. ") tidak terdaftar pada Key ini!" 
+						end
+						KeyFrame.Visible = true
+						return
+					end
+				else
+					-- Auto-register jika user lama/baru belum terdaftar username-nya
+					pcall(function()
+						if requestFunc then
+							requestFunc({
+								Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
+								Method = "PATCH",
+								Headers = { 
+									["apikey"] = SUPABASE_ANON_KEY, 
+									["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
+									["Content-Type"] = "application/json" 
+								},
+								Body = HttpService:JSONEncode({ roblox_username = currentRobloxUser })
+							})
+						end
+					end)
 				end
+
+				-- 3. VALIDASI HWID (OPSIONAL)
+				if record.hwid_value and record.hwid_value ~= "" then
+					if record.hwid_value ~= CurrentHWID then
+						if not isAutoLogin then 
+							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+							StatusKey.Text = "Key terikat di perangkat (HWID) lain!" 
+						end
+						KeyFrame.Visible = true
+						return
+					end
+				else
+					pcall(function()
+						if requestFunc then
+							requestFunc({
+								Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
+								Method = "PATCH",
+								Headers = { 
+									["apikey"] = SUPABASE_ANON_KEY, 
+									["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
+									["Content-Type"] = "application/json" 
+								},
+								Body = HttpService:JSONEncode({ hwid_value = CurrentHWID })
+							})
+						end
+					end)
+				end
+				
+				-- JIKA LOLOS
 				pcall(function() if writefile then writefile(KEY_FILE, enteredKey) end end)
 				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
 				Main.Visible = true
 			else
-				if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Key Salah atau Tidak Ditemukan!" end
+				if not isAutoLogin then 
+					StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+					StatusKey.Text = "Key tidak ditemukan / invalid!" 
+				end
 				KeyFrame.Visible = true
 			end
 		else
-			if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Gagal terhubung ke database." end
+			if not isAutoLogin then 
+				StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+				StatusKey.Text = "Gagal terhubung ke database verifikasi." 
+			end
 			KeyFrame.Visible = true
 		end
 	end)
