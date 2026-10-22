@@ -55,7 +55,6 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			-- [FIX] JSONEncode -> JSONDecode + pcall (sebelumnya string dibandingkan dengan "table")
 			local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(content) end)
 			if decodeSuccess and type(data) == "table" then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
@@ -85,7 +84,6 @@ local function ResetConfig()
 			WebhookEnabled = false,
 			WebhookUrl = ""
 		}
-		-- [FIX] sinkronkan global state yang dipakai UI supaya tidak stale
 		getgenv().BiteDelayInput      = getgenv().UbeyConfig.BiteDelay
 		getgenv().AutoSellTimerInput  = getgenv().UbeyConfig.AutoSellTimer
 		getgenv().SelectedFishingSpot = getgenv().UbeyConfig.SelectedSpot
@@ -193,7 +191,6 @@ end)
 ------------------------------------------------------------------
 local hookedRemotes = {}
 
--- [FIX] validasi tipe actionType supaya aman dari remote yang kirim non-string
 local function ProcessNotifyClient(actionType)
 	if type(actionType) ~= "string" then return end
 	if actionType == "GotFish" then
@@ -303,7 +300,6 @@ local function ClickGameAutoButton()
 				local n = string.lower(v.Name)
 				local t = v:IsA("TextButton") and string.lower(v.Text) or ""
 				if string.find(n, "auto") or string.find(t, "auto") then
-					-- [FIX] Activated bukan signal valid di TextButton; bungkus pcall + cek
 					if firesignal then
 						pcall(function() firesignal(v.MouseButton1Click) end)
 						if v.Activated then
@@ -466,7 +462,6 @@ end
 -- AUTO FISHING (INSTANT / LEGIT)
 ------------------------------------------------------------------
 local function RunAutoFishCycle(remoteFolder)
-	-- [FIX] guard remoteFolder & semua remote yang dipakai
 	if not remoteFolder then return end
 	pcall(function()
 		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1101,7 +1096,8 @@ local function ValidateKey(enteredKey, isAutoLogin)
 				local record = data[1]
 				local currentRobloxUser = LocalPlayer.Name
 				
-				if record.status == false or record.status == "inactive" or record.status == "used" then
+				-- [FIX] Membaca kolom "active" dari Supabase
+				if record.active and tostring(record.active) ~= "active" then
 					if not isAutoLogin then 
 						StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
 						StatusKey.Text = "Key sudah tidak aktif / kadaluwarsa!" 
@@ -1136,8 +1132,9 @@ local function ValidateKey(enteredKey, isAutoLogin)
 					end)
 				end
 
-				if record.hwid_value and record.hwid_value ~= "" then
-					if record.hwid_value ~= CurrentHWID then
+				-- [FIX] Membaca kolom "hwid" dari Supabase
+				if record.hwid and record.hwid ~= "" then
+					if record.hwid ~= CurrentHWID then
 						if not isAutoLogin then 
 							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
 							StatusKey.Text = "Key terikat di perangkat (HWID) lain!" 
@@ -1156,7 +1153,7 @@ local function ValidateKey(enteredKey, isAutoLogin)
 									["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
 									["Content-Type"] = "application/json" 
 								},
-								Body = HttpService:JSONEncode({ hwid_value = CurrentHWID })
+								Body = HttpService:JSONEncode({ hwid = CurrentHWID })
 							})
 						end
 					end)
