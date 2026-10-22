@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | AUTO FISHING + AUTO SUMMIT (PERFECT VERSION)
+-- UBEY HUB | AUTO FISHING + AUTO SUMMIT + USERNAME KEY SYSTEM
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -18,13 +18,36 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 ------------------------------------------------------------------
--- ⚙️ PENGATURAN
+-- ⚙️ CONFIG & FILE SAVE
 ------------------------------------------------------------------
-local CONFIG = {
-	WaitTime = 4.0,        -- Delay Auto Fishing
+local CONFIG_FILE = "UbeyHub_Config.json"
+local KEY_FILE = "UbeyHub_SavedKey.txt"
+
+getgenv().UbeyConfig = {
+	WaitTime = 4.0,
 	LoopDelay = 0.1,
-	AutoSellTimer = 300,
+	AutoSellTimer = "5",
 }
+
+local function SaveConfig()
+	pcall(function()
+		if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode(getgenv().UbeyConfig)) end
+	end)
+end
+
+local function LoadConfig()
+	pcall(function()
+		if readfile and isfile and isfile(CONFIG_FILE) then
+			local data = HttpService:JSONDecode(readfile(CONFIG_FILE))
+			if type(data) == "table" then
+				for k, v in pairs(data) do
+					if getgenv().UbeyConfig[k] ~= nil then getgenv().UbeyConfig[k] = v end
+				end
+			end
+		end
+	end)
+end
+LoadConfig()
 
 getgenv().AutoFishingRunning = false
 getgenv().AutoSellRunning = false
@@ -32,6 +55,7 @@ getgenv().AutoSummitRunning = false
 getgenv().TotalFishCaught = 0
 getgenv().TotalSummitRun = 0
 getgenv().SessionStartTime = os.time()
+getgenv().KeyVerified = false
 
 -- Matikan notifikasi Gameplay Paused bawaan Roblox
 pcall(function()
@@ -39,11 +63,10 @@ pcall(function()
 end)
 
 ------------------------------------------------------------------
--- SUPABASE KEY SYSTEM
+-- SUPABASE KEY SYSTEM & USERNAME VALIDATION
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
 local SUPABASE_ANON_KEY = "sb_publishable_8_TpNisUFO-E3rEvqonNvA_RLPy9PX5"
-local KEY_FILE = "UbeyHub_SavedKey.txt"
 
 local function GetDeviceHWID()
 	local hwid = nil
@@ -98,14 +121,14 @@ task.spawn(function()
 					CleanupCast:FireServer()
 					task.wait(0.05)
 					CastReplication:FireServer(castVec, Vector3.new(0, 5, 24), currentRod, 90)
-					task.wait(CONFIG.WaitTime)
+					task.wait(tonumber(getgenv().UbeyConfig.WaitTime) or 4.0)
 					FishGiver:FireServer({ hookPosition = hookVec, powerPercent = 0 })
 					task.wait(0.1)
 					CleanupCast:FireServer()
 					getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
 				end
 			end)
-			task.wait(CONFIG.LoopDelay)
+			task.wait(tonumber(getgenv().UbeyConfig.LoopDelay) or 0.1)
 		else
 			task.wait(0.5)
 		end
@@ -116,37 +139,37 @@ end)
 -- HELPER: SUMMIT LOGIC (WAYPOINT + TIMER BYPASS)
 ------------------------------------------------------------------
 local waypoints = {
-	Vector3.new(-4.2, 16.3, 886.5),     -- BC ke CP 1
-	Vector3.new(-176.9, 79.6, 1907.9),  -- CP 1 ke CP 2
-	Vector3.new(0.5, 131.2, 2793.1),    -- CP 2 ke CP 3
-	Vector3.new(-1107.6, 362.1, 3266.3),-- CP 3 ke CP 4
-	Vector3.new(-1236.0, 504.5, 3828.8),-- CP 4 ke CP 5
-	Vector3.new(-1754.2, 730.9, 4525.4),-- CP 5 ke CP 6
-	Vector3.new(-1814.4, 746.4, 5568.2),-- CP 6 ke CP 7
-	Vector3.new(-2882.8, 740.9, 6129.6),-- CP 7 ke CP 8
-	Vector3.new(-3485.3, 740.2, 6524.1),-- CP 8 ke CP 9
-	Vector3.new(-3071.4, 794.4, 7228.8),-- CP 9 ke CP 10
-	Vector3.new(-2916.1, 835.4, 7965.9),-- CP 10 ke CP 11
-	Vector3.new(-2932.0, 849.1, 8838.7),-- CP 11 ke CP 12
-	Vector3.new(-3510.9, 1021.1, 9350.6),-- CP 12 ke CP 13
-	Vector3.new(-3472.3, 1021.8, 10147.4),-- CP 13 ke CP 14
-	Vector3.new(-3613.4, 1022.4, 10852.6),-- CP 14 ke CP 15
-	Vector3.new(-3849.1, 1048.2, 11692.4),-- CP 15 ke CP 16
-	Vector3.new(-4051.8, 1115.9, 12606.3),-- CP 16 ke CP 17
-	Vector3.new(-3995.3, 1197.4, 13586.2),-- CP 17 ke CP 18
-	Vector3.new(-4306.6, 1276.0, 14465.3),-- CP 18 ke CP 19
-	Vector3.new(-4564.7, 1295.0, 15327.3),-- CP 19 ke CP 20
-	Vector3.new(-4747.6, 1323.8, 16335.5),-- CP 20 ke CP 21
-	Vector3.new(-4821.9, 1366.9, 17051.8),-- CP 21 ke CP 22
-	Vector3.new(-5133.6, 1531.3, 17596.4),-- CP 22 ke CP 23
-	Vector3.new(-5339.5, 1631.6, 18276.7),-- CP 23 ke CP 24
-	Vector3.new(-5362.9, 1737.9, 19296.5),-- CP 24 ke CP 25
-	Vector3.new(-5376.3, 1761.7, 19944.1),-- CP 25 ke CP 26
-	Vector3.new(-5593.8, 1890.4, 20588.2),-- CP 26 ke CP 27
-	Vector3.new(-5700.9, 1975.2, 21045.2),-- CP 27 ke CP 28
-	Vector3.new(-6024.9, 1977.4, 21183.8),-- CP 28 ke CP 29
-	Vector3.new(-6633.9, 2048.1, 21482.6),-- CP 29 ke CP 30
-	Vector3.new(-6634.3, 2230.0, 22351.3),-- SUMMIT AKHIR
+	Vector3.new(-4.2, 16.3, 886.5),
+	Vector3.new(-176.9, 79.6, 1907.9),
+	Vector3.new(0.5, 131.2, 2793.1),
+	Vector3.new(-1107.6, 362.1, 3266.3),
+	Vector3.new(-1236.0, 504.5, 3828.8),
+	Vector3.new(-1754.2, 730.9, 4525.4),
+	Vector3.new(-1814.4, 746.4, 5568.2),
+	Vector3.new(-2882.8, 740.9, 6129.6),
+	Vector3.new(-3485.3, 740.2, 6524.1),
+	Vector3.new(-3071.4, 794.4, 7228.8),
+	Vector3.new(-2916.1, 835.4, 7965.9),
+	Vector3.new(-2932.0, 849.1, 8838.7),
+	Vector3.new(-3510.9, 1021.1, 9350.6),
+	Vector3.new(-3472.3, 1021.8, 10147.4),
+	Vector3.new(-3613.4, 1022.4, 10852.6),
+	Vector3.new(-3849.1, 1048.2, 11692.4),
+	Vector3.new(-4051.8, 1115.9, 12606.3),
+	Vector3.new(-3995.3, 1197.4, 13586.2),
+	Vector3.new(-4306.6, 1276.0, 14465.3),
+	Vector3.new(-4564.7, 1295.0, 15327.3),
+	Vector3.new(-4747.6, 1323.8, 16335.5),
+	Vector3.new(-4821.9, 1366.9, 17051.8),
+	Vector3.new(-5133.6, 1531.3, 17596.4),
+	Vector3.new(-5339.5, 1631.6, 18276.7),
+	Vector3.new(-5362.9, 1737.9, 19296.5),
+	Vector3.new(-5376.3, 1761.7, 19944.1),
+	Vector3.new(-5593.8, 1890.4, 20588.2),
+	Vector3.new(-5700.9, 1975.2, 21045.2),
+	Vector3.new(-6024.9, 1977.4, 21183.8),
+	Vector3.new(-6633.9, 2048.1, 21482.6),
+	Vector3.new(-6634.3, 2230.0, 22351.3),
 }
 
 task.spawn(function()
@@ -281,7 +304,7 @@ Gui.Parent = PlayerGui
 Gui.ResetOnSpawn = false
 
 ------------------------------------------------------------------
--- KEY SYSTEM UI
+-- KEY SYSTEM UI (UPDATED)
 ------------------------------------------------------------------
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Parent = Gui
@@ -298,10 +321,10 @@ local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Parent = KeyFrame
 KeyTitle.Size = UDim2.new(1,0,0,50)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "UBEY HUB - HWID KEY SYSTEM"
+KeyTitle.Text = "UBEY HUB - USERNAME & KEY SYSTEM"
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.TextColor3 = Color3.fromRGB(0,170,255)
-KeyTitle.TextSize = 14
+KeyTitle.TextSize = 13
 
 local KeyBox = Instance.new("TextBox")
 KeyBox.Parent = KeyFrame
@@ -320,7 +343,7 @@ SubmitKeyBtn.Parent = KeyFrame
 SubmitKeyBtn.Size = UDim2.new(0,165,0,35)
 SubmitKeyBtn.Position = UDim2.new(0,20,0,110)
 SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(0,100,180)
-SubmitKeyBtn.Text = "Verifikasi Perangkat"
+SubmitKeyBtn.Text = "Verifikasi Key"
 SubmitKeyBtn.TextColor3 = Color3.new(1,1,1)
 SubmitKeyBtn.Font = Enum.Font.GothamBold
 SubmitKeyBtn.TextSize = 12
@@ -345,7 +368,7 @@ StatusKey.BackgroundTransparency = 1
 StatusKey.Text = ""
 StatusKey.Font = Enum.Font.Gotham
 StatusKey.TextColor3 = Color3.fromRGB(255,50,50)
-StatusKey.TextSize = 12
+StatusKey.TextSize = 11
 
 ------------------------------------------------------------------
 -- MAIN HUB UI
@@ -529,8 +552,47 @@ local function AddToggle(parent, text, callback)
 	end)
 end
 
+local function AddTimerBox(parent, labelText, configKey)
+	local frame = Instance.new("Frame")
+	frame.Parent = parent
+	frame.Size = UDim2.new(1,0,0,35)
+	frame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	local fc = Instance.new("UICorner") fc.Parent = frame
+	
+	local lbl = Instance.new("TextLabel")
+	lbl.Parent = frame
+	lbl.Size = UDim2.new(0.5, 0, 1, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = "  " .. labelText
+	lbl.TextColor3 = Color3.new(1,1,1)
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 12
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local box = Instance.new("TextBox")
+	box.Parent = frame
+	box.Size = UDim2.new(0.45, -5, 0, 25)
+	box.Position = UDim2.new(0.52, 0, 0, 5)
+	box.BackgroundColor3 = Color3.fromRGB(45,45,55)
+	box.Text = tostring(getgenv().UbeyConfig[configKey])
+	box.TextColor3 = Color3.fromRGB(0,170,255)
+	box.Font = Enum.Font.GothamBold
+	box.TextSize = 12
+	local bc = Instance.new("UICorner") bc.Parent = box
+	
+	box.FocusLost:Connect(function()
+		local val = tonumber(box.Text)
+		if val then
+			getgenv().UbeyConfig[configKey] = tostring(val)
+			SaveConfig()
+		else
+			box.Text = tostring(getgenv().UbeyConfig[configKey])
+		end
+	end)
+end
+
 ------------------------------------------------------------------
--- KEY VALIDATION
+-- KEY VALIDATION FUNCTION
 ------------------------------------------------------------------
 GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	pcall(function() if setclipboard then setclipboard("https://discord.gg/YXuYeEpnXE") end end)
@@ -538,24 +600,50 @@ GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	StatusKey.Text = "Link Discord disalin!"
 end)
 
+local function CheckUsernameInList(allowedUsersStr, currentUsername)
+	if not allowedUsersStr or allowedUsersStr == "" then return false end
+	for name in string.gmatch(allowedUsersStr, "[^,%s]+") do
+		if string.lower(name) == string.lower(currentUsername) then
+			return true
+		end
+	end
+	return false
+end
+
 local function ValidateKey(enteredKey, isAutoLogin)
 	if enteredKey == "" then
-		if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Masukkan key terlebih dahulu!" end
-		KeyFrame.Visible = true; return
+		if not isAutoLogin then
+			StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50)
+			StatusKey.Text = "Masukkan Key terlebih dahulu!"
+		end
+		KeyFrame.Visible = true
+		return
 	end
-	if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,200,0) StatusKey.Text = "Memeriksa HWID & Key ke Server..." end
+	
+	if not isAutoLogin then
+		StatusKey.TextColor3 = Color3.fromRGB(255, 200, 0)
+		StatusKey.Text = "Memeriksa Validasi Akun & Key..."
+	end
 	
 	task.spawn(function()
-		local requestFunc = syn and syn.request or http and http.request or request
+		local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
 		local success, response = pcall(function()
 			if requestFunc then
 				local res = requestFunc({
-					Url = SUPABASE_URL .. enteredKey, Method = "GET",
-					Headers = { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, ["Content-Type"] = "application/json" }
+					Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
+					Method = "GET",
+					Headers = { 
+						["apikey"] = SUPABASE_ANON_KEY, 
+						["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
+						["Content-Type"] = "application/json" 
+					}
 				})
 				return res.Body
 			else
-				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, { ["apikey"] = SUPABASE_ANON_KEY, ["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY })
+				return HttpService:GetAsync(SUPABASE_URL .. HttpService:UrlEncode(enteredKey), false, { 
+					["apikey"] = SUPABASE_ANON_KEY, 
+					["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY 
+				})
 			end
 		end)
 		
@@ -563,24 +651,90 @@ local function ValidateKey(enteredKey, isAutoLogin)
 			local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(response) end)
 			if decodeSuccess and data and #data > 0 then
 				local record = data[1]
+				local currentRobloxUser = LocalPlayer.Name
+				
+				-- 1. Cek Status Key
 				if record.status == false or record.status == "inactive" or record.status == "used" then
-					if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Key sudah tidak aktif!" end
-					KeyFrame.Visible = true; return
+					if not isAutoLogin then 
+						StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+						StatusKey.Text = "Key sudah tidak aktif / kadaluwarsa!" 
+					end
+					KeyFrame.Visible = true
+					return
 				end
-				if record.hwid_value and record.hwid_value ~= "" and record.hwid_value ~= CurrentHWID then
-					if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Key terikat di perangkat lain!" end
-					KeyFrame.Visible = true; return
+				
+				-- 2. VALIDASI & AUTO-REGISTER USERNAME ROBLOX
+				if record.roblox_username and record.roblox_username ~= "" then
+					if not CheckUsernameInList(record.roblox_username, currentRobloxUser) then
+						if not isAutoLogin then 
+							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+							StatusKey.Text = "Username (" .. currentRobloxUser .. ") tidak terdaftar!" 
+						end
+						KeyFrame.Visible = true
+						return
+					end
+				else
+					-- Auto-register jika belum ada username
+					pcall(function()
+						if requestFunc then
+							requestFunc({
+								Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
+								Method = "PATCH",
+								Headers = { 
+									["apikey"] = SUPABASE_ANON_KEY, 
+									["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
+									["Content-Type"] = "application/json" 
+								},
+								Body = HttpService:JSONEncode({ roblox_username = currentRobloxUser })
+							})
+						end
+					end)
 				end
+
+				-- 3. VALIDASI HWID (OPSIONAL)
+				if record.hwid_value and record.hwid_value ~= "" then
+					if record.hwid_value ~= CurrentHWID then
+						if not isAutoLogin then 
+							StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+							StatusKey.Text = "Key terikat di perangkat (HWID) lain!" 
+						end
+						KeyFrame.Visible = true
+						return
+					end
+				else
+					pcall(function()
+						if requestFunc then
+							requestFunc({
+								Url = SUPABASE_URL .. HttpService:UrlEncode(enteredKey),
+								Method = "PATCH",
+								Headers = { 
+									["apikey"] = SUPABASE_ANON_KEY, 
+									["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY, 
+									["Content-Type"] = "application/json" 
+								},
+								Body = HttpService:JSONEncode({ hwid_value = CurrentHWID })
+							})
+						end
+					end)
+				end
+				
+				-- JIKA LOLOS SEMUA
 				pcall(function() if writefile then writefile(KEY_FILE, enteredKey) end end)
 				getgenv().KeyVerified = true
 				KeyFrame.Visible = false
 				Main.Visible = true
 			else
-				if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Key Salah atau Tidak Ditemukan!" end
+				if not isAutoLogin then 
+					StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+					StatusKey.Text = "Key tidak ditemukan / invalid!" 
+				end
 				KeyFrame.Visible = true
 			end
 		else
-			if not isAutoLogin then StatusKey.TextColor3 = Color3.fromRGB(255,50,50) StatusKey.Text = "Gagal terhubung ke database." end
+			if not isAutoLogin then 
+				StatusKey.TextColor3 = Color3.fromRGB(255, 50, 50) 
+				StatusKey.Text = "Gagal terhubung ke database." 
+			end
 			KeyFrame.Visible = true
 		end
 	end)
@@ -590,9 +744,15 @@ SubmitKeyBtn.MouseButton1Click:Connect(function() ValidateKey(KeyBox.Text, false
 task.spawn(function()
 	if readfile and isfile and isfile(KEY_FILE) then
 		local savedKey = readfile(KEY_FILE)
-		if savedKey and savedKey ~= "" then KeyBox.Text = savedKey; ValidateKey(savedKey, true)
-		else KeyFrame.Visible = true end
-	else KeyFrame.Visible = true end
+		if savedKey and savedKey ~= "" then 
+			KeyBox.Text = savedKey
+			ValidateKey(savedKey, true)
+		else
+			KeyFrame.Visible = true
+		end
+	else
+		KeyFrame.Visible = true
+	end
 end)
 
 ------------------------------------------------------------------
@@ -636,6 +796,8 @@ AddToggle(FishingPage, "Auto Sell Ikan (Timer)", function(v)
 		end)
 	end
 end)
+
+AddTimerBox(FishingPage, "Jeda Jual (Menit)", "AutoSellTimer")
 
 ------------------------------------------------------------------
 -- PAGE 2: SUMMIT FARM
