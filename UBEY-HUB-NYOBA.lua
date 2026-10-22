@@ -55,8 +55,9 @@ local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
 			local content = readfile(CONFIG_FILE)
-			local data = HttpService:JSONEncode(content)
-			if type(data) == "table" then
+			-- [FIX] JSONEncode -> JSONDecode + pcall (sebelumnya string dibandingkan dengan "table")
+			local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(content) end)
+			if decodeSuccess and type(data) == "table" then
 				if data.BiteDelay then getgenv().UbeyConfig.BiteDelay = data.BiteDelay end
 				if data.TapDelay then getgenv().UbeyConfig.TapDelay = data.TapDelay end
 				if data.MinigameMode then getgenv().UbeyConfig.MinigameMode = data.MinigameMode end
@@ -84,6 +85,12 @@ local function ResetConfig()
 			WebhookEnabled = false,
 			WebhookUrl = ""
 		}
+		-- [FIX] sinkronkan global state yang dipakai UI supaya tidak stale
+		getgenv().BiteDelayInput      = getgenv().UbeyConfig.BiteDelay
+		getgenv().AutoSellTimerInput  = getgenv().UbeyConfig.AutoSellTimer
+		getgenv().SelectedFishingSpot = getgenv().UbeyConfig.SelectedSpot
+		getgenv().KeyVerified         = false
+
 		if delfile and isfile then
 			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
 			if isfile(KEY_FILE) then delfile(KEY_FILE) end
@@ -186,7 +193,9 @@ end)
 ------------------------------------------------------------------
 local hookedRemotes = {}
 
-local function ProcessNotifyClient(actionType, fishDataArg)
+-- [FIX] validasi tipe actionType supaya aman dari remote yang kirim non-string
+local function ProcessNotifyClient(actionType)
+	if type(actionType) ~= "string" then return end
 	if actionType == "GotFish" then
 		pcall(function()
 			getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
@@ -294,11 +303,16 @@ local function ClickGameAutoButton()
 				local n = string.lower(v.Name)
 				local t = v:IsA("TextButton") and string.lower(v.Text) or ""
 				if string.find(n, "auto") or string.find(t, "auto") then
+					-- [FIX] Activated bukan signal valid di TextButton; bungkus pcall + cek
 					if firesignal then
-						firesignal(v.MouseButton1Click)
-						firesignal(v.Activated)
+						pcall(function() firesignal(v.MouseButton1Click) end)
+						if v.Activated then
+							pcall(function() firesignal(v.Activated) end)
+						end
 					elseif getconnections then
-						for _, c in ipairs(getconnections(v.MouseButton1Click)) do c:Fire() end
+						pcall(function()
+							for _, c in ipairs(getconnections(v.MouseButton1Click)) do c:Fire() end
+						end)
 					end
 					return
 				end
@@ -452,21 +466,29 @@ end
 -- AUTO FISHING (INSTANT / LEGIT)
 ------------------------------------------------------------------
 local function RunAutoFishCycle(remoteFolder)
+	-- [FIX] guard remoteFolder & semua remote yang dipakai
+	if not remoteFolder then return end
 	pcall(function()
 		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		if not hrp then return end
-		
+
+		local castEvt = remoteFolder:FindFirstChild("CastEvent")
+		local notifyEvt = remoteFolder:FindFirstChild("NotifyClient")
+		local miniEvt = remoteFolder:FindFirstChild("MiniGame")
+		if not castEvt or not notifyEvt then return end
+
 		OptimizeRodSettings()
-		
-		remoteFolder.CastEvent:FireServer(true)
+
+		castEvt:FireServer(true)
 		task.wait(0.05)
-		remoteFolder.CastEvent:FireServer(false, 100, hrp.CFrame.LookVector)
-		
+		castEvt:FireServer(false, 100, hrp.CFrame.LookVector)
+
 		local hooked = false
-		local conn = remoteFolder.NotifyClient.OnClientEvent:Connect(function(actionType)
+		local conn = notifyEvt.OnClientEvent:Connect(function(actionType)
+			if type(actionType) ~= "string" then return end
 			if actionType == "Bite" or actionType == "Hook" then hooked = true end
 		end)
-		
+
 		local start = tick()
 		while not hooked and getgenv().AutoFishingEventRunning
 			and getgenv().UbeyConfig.MinigameMode == "Instant" do
@@ -474,13 +496,13 @@ local function RunAutoFishCycle(remoteFolder)
 			task.wait(0.05)
 		end
 		if conn then conn:Disconnect() end
-		
+
 		if hooked and getgenv().AutoFishingEventRunning
 			and getgenv().UbeyConfig.MinigameMode == "Instant" then
 			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
-			
+
 			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
-			
+
 			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
 			if tandaSeruRemote then
 				local color1 = Color3.fromRGB(23, 255, 151)
@@ -491,10 +513,10 @@ local function RunAutoFishCycle(remoteFolder)
 				})
 				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)
 			end
-			
+
 			task.wait(0.1)
 			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
-			remoteFolder.MiniGame:FireServer(true)
+			if miniEvt then miniEvt:FireServer(true) end
 			task.wait(0.3)
 		end
 	end)
@@ -531,7 +553,11 @@ local function StartFishingLoop()
 				pcall(function()
 					local rod = GetEquippedRod()
 					local rf = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Remotes")
-					if rf then RunAutoFishCycle(rf) else task.wait(1) end
+					if rf then
+						RunAutoFishCycle(rf)
+					else
+						task.wait(1)
+					end
 				end)
 				task.wait(0.1)
 			end
