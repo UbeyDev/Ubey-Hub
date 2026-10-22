@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | AUTO FISHING (PURE INSTANT - MINIGAME BYPASS)
+-- UBEY HUB | AUTO FISHING + AUTO SUMMIT (PERFECT VERSION)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -12,26 +12,31 @@ local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Workspace = game:GetService("Workspace")
+local GuiService = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 ------------------------------------------------------------------
--- ⚙️ PENGATURAN (HARDCODE) ⚙️
+-- ⚙️ PENGATURAN
 ------------------------------------------------------------------
-getgenv().UbeyConfig = {
-	CastDelay = 0.25,   -- Delay setelah lempar kail
-	MiniDelay = 0.30,   -- Delay minigame
-	GiveDelay = 0.20,   -- Delay klaim ikan
-	AutoSellTimer = "5",
-	WebhookEnabled = false,
-	WebhookUrl = ""
+local CONFIG = {
+	WaitTime = 4.0,        -- Delay Auto Fishing
+	LoopDelay = 0.1,
+	AutoSellTimer = 300,
 }
 
 getgenv().AutoFishingRunning = false
 getgenv().AutoSellRunning = false
+getgenv().AutoSummitRunning = false
 getgenv().TotalFishCaught = 0
+getgenv().TotalSummitRun = 0
 getgenv().SessionStartTime = os.time()
+
+-- Matikan notifikasi Gameplay Paused bawaan Roblox
+pcall(function()
+	GuiService:SetGameplayPausedNotificationEnabled(false)
+end)
 
 ------------------------------------------------------------------
 -- SUPABASE KEY SYSTEM
@@ -51,7 +56,7 @@ end
 local CurrentHWID = GetDeviceHWID()
 
 ------------------------------------------------------------------
--- HELPER: FISHING LOGIC (DARI SCRIPT CONTOH)
+-- HELPER: FISHING LOGIC
 ------------------------------------------------------------------
 local function GetEquippedRodName()
 	local char = LocalPlayer.Character
@@ -59,7 +64,7 @@ local function GetEquippedRodName()
 		local tool = char:FindFirstChildOfClass("Tool")
 		if tool then return tool.Name end
 	end
-	return "Basic Rod"
+	return nil
 end
 
 local function TriggerSellAll()
@@ -71,65 +76,153 @@ local function TriggerSellAll()
 end
 
 task.spawn(function()
+	local FS = ReplicatedStorage:WaitForChild("FishingSystem", 10)
+	if not FS then return end
+	
+	local CastReplication = FS:WaitForChild("CastReplication")
+	local CleanupCast = FS:WaitForChild("CleanupCast")
+	local FishGiver = FS:WaitForChild("FishGiver")
+
 	while true do
-		task.wait(0.1)
-		
 		if getgenv().AutoFishingRunning then
 			pcall(function()
-				local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-				local hrp = char:WaitForChild("HumanoidRootPart", 3)
-				if not hrp then return end
-				
-				local FS = ReplicatedStorage:WaitForChild("FishingSystem", 3)
-				if not FS then return end
-				
-				local cast = FS:FindFirstChild("CastReplication")
-				local mini = FS:FindFirstChild("MinigameStarted") -- KUNCI UTAMANYA!
-				local clean = FS:FindFirstChild("CleanupCast")
-				local give = FS:FindFirstChild("FishGiver")
+				local char = LocalPlayer.Character
+				local root = char and char:FindFirstChild("HumanoidRootPart")
 				local currentRod = GetEquippedRodName()
-				
-				local pos = hrp.Position + Vector3.new(0, 2, 0)
-				local lookVec = hrp.CFrame.LookVector * 15
-				local hook = pos + lookVec - Vector3.new(0, 5, 0)
-				
-				-- 1. Lempar Kail
-				if cast then
-					cast:FireServer(pos, Vector3.new(-24.72, 5, 3.71), currentRod, 100)
-				end
-				
-				task.wait(getgenv().UbeyConfig.CastDelay)
-				if not getgenv().AutoFishingRunning then return end
-				
-				-- 2. Minigame (Bypass)
-				if mini then
-					mini:FireServer({
-						hookPosition = hook,
-						power = 50
-					})
-				end
-				
-				task.wait(getgenv().UbeyConfig.MiniDelay)
-				if not getgenv().AutoFishingRunning then return end
-				
-				-- 3. Cleanup Cast
-				if clean then
-					clean:FireServer()
-				end
-				
-				task.wait(0.05)
-				
-				-- 4. Claim Ikan (FishGiver)
-				if give then
-					give:FireServer({
-						hookPosition = hook,
-						power = 50
-					})
+
+				if root and currentRod then
+					local pPos = root.Position
+					local castVec = pPos + (root.CFrame.LookVector * 15)
+					local hookVec = castVec - Vector3.new(0, 8, 0)
+
+					CleanupCast:FireServer()
+					task.wait(0.05)
+					CastReplication:FireServer(castVec, Vector3.new(0, 5, 24), currentRod, 90)
+					task.wait(CONFIG.WaitTime)
+					FishGiver:FireServer({ hookPosition = hookVec, powerPercent = 0 })
+					task.wait(0.1)
+					CleanupCast:FireServer()
 					getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
 				end
-				
-				task.wait(getgenv().UbeyConfig.GiveDelay)
 			end)
+			task.wait(CONFIG.LoopDelay)
+		else
+			task.wait(0.5)
+		end
+	end
+end)
+
+------------------------------------------------------------------
+-- HELPER: SUMMIT LOGIC (WAYPOINT + TIMER BYPASS)
+------------------------------------------------------------------
+local waypoints = {
+	Vector3.new(-4.2, 16.3, 886.5),     -- BC ke CP 1
+	Vector3.new(-176.9, 79.6, 1907.9),  -- CP 1 ke CP 2
+	Vector3.new(0.5, 131.2, 2793.1),    -- CP 2 ke CP 3
+	Vector3.new(-1107.6, 362.1, 3266.3),-- CP 3 ke CP 4
+	Vector3.new(-1236.0, 504.5, 3828.8),-- CP 4 ke CP 5
+	Vector3.new(-1754.2, 730.9, 4525.4),-- CP 5 ke CP 6
+	Vector3.new(-1814.4, 746.4, 5568.2),-- CP 6 ke CP 7
+	Vector3.new(-2882.8, 740.9, 6129.6),-- CP 7 ke CP 8
+	Vector3.new(-3485.3, 740.2, 6524.1),-- CP 8 ke CP 9
+	Vector3.new(-3071.4, 794.4, 7228.8),-- CP 9 ke CP 10
+	Vector3.new(-2916.1, 835.4, 7965.9),-- CP 10 ke CP 11
+	Vector3.new(-2932.0, 849.1, 8838.7),-- CP 11 ke CP 12
+	Vector3.new(-3510.9, 1021.1, 9350.6),-- CP 12 ke CP 13
+	Vector3.new(-3472.3, 1021.8, 10147.4),-- CP 13 ke CP 14
+	Vector3.new(-3613.4, 1022.4, 10852.6),-- CP 14 ke CP 15
+	Vector3.new(-3849.1, 1048.2, 11692.4),-- CP 15 ke CP 16
+	Vector3.new(-4051.8, 1115.9, 12606.3),-- CP 16 ke CP 17
+	Vector3.new(-3995.3, 1197.4, 13586.2),-- CP 17 ke CP 18
+	Vector3.new(-4306.6, 1276.0, 14465.3),-- CP 18 ke CP 19
+	Vector3.new(-4564.7, 1295.0, 15327.3),-- CP 19 ke CP 20
+	Vector3.new(-4747.6, 1323.8, 16335.5),-- CP 20 ke CP 21
+	Vector3.new(-4821.9, 1366.9, 17051.8),-- CP 21 ke CP 22
+	Vector3.new(-5133.6, 1531.3, 17596.4),-- CP 22 ke CP 23
+	Vector3.new(-5339.5, 1631.6, 18276.7),-- CP 23 ke CP 24
+	Vector3.new(-5362.9, 1737.9, 19296.5),-- CP 24 ke CP 25
+	Vector3.new(-5376.3, 1761.7, 19944.1),-- CP 25 ke CP 26
+	Vector3.new(-5593.8, 1890.4, 20588.2),-- CP 26 ke CP 27
+	Vector3.new(-5700.9, 1975.2, 21045.2),-- CP 27 ke CP 28
+	Vector3.new(-6024.9, 1977.4, 21183.8),-- CP 28 ke CP 29
+	Vector3.new(-6633.9, 2048.1, 21482.6),-- CP 29 ke CP 30
+	Vector3.new(-6634.3, 2230.0, 22351.3),-- SUMMIT AKHIR
+}
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoSummitRunning then
+			pcall(function()
+				local permisiFolder = workspace:FindFirstChild("permisi")
+				local basecampFolder = workspace:FindFirstChild("BASECAMP")
+				local touchedList = {}
+
+				local function checkAndTouchCP()
+					if not permisiFolder then return end
+					for _, part in ipairs(permisiFolder:GetChildren()) do
+						if part:IsA("BasePart") and not touchedList[part] then
+							touchedList[part] = true
+							if firetouchinterest then
+								local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+								if hrp then
+									firetouchinterest(hrp, part, 0)
+									task.wait(0.05)
+									firetouchinterest(hrp, part, 1)
+								end
+							end
+						end
+					end
+				end
+
+				local function tpToBasecamp()
+					if basecampFolder then
+						local tpPart2 = basecampFolder:FindFirstChild("TeleportPart2")
+						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+						if tpPart2 and hrp then
+							hrp.CFrame = tpPart2.CFrame
+							if firetouchinterest then
+								firetouchinterest(hrp, tpPart2, 0)
+								task.wait(0.1)
+								firetouchinterest(hrp, tpPart2, 1)
+							end
+						end
+					end
+				end
+
+				local function safeTeleport(targetPos)
+					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					if not hrp then return end
+					pcall(function()
+						LocalPlayer:RequestStreamAroundAsync(targetPos)
+					end)
+					hrp.CFrame = CFrame.new(targetPos)
+				end
+
+				touchedList = {}
+				
+				for index, pos in ipairs(waypoints) do
+					if not getgenv().AutoSummitRunning then break end
+					
+					safeTeleport(pos)
+					
+					local timer = 0
+					while timer < 8 and getgenv().AutoSummitRunning do
+						checkAndTouchCP()
+						task.wait(0.5)
+						timer = timer + 0.5
+					end
+				end
+				
+				if getgenv().AutoSummitRunning then
+					getgenv().TotalSummitRun = getgenv().TotalSummitRun + 1
+					task.wait(3)
+					tpToBasecamp()
+					task.wait(3)
+				end
+			end)
+			task.wait(1)
+		else
+			task.wait(0.5)
 		end
 	end
 end)
@@ -385,8 +478,9 @@ local function CreateNavButton(text, yPos)
 end
 
 local FishingBtn = CreateNavButton("🎣 Fishing", 60)
-local SettingsBtn = CreateNavButton("⚙️ Settings", 95)
-local CreditsBtn = CreateNavButton("👑 Credits", 130)
+local SummitBtn = CreateNavButton("⛰️ Summit Farm", 95)
+local SettingsBtn = CreateNavButton("⚙️ Settings", 130)
+local CreditsBtn = CreateNavButton("👑 Credits", 165)
 
 local function MakePage()
 	local f = Instance.new("ScrollingFrame")
@@ -402,14 +496,16 @@ local function MakePage()
 end
 
 local FishingPage = MakePage() FishingPage.Visible = true
+local SummitPage = MakePage()
 local SettingsPage = MakePage()
 local CreditsPage = MakePage()
 
 local function HideAll()
-	for _, pg in ipairs({FishingPage, SettingsPage, CreditsPage}) do pg.Visible = false end
+	for _, pg in ipairs({FishingPage, SummitPage, SettingsPage, CreditsPage}) do pg.Visible = false end
 end
 
 FishingBtn.MouseButton1Click:Connect(function() HideAll(); FishingPage.Visible = true end)
+SummitBtn.MouseButton1Click:Connect(function() HideAll(); SummitPage.Visible = true end)
 SettingsBtn.MouseButton1Click:Connect(function() HideAll(); SettingsPage.Visible = true end)
 CreditsBtn.MouseButton1Click:Connect(function() HideAll(); CreditsPage.Visible = true end)
 
@@ -506,7 +602,7 @@ local TitleFish = Instance.new("TextLabel")
 TitleFish.Parent = FishingPage
 TitleFish.Size = UDim2.new(1,0,0,30)
 TitleFish.BackgroundTransparency = 1
-TitleFish.Text = "🎣 AUTO FISHING (PURE INSTANT)"
+TitleFish.Text = "🎣 AUTO FISHING (DYNAMIC ROD)"
 TitleFish.TextColor3 = Color3.fromRGB(0,170,255)
 TitleFish.Font = Enum.Font.GothamBold
 TitleFish.TextSize = 13
@@ -515,13 +611,13 @@ local InfoLabel = Instance.new("TextLabel")
 InfoLabel.Parent = FishingPage
 InfoLabel.Size = UDim2.new(1,0,0,40)
 InfoLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
-InfoLabel.Text = "Instan Sequence:\nCast -> Mini -> Clean -> Give."
+InfoLabel.Text = "Pastikan kamu sudah memegang (equip) pancingan!\nScript akan mendeteksi nama rod secara otomatis."
 InfoLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
 InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.TextSize = 11
 local ilc = Instance.new("UICorner") ilc.Parent = InfoLabel
 
-AddToggle(FishingPage, "Auto Fishing (Instant)", function(v)
+AddToggle(FishingPage, "Auto Fishing", function(v)
 	getgenv().AutoFishingRunning = v
 end)
 
@@ -542,7 +638,33 @@ AddToggle(FishingPage, "Auto Sell Ikan (Timer)", function(v)
 end)
 
 ------------------------------------------------------------------
--- PAGE 2: SETTINGS
+-- PAGE 2: SUMMIT FARM
+------------------------------------------------------------------
+local TitleSum = Instance.new("TextLabel")
+TitleSum.Parent = SummitPage
+TitleSum.Size = UDim2.new(1,0,0,30)
+TitleSum.BackgroundTransparency = 1
+TitleSum.Text = "⛰️ AUTO SUMMIT FARM"
+TitleSum.TextColor3 = Color3.fromRGB(0,170,255)
+TitleSum.Font = Enum.Font.GothamBold
+TitleSum.TextSize = 13
+
+local InfoSum = Instance.new("TextLabel")
+InfoSum.Parent = SummitPage
+InfoSum.Size = UDim2.new(1,0,0,40)
+InfoSum.BackgroundColor3 = Color3.fromRGB(30,30,40)
+InfoSum.Text = "Otomatis mendaki via Waypoint (31 Titik) & Bypass Timer 4 Menit.\nJangan bergerak selama Auto Summit ON."
+InfoSum.TextColor3 = Color3.fromRGB(255, 200, 0)
+InfoSum.Font = Enum.Font.Gotham
+InfoSum.TextSize = 11
+local isc = Instance.new("UICorner") isc.Parent = InfoSum
+
+AddToggle(SummitPage, "Auto Climb Summit (Loop)", function(v)
+	getgenv().AutoSummitRunning = v
+end)
+
+------------------------------------------------------------------
+-- PAGE 3: SETTINGS
 ------------------------------------------------------------------
 local TitleSet = Instance.new("TextLabel")
 TitleSet.Parent = SettingsPage
@@ -566,7 +688,7 @@ AntiLagBtn.MouseButton1Click:Connect(function()
 end)
 
 ------------------------------------------------------------------
--- PAGE 3: CREDITS
+-- PAGE 4: CREDITS
 ------------------------------------------------------------------
 local CredLbl = Instance.new("TextLabel")
 CredLbl.Parent = CreditsPage
@@ -593,7 +715,7 @@ StatLabel.Parent = StatPanel
 StatLabel.Size = UDim2.new(1, -10, 1, 0)
 StatLabel.Position = UDim2.new(0, 5, 0, 0)
 StatLabel.BackgroundTransparency = 1
-StatLabel.Text = "📊 Fish: 0  |  ⏱️ 00s"
+StatLabel.Text = "📊 Fish: 0  |  ⛰️ Summit: 0  |  ⏱️ 00s"
 StatLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
 StatLabel.Font = Enum.Font.GothamBold
 StatLabel.TextSize = 11
@@ -610,7 +732,7 @@ task.spawn(function()
 			if hours > 0 then timeStr = string.format("%02dh %02dm %02ds", hours, mins, secs)
 			elseif mins > 0 then timeStr = string.format("%02dm %02ds", mins, secs)
 			else timeStr = string.format("%02ds", secs) end
-			StatLabel.Text = string.format("📊 Fish: %d  |  ⏱️ %s", getgenv().TotalFishCaught, timeStr)
+			StatLabel.Text = string.format("📊 Fish: %d  |  ⛰️ Summit: %d  |  ⏱️ %s", getgenv().TotalFishCaught, getgenv().TotalSummitRun, timeStr)
 		end)
 		task.wait(1)
 	end
