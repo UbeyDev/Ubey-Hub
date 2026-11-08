@@ -1841,7 +1841,7 @@ TitleSum.TextSize = 13
 local SUMMIT_DELAY = 1.5
 local SUMMIT_CP_HEIGHT = 1.5
 local SUMMIT_MID_HEIGHT = 6
-local BC_CFRAME     = CFrame.new(-6834.84912, 1313.24744, -9902.42285, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+local BC_CFRAME = CFrame.new(-6830.49854, 1315.599, -9845.91797, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 local FINISH_CFRAME = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 
 local SummitPoints = {
@@ -2016,17 +2016,9 @@ task.spawn(function()
 
 				if not getgenv().AutoSummitRunning then return end
 
-              -- BALIK KE BC (MENGGUNAKAN REMOTE)
-pcall(function()
-	local cpRemote = ReplicatedStorage:FindFirstChild("Remote") 
-		and ReplicatedStorage.Remote:FindFirstChild("Checkpoint") 
-		and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
-	if cpRemote then 
-		cpRemote:FireServer(0) 
-	end
-end)
-
-task.wait(2.5) -- Tunggu server memproses teleport
+-- BALIK KE BC (CFRAME + TOUCH PORTAL)
+SummitTeleportAndTouch(BC_CFRAME, "BC Return", false, nil)
+task.wait(1.5) -- Jeda agar server memproses sentuhan portal
 			end)
 
 			if not success then
