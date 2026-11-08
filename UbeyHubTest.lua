@@ -2016,7 +2016,7 @@ task.spawn(function()
 
 				if not getgenv().AutoSummitRunning then return end
 
-			-- BALIK KE BC (MENGGUNAKAN REMOTE)
+              -- BALIK KE BC (MENGGUNAKAN REMOTE)
 pcall(function()
 	local cpRemote = ReplicatedStorage:FindFirstChild("Remote") 
 		and ReplicatedStorage.Remote:FindFirstChild("Checkpoint") 
@@ -2025,7 +2025,8 @@ pcall(function()
 		cpRemote:FireServer(0) 
 	end
 end)
-task.wait(2.5) -- Tunggu server memproses
+
+task.wait(2.5) -- Tunggu server memproses teleport
 			end)
 
 			if not success then
@@ -2622,7 +2623,6 @@ task.spawn(function()
 	end
 end)
 
-----------------------------------------------------
 -- FLOATING BUTTON
 ----------------------------------------------------
 local Float = Instance.new("ImageButton")
@@ -2631,6 +2631,7 @@ Float.Size = UDim2.new(0,65,0,65)
 Float.Position = UDim2.new(0,20,0,120)
 Float.Image = "rbxassetid://90770802417381"
 Float.BackgroundColor3 = Color3.fromRGB(20,20,25)
+
 local flCorner = Instance.new("UICorner")
 flCorner.CornerRadius = UDim.new(1,0)
 flCorner.Parent = Float
@@ -2645,18 +2646,4 @@ Float.MouseButton1Click:Connect(function()
 		KeyFrame.Visible = false
 	end
 end)
-
-= UDim.new(1,0)
-flCorner.Parent = Float
-MakeDraggable(Float)
-
-Float.MouseButton1Click:Connect(function()
-	if not getgenv().KeyVerified then
-		KeyFrame.Visible = not KeyFrame.Visible
-		Main.Visible = false
-	else
-		Main.Visible = not Main.Visible
-		KeyFrame.Visible = false
-	end
-end)
-
+-- (SELESAI SAMPAI SINI AJA, HAPUS SISANYA)
