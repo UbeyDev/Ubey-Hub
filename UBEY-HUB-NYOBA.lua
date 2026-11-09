@@ -21,7 +21,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- ====== PENGATURAN TAMPILAN (EDIT DI SINI) ======
-local HUB_TITLE = "Ubey Hub V3"
+local HUB_TITLE = "Ubey Hub Premium👑"
 local HUB_DISCORD = "discord.gg/YXuYeEpnXE"
 local DISCORD_LINK = "https://discord.gg/YXuYeEpnXE"
 local LOGO_ASSET = "rbxassetid://90770802417381"
@@ -34,12 +34,12 @@ getgenv().SessionStartTime = os.time()
 -- CONFIG & FILE SAVE
 ------------------------------------------------------------------
 local CONFIG_FILE = "UbeyHubV3_Config.json"
-local KEY_FILE = "UbeyHubV3_SavedKey.txt"
+local KEY_FILE = "UbeyHub_SavedKey.txt"
 
 local function DefaultConfig()
 	return {
 		BiteDelay = "0.5", TapDelay = "0.12", MinigameMode = "Legit",
-		SelectedSpot = "Spot Mancing Jembatan", AutoSellTimer = "5",
+		SelectedSpot = "Spot Mancing Core", AutoSellTimer = "5",
 		AntiAdminEnabled = false, TargetGroupId = 7019573,
 		WebhookEnabled = false, WebhookUrl = ""
 	}
@@ -327,7 +327,6 @@ getgenv().AutoDetectCoreEvent = false
 
 getgenv().LoopSpotEnabled = false
 getgenv().SpotLoopConfig = {
-	["Spot Mancing Jembatan"] = { Enabled = false, Timer = "10" },
 	["Spot Mancing Core"] = { Enabled = false, Timer = "10" },
 	["Spot Mancing Ikan Anomali"] = { Enabled = false, Timer = "10" }
 }
@@ -345,6 +344,7 @@ getgenv().FavMutations = {
 	["Festive"] = false, ["8-Bit"] = false, ["Bloodmoon"] = false, ["Abyssal"] = false,
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
+getgenv().FavNames = {}
 getgenv().UnfavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
 	["Legendary"] = false, ["Mythical"] = false, ["Secret"] = false, ["Forgotten"] = false
@@ -359,11 +359,15 @@ getgenv().UnfavMutations = {
 }
 
 local FishingSpots = {
-	["Spot Mancing Jembatan"] = CFrame.new(-6783.74756, 1322.81006, -9757.34473, 0.0899723172, -9.34088291e-08, 0.995944262, 1.76120434e-08, 1, 9.21981638e-08, -0.995944262, 9.24533072e-09, 0.0899723172),
 	["Spot Mancing Core"] = CFrame.new(-9069.33887, 1250.32092, -6510.3374, 0.99812746, -7.96398965e-08, -0.0611686334, 8.05492206e-08, 1, 1.24000188e-08, 0.0611686334, -1.73038845e-08, 0.99812746),
 	["Spot Mancing Ikan Anomali"] = CFrame.new(-8199.52832, 1238.83752, -6278.13135, -0.999144316, 1.1644854e-08, -0.0413601957, 1.63464247e-08, 1, -1.13335595e-07, 0.0413601957, -1.13914709e-07, -0.999144316)
 }
-local SpotNames = {"Spot Mancing Jembatan", "Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+local SpotNames = {"Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+-- jika config lama masih menyimpan spot yang sudah dihapus
+if not FishingSpots[getgenv().SelectedFishingSpot] then
+	getgenv().SelectedFishingSpot = "Spot Mancing Core"
+	getgenv().UbeyConfig.SelectedSpot = "Spot Mancing Core"
+end
 
 local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
 
@@ -560,16 +564,20 @@ local function GetServerFishData()
 	return list
 end
 
-local function MatchFilter(fish, rarities, mutations)
-	local hit = false
-	local rl, ml = string.lower(fish.Rarity), string.lower(fish.Mutation)
+local function MatchFilter(fish, rarities, mutations, names)
+	local rl, ml, nl = string.lower(fish.Rarity), string.lower(fish.Mutation), string.lower(fish.Name)
 	for rName, active in pairs(rarities) do
-		if active and string.lower(rName) == rl then hit = true end
+		if active and string.lower(rName) == rl then return true end
 	end
 	for mName, active in pairs(mutations) do
-		if active and string.find(ml, string.lower(mName)) then hit = true end
+		if active and ml ~= "" and string.find(ml, string.lower(mName), 1, true) then return true end
 	end
-	return hit
+	if names then
+		for n, active in pairs(names) do
+			if active and string.lower(n) == nl then return true end
+		end
+	end
+	return false
 end
 
 local function ProcessAutoFavorite()
@@ -578,7 +586,7 @@ local function ProcessAutoFavorite()
 		if not remote then return end
 		for _, fish in ipairs(GetServerFishData()) do
 			if not getgenv().AutoFavoriteRunning then break end
-			if MatchFilter(fish, getgenv().FavRarities, getgenv().FavMutations) and not fish.IsFavorited then
+			if MatchFilter(fish, getgenv().FavRarities, getgenv().FavMutations, getgenv().FavNames) and not fish.IsFavorited then
 				remote:FireServer(fish.UUID, true)
 				task.wait(0.12)
 			end
@@ -995,6 +1003,88 @@ function UI.MultiDropdown(page, title, desc, options, state)
 	end)
 end
 
+function UI.SearchMultiDropdown(page, title, desc, options, state)
+	local card = Card(page)
+	card.ClipsDescendants = true
+	CardText(card, title, desc, 140)
+	local head = New("TextButton", {Text = "", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 54)}, card)
+	local count = Label(head, "", 11, C.accent, Enum.Font.GothamBold, UDim2.new(1, -132, 0, 0), UDim2.new(0, 120, 1, 0), Enum.TextXAlignment.Right)
+	local search = New("TextBox", {
+		Position = UDim2.new(0, 8, 0, 58), Size = UDim2.new(1, -16, 0, 28), BackgroundColor3 = C.bg,
+		Text = "", PlaceholderText = "🔍 Cari nama ikan...", PlaceholderColor3 = C.sub, TextColor3 = C.text,
+		Font = Enum.Font.Gotham, TextSize = 12, ClearTextOnFocus = false
+	}, card)
+	Round(search, 8)
+	local list = New("ScrollingFrame", {
+		Position = UDim2.new(0, 8, 0, 92), Size = UDim2.new(1, -16, 0, 170), BackgroundTransparency = 1,
+		BorderSizePixel = 0, ScrollBarThickness = 3, ScrollBarImageColor3 = C.accent,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y
+	}, card)
+	New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, list)
+
+	local buttons = {}
+	local function summary()
+		local n = 0
+		for _, v in pairs(state) do if v then n = n + 1 end end
+		if #options == 0 then count.Text = "Daftar kosong ▾"
+		else count.Text = (n == 0 and "None" or (n .. " dipilih")) .. " ▾" end
+	end
+	local function paint(name)
+		local b = buttons[name]
+		b.BackgroundColor3 = state[name] and C.accent or C.bg
+		b.Text = "  " .. name .. (state[name] and "   ✓" or "")
+	end
+	local function ActionBtn(text, order, fn)
+		local b = New("TextButton", {
+			Size = UDim2.new(1, -6, 0, 26), BackgroundColor3 = C.off, Text = "  " .. text, TextColor3 = C.text,
+			Font = Enum.Font.GothamBold, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, LayoutOrder = order
+		}, list)
+		Round(b, 8)
+		b.MouseButton1Click:Connect(fn)
+	end
+
+	ActionBtn("⚡ Pilih semua yang tampil", -2, function()
+		for name, b in pairs(buttons) do
+			if b.Visible then state[name] = true; paint(name) end
+		end
+		summary()
+	end)
+	ActionBtn("🗑 Hapus semua pilihan", -1, function()
+		for name in pairs(buttons) do state[name] = false; paint(name) end
+		summary()
+	end)
+
+	for i, name in ipairs(options) do
+		buttons[name] = New("TextButton", {
+			Size = UDim2.new(1, -6, 0, 26), BackgroundColor3 = C.bg, Text = "", TextColor3 = C.text,
+			Font = Enum.Font.Gotham, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, LayoutOrder = i
+		}, list)
+		Round(buttons[name], 8)
+		paint(name)
+		buttons[name].MouseButton1Click:Connect(function()
+			state[name] = not state[name]
+			paint(name)
+			summary()
+		end)
+	end
+	summary()
+
+	search:GetPropertyChangedSignal("Text"):Connect(function()
+		local q = string.lower(search.Text)
+		for name, b in pairs(buttons) do
+			b.Visible = (q == "") or (string.find(string.lower(name), q, 1, true) ~= nil)
+		end
+	end)
+
+	local open = false
+	head.MouseButton1Click:Connect(function()
+		open = not open
+		TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+			Size = UDim2.new(1, -4, 0, open and 272 or 54)
+		}):Play()
+	end)
+end
+
 local function Flash(btn, text, ok)
 	local old = btn.Text
 	local oldColor = btn.BackgroundColor3
@@ -1011,11 +1101,9 @@ end
 local FishingPage = UI.Tab("Fishing & Sell", "🎣")
 local FavoritePage = UI.Tab("Favorite", "⭐")
 local GalatamaPage = UI.Tab("Galatama", "🏆")
-local ShopPage = UI.Tab("Teleport Shop", "🛒")
 local SummitPage = UI.Tab("Summit", "⛰️")
 local PlayerPage = UI.Tab("Player", "⚡")
 local HaloPage = UI.Tab("Halo Kepala", "👑")
-local PlayerTpPage = UI.Tab("Teleport Player", "👥")
 local PrivacyPage = UI.Tab("Privacy", "🛡️")
 local SettingsPage = UI.Tab("Settings", "⚙️")
 local CreditsPage = UI.Tab("Credits", "💎")
@@ -1276,10 +1364,32 @@ local mutationList = {
 	"Elemental", "Festive", "8-Bit", "Bloodmoon", "Abyssal", "Strawberry", "Void", "Cupid"
 }
 
+-- Ambil daftar dari Dex: mutasi (MutasiVFXKenyal) & nama ikan (AsetKenyal.IkanTampil)
+local function GetChildNames(path)
+	local names = {}
+	pcall(function()
+		local cur = ReplicatedStorage
+		for _, n in ipairs(path) do cur = cur:WaitForChild(n, 5) end
+		for _, c in ipairs(cur:GetChildren()) do table.insert(names, c.Name) end
+	end)
+	table.sort(names, function(a, b) return a:lower() < b:lower() end)
+	return names
+end
+local function MergeNames(list, extra)
+	local seen = {}
+	for _, v in ipairs(list) do seen[v:lower()] = true end
+	for _, v in ipairs(extra) do
+		if not seen[v:lower()] then seen[v:lower()] = true; table.insert(list, v) end
+	end
+end
+MergeNames(mutationList, GetChildNames({"MutasiVFXKenyal"}))
+local fishNameList = GetChildNames({"AsetKenyal", "IkanTampil"})
+
 UI.Section(FavoritePage, "AUTO FAVORITE FILTER")
 UI.Toggle(FavoritePage, "Auto Favorite", "Favoritkan ikan yang cocok dengan filter di bawah.", false, function(v) getgenv().AutoFavoriteRunning = v end)
 UI.MultiDropdown(FavoritePage, "Fav Filter Rarity", "Rarity yang difavoritkan", rarityList, getgenv().FavRarities)
-UI.MultiDropdown(FavoritePage, "Fav Filter Mutasi", "Mutasi yang difavoritkan", mutationList, getgenv().FavMutations)
+UI.MultiDropdown(FavoritePage, "Fav Filter Mutasi", "Semua mutasi dari Dex", mutationList, getgenv().FavMutations)
+UI.SearchMultiDropdown(FavoritePage, "Fav Filter Nama Ikan", "Favoritkan ikan berdasarkan nama", fishNameList, getgenv().FavNames)
 
 UI.Section(FavoritePage, "UNFAVORITE FILTER", C.bad)
 UI.MultiDropdown(FavoritePage, "Unfav Filter Rarity", "Rarity yang di-unfavorite", rarityList, getgenv().UnfavRarities)
@@ -1346,22 +1456,6 @@ task.spawn(function()
 		task.wait(5)
 	end
 end)
-
-------------------------------------------------------------------
--- 4. TELEPORT SHOP
-------------------------------------------------------------------
-UI.Section(ShopPage, "TELEPORT KE SHOP & NPC")
-local function AddShopTp(name, cf)
-	UI.Button(ShopPage, name, "Teleport ke " .. name, "Teleport", function()
-		pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = cf + Vector3.new(0, 5, 0) end)
-	end)
-end
-AddShopTp("Tempat Jual Ikan", CFrame.new(-6668.79785, 1312.69983, -9964.06152))
-AddShopTp("Skin Shop", CFrame.new(-6639.45947, 1312.69983, -9947.36133))
-AddShopTp("Pet Shop", CFrame.new(-6640.44092, 1312.69983, -9917.93652))
-AddShopTp("Upgrade Pet", CFrame.new(-6637.85156, 1312.69983, -9886.52441))
-AddShopTp("Rod Shop", CFrame.new(-6638.09521, 1312.69983, -9857.41797))
-AddShopTp("Title Shop", CFrame.new(-6667.0249, 1312.69983, -9843.66113))
 
 ------------------------------------------------------------------
 -- 5. SUMMIT
@@ -1557,60 +1651,6 @@ LocalPlayer.Idled:Connect(function()
 	end
 end)
 
-UI.Button(PlayerPage, "Headless", "Sembunyikan kepala karakter.", "Aktifkan", function()
-	pcall(function()
-		local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-		if head then
-			head.Transparency = 1
-			for _, child in ipairs(head:GetChildren()) do
-				if child:IsA("Decal") then child.Transparency = 1 end
-			end
-		end
-	end)
-end)
-
-local autoRgbActive = false
-UI.Toggle(PlayerPage, "Auto RGB Fire", "Api warna-warni di kepala.", false, function(v)
-	autoRgbActive = v
-	pcall(function()
-		local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-		if head then
-			local fire = head:FindFirstChild("UbeyHeadFire")
-			if v and not fire then
-				fire = Instance.new("Fire")
-				fire.Name = "UbeyHeadFire"
-				fire.Size = 5
-				fire.Heat = 15
-				fire.Parent = head
-			elseif not v and fire then
-				fire:Destroy()
-			end
-		end
-	end)
-end)
-
-task.spawn(function()
-	local colors = {
-		Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 100, 255),
-		Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 255)
-	}
-	local index = 1
-	while true do
-		if autoRgbActive then
-			pcall(function()
-				local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-				local fire = head and head:FindFirstChild("UbeyHeadFire")
-				if fire then
-					index = index % #colors + 1
-					fire.Color = colors[index]
-					fire.SecondaryColor = colors[(index % #colors) + 1]
-				end
-			end)
-		end
-		task.wait(1)
-	end
-end)
-
 ------------------------------------------------------------------
 -- 7. HALO PAGE
 ------------------------------------------------------------------
@@ -1674,32 +1714,6 @@ pcall(function()
 		end
 	end
 end)
-
-------------------------------------------------------------------
--- 8. TELEPORT PLAYER
-------------------------------------------------------------------
-UI.Section(PlayerTpPage, "TELEPORT KE PLAYER LAIN")
-local PlayerCards = {}
-
-local function ScanAndDisplayPlayers()
-	for _, c in ipairs(PlayerCards) do c:Destroy() end
-	PlayerCards = {}
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer then
-			local _, card = UI.Button(PlayerTpPage, plr.Name, plr.DisplayName, "Teleport", function()
-				pcall(function()
-					local t = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-					local me = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if t and me then me.CFrame = t.CFrame + Vector3.new(0, 5, 0) end
-				end)
-			end)
-			table.insert(PlayerCards, card)
-		end
-	end
-end
-
-UI.Button(PlayerTpPage, "Refresh Pemain", "Scan ulang daftar pemain di server.", "Refresh", ScanAndDisplayPlayers, C.good)
-task.spawn(function() task.wait(2); ScanAndDisplayPlayers() end)
 
 ------------------------------------------------------------------
 -- 9. PRIVACY & ANTI-ADMIN
