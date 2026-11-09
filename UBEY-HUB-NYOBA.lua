@@ -1,45 +1,53 @@
 -- ==============================================================================
--- UBEY HUB | AUTO FISHING + AUTO SUMMIT + USERNAME KEY SYSTEM
--- [SECURITY FIXED] Local Variable Key + Loop Protection + New GUI
+-- UBEY HUB V3 | NEW GUI + SECURE KEY SYSTEM + FLOATING LOGO
+-- [FIXED] Cleaned Syntax, Robust Key Logic, HWID & Username Lock
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local Workspace = game:GetService("Workspace")
-local GuiService = game:GetService("GuiService")
-local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- [SECURITY FIX] Variabel lokal, tidak bisa diubah via console getgenv()
-local IsKeyVerified = false
+-- [SECURITY FIX] Variabel lokal, tidak bisa diubah via console
+local IsKeyVerified = false 
 
--- ====== PENGATURAN TAMPILAN (EDIT DI SINI) ======
+-- ====== PENGATURAN TAMPILAN ======
 local HUB_TITLE = "UBEY HUB"
 local HUB_DISCORD = "discord.gg/YXuYeEpnXE"
 local DISCORD_LINK = "https://discord.gg/YXuYeEpnXE"
 local LOGO_ASSET = "rbxassetid://90770802417381"
 -- ================================================
 
-------------------------------------------------------------------
--- ⚙️ CONFIG & FILE SAVE
-------------------------------------------------------------------
-local CONFIG_FILE = "UbeyHub_Config.json"
-local KEY_FILE = "UbeyHub_SavedKey.txt"
+getgenv().TotalFishCaught = 0
+getgenv().SessionStartTime = os.time()
 
-getgenv().UbeyConfig = {
-	WaitTime = 4.0,
-	LoopDelay = 0.1,
-	AutoSellTimer = "5",
-}
+------------------------------------------------------------------
+-- CONFIG & FILE SAVE
+------------------------------------------------------------------
+local CONFIG_FILE = "UbeyHubV3_Config.json"
+local KEY_FILE = "UbeyHubV3_SavedKey.txt"
+
+local function DefaultConfig()
+	return {
+		BiteDelay = "0.5", TapDelay = "0.12", MinigameMode = "Legit",
+		SelectedSpot = "Spot Mancing Core", AutoSellTimer = "5",
+		AntiAdminEnabled = false, TargetGroupId = 7019573,
+		WebhookEnabled = false, WebhookUrl = ""
+	}
+end
+getgenv().UbeyConfig = DefaultConfig()
 
 local function SaveConfig()
 	pcall(function()
@@ -50,28 +58,34 @@ end
 local function LoadConfig()
 	pcall(function()
 		if readfile and isfile and isfile(CONFIG_FILE) then
-			local data = HttpService:JSONDecode(readfile(CONFIG_FILE))
-			if type(data) == "table" then
-				for k, v in pairs(data) do
-					if getgenv().UbeyConfig[k] ~= nil then getgenv().UbeyConfig[k] = v end
+			local ok, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+			if ok and type(data) == "table" then
+				for k, _ in pairs(DefaultConfig()) do
+					if data[k] ~= nil then getgenv().UbeyConfig[k] = data[k] end
 				end
 			end
 		end
 	end)
 end
+
+local function ResetConfig()
+	pcall(function()
+		getgenv().UbeyConfig = DefaultConfig()
+		getgenv().BiteDelayInput = getgenv().UbeyConfig.BiteDelay
+		getgenv().AutoSellTimerInput = getgenv().UbeyConfig.AutoSellTimer
+		getgenv().SelectedFishingSpot = getgenv().UbeyConfig.SelectedSpot
+		IsKeyVerified = false
+		if delfile and isfile then
+			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
+			if isfile(KEY_FILE) then delfile(KEY_FILE) end
+		end
+	end)
+end
+
 LoadConfig()
 
-getgenv().AutoFishingRunning = false
-getgenv().AutoSellRunning = false
-getgenv().AutoSummitRunning = false
-getgenv().TotalFishCaught = 0
-getgenv().TotalSummitRun = 0
-getgenv().SessionStartTime = os.time()
-
-pcall(function() GuiService:SetGameplayPausedNotificationEnabled(false) end)
-
 ------------------------------------------------------------------
--- SUPABASE KEY SYSTEM & USERNAME VALIDATION
+-- SUPABASE & HWID
 ------------------------------------------------------------------
 local SUPABASE_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/rest/v1/Ubey_Project?key_value=eq."
 local SUPABASE_ANON_KEY = "sb_publishable_rMWL7Qrjw9iG0c29vGZ0bw_O3swXT6n"
@@ -86,181 +100,202 @@ local function GetDeviceHWID()
 end
 local CurrentHWID = GetDeviceHWID()
 
-------------------------------------------------------------------
--- HELPER: FISHING LOGIC
-------------------------------------------------------------------
-local function GetEquippedRodName()
-	local char = LocalPlayer.Character
-	if char then
-		local tool = char:FindFirstChildOfClass("Tool")
-		if tool then return tool.Name end
-	end
-	return nil
+local function GetRequestFunc()
+	return (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
 end
 
-local function TriggerSellAll()
+------------------------------------------------------------------
+-- DISCORD WEBHOOK
+------------------------------------------------------------------
+local function SendServerWideWebhook(playerName, catchType, position)
 	pcall(function()
-		local fs = ReplicatedStorage:FindFirstChild("FishingSystem")
-		local sellRemote = fs and fs:FindFirstChild("SellFish")
-		if sellRemote then sellRemote:FireServer() end
+		if not getgenv().UbeyConfig.WebhookEnabled then return end
+		local url = getgenv().UbeyConfig.WebhookUrl
+		if not url or url == "" or not string.find(url, "api/webhooks") then return end
+
+		local typeLower = string.lower(tostring(catchType))
+		local targetPlayer = tostring(playerName or "Unknown Player")
+
+		if string.find(typeLower, "secret") or string.find(typeLower, "forgotten") or string.find(typeLower, "core") or string.find(typeLower, "mythical") then
+			local requestFunc = GetRequestFunc()
+			if not requestFunc then return end
+
+			local embedTitle = "👑 Ubey Hub V3 - Server Rare Catch Tracker!"
+			local alertContent = string.format("@everyone 🚨 **%s Berhasil Mendapatkan Tangkapan Langka!**", targetPlayer)
+			local embedColor = 16711935
+
+			if string.find(typeLower, "core") then
+				alertContent = string.format("@everyone ⚡ **%s Mendapatkan Withering Core!**", targetPlayer)
+				embedTitle = "💎 Ubey Hub V3 - Core Event Tracker!"
+				embedColor = 16776960
+			end
+
+			local posStr = position and string.format("%.1f, %.1f, %.1f", position.X, position.Y, position.Z) or "N/A"
+			local data = {
+				["content"] = alertContent,
+				["embeds"] = {{
+					["title"] = embedTitle,
+					["description"] = string.format("Pemain **%s** di dalam server ini baru saja mendapatkan item spesial!", targetPlayer),
+					["color"] = embedColor,
+					["fields"] = {
+						{ ["name"] = "👤 Nama Player", ["value"] = targetPlayer, ["inline"] = true },
+						{ ["name"] = "🎯 Tipe Tangkapan", ["value"] = tostring(catchType), ["inline"] = true },
+						{ ["name"] = "📍 Koordinat", ["value"] = posStr, ["inline"] = true }
+					},
+					["footer"] = { ["text"] = "Ubey Hub V3 • Server-Wide Broadcast Monitor" },
+					["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+				}}
+			}
+			requestFunc({
+				Url = url, Method = "POST",
+				Headers = { ["Content-Type"] = "application/json" },
+				Body = HttpService:JSONEncode(data)
+			})
+		end
 	end)
 end
 
 task.spawn(function()
-	local FS = ReplicatedStorage:WaitForChild("FishingSystem", 10)
-	if not FS then return end
-	
-	local CastReplication = FS:WaitForChild("CastReplication")
-	local CleanupCast = FS:WaitForChild("CleanupCast")
-	local FishGiver = FS:WaitForChild("FishGiver")
-
-	while true do
-		if getgenv().AutoFishingRunning and IsKeyVerified then
-			pcall(function()
-				local char = LocalPlayer.Character
-				local root = char and char:FindFirstChild("HumanoidRootPart")
-				local currentRod = GetEquippedRodName()
-
-				if root and currentRod then
-					local pPos = root.Position
-					local castVec = pPos + (root.CFrame.LookVector * 15)
-					local hookVec = castVec - Vector3.new(0, 8, 0)
-
-					CleanupCast:FireServer()
-					task.wait(0.05)
-					CastReplication:FireServer(castVec, Vector3.new(0, 5, 24), currentRod, 90)
-					task.wait(tonumber(getgenv().UbeyConfig.WaitTime) or 4.0)
-					FishGiver:FireServer({ hookPosition = hookVec, powerPercent = 0 })
-					task.wait(0.1)
-					CleanupCast:FireServer()
-					getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
-				end
+	pcall(function()
+		local r = ReplicatedStorage:FindFirstChild("CutsceneBroadcast")
+		if r and r:IsA("RemoteEvent") then
+			r.OnClientEvent:Connect(function(catchType, position, targetPlayer)
+				SendServerWideWebhook(targetPlayer and targetPlayer.Name or "Unknown Player", catchType, position)
 			end)
-			task.wait(tonumber(getgenv().UbeyConfig.LoopDelay) or 0.1)
-		else
-			task.wait(0.5)
 		end
-	end
+	end)
 end)
 
 ------------------------------------------------------------------
--- HELPER: SUMMIT LOGIC (WAYPOINT + TIMER BYPASS)
+-- CATCH MONITOR
 ------------------------------------------------------------------
-local waypoints = {
-	Vector3.new(-4.2, 16.3, 886.5),
-	Vector3.new(-176.9, 79.6, 1907.9),
-	Vector3.new(0.5, 131.2, 2793.1),
-	Vector3.new(-1107.6, 362.1, 3266.3),
-	Vector3.new(-1236.0, 504.5, 3828.8),
-	Vector3.new(-1754.2, 730.9, 4525.4),
-	Vector3.new(-1814.4, 746.4, 5568.2),
-	Vector3.new(-2882.8, 740.9, 6129.6),
-	Vector3.new(-3485.3, 740.2, 6524.1),
-	Vector3.new(-3071.4, 794.4, 7228.8),
-	Vector3.new(-2916.1, 835.4, 7965.9),
-	Vector3.new(-2932.0, 849.1, 8838.7),
-	Vector3.new(-3510.9, 1021.1, 9350.6),
-	Vector3.new(-3472.3, 1021.8, 10147.4),
-	Vector3.new(-3613.4, 1022.4, 10852.6),
-	Vector3.new(-3849.1, 1048.2, 11692.4),
-	Vector3.new(-4051.8, 1115.9, 12606.3),
-	Vector3.new(-3995.3, 1197.4, 13586.2),
-	Vector3.new(-4306.6, 1276.0, 14465.3),
-	Vector3.new(-4564.7, 1295.0, 15327.3),
-	Vector3.new(-4747.6, 1323.8, 16335.5),
-	Vector3.new(-4821.9, 1366.9, 17051.8),
-	Vector3.new(-5133.6, 1531.3, 17596.4),
-	Vector3.new(-5339.5, 1631.6, 18276.7),
-	Vector3.new(-5362.9, 1737.9, 19296.5),
-	Vector3.new(-5376.3, 1761.7, 19944.1),
-	Vector3.new(-5593.8, 1890.4, 20588.2),
-	Vector3.new(-5700.9, 1975.2, 21045.2),
-	Vector3.new(-6024.9, 1977.4, 21183.8),
-	Vector3.new(-6633.9, 2048.1, 21482.6),
-	Vector3.new(-6634.3, 2230.0, 22351.3),
-}
-
-task.spawn(function()
-	while true do
-		if getgenv().AutoSummitRunning and IsKeyVerified then
-			pcall(function()
-				local permisiFolder = workspace:FindFirstChild("permisi")
-				local basecampFolder = workspace:FindFirstChild("BASECAMP")
-				local touchedList = {}
-
-				local function checkAndTouchCP()
-					if not permisiFolder then return end
-					for _, part in ipairs(permisiFolder:GetChildren()) do
-						if part:IsA("BasePart") and not touchedList[part] then
-							touchedList[part] = true
-							if firetouchinterest then
-								local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-								if hrp then
-									firetouchinterest(hrp, part, 0)
-									task.wait(0.05)
-									firetouchinterest(hrp, part, 1)
-								end
-							end
-						end
-					end
-				end
-
-				local function tpToBasecamp()
-					if basecampFolder then
-						local tpPart2 = basecampFolder:FindFirstChild("TeleportPart2")
-						local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-						if tpPart2 and hrp then
-							hrp.CFrame = tpPart2.CFrame
-							if firetouchinterest then
-								firetouchinterest(hrp, tpPart2, 0)
-								task.wait(0.1)
-								firetouchinterest(hrp, tpPart2, 1)
-							end
-						end
-					end
-				end
-
-				local function safeTeleport(targetPos)
-					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					if not hrp then return end
-					pcall(function()
-						LocalPlayer:RequestStreamAroundAsync(targetPos)
-					end)
-					hrp.CFrame = CFrame.new(targetPos)
-				end
-
-				touchedList = {}
-				
-				for index, pos in ipairs(waypoints) do
-					if not getgenv().AutoSummitRunning or not IsKeyVerified then break end
-					
-					safeTeleport(pos)
-					
-					local timer = 0
-					while timer < 8 and getgenv().AutoSummitRunning do
-						checkAndTouchCP()
-						task.wait(0.5)
-						timer = timer + 0.5
-					end
-				end
-				
-				if getgenv().AutoSummitRunning then
-					getgenv().TotalSummitRun = getgenv().TotalSummitRun + 1
-					task.wait(3)
-					tpToBasecamp()
-					task.wait(3)
-				end
-			end)
-			task.wait(1)
-		else
-			task.wait(0.5)
-		end
+local hookedRemotes = {}
+local function ProcessNotifyClient(actionType)
+	if type(actionType) ~= "string" then return end
+	if actionType == "GotFish" then
+		pcall(function() getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1 end)
 	end
-end)
+end
+
+local function AttachNotifyHook(remote)
+	if remote and remote:IsA("RemoteEvent") and not hookedRemotes[remote] then
+		hookedRemotes[remote] = true
+		remote.OnClientEvent:Connect(ProcessNotifyClient)
+	end
+end
+
+local function ScanContainerForNotify(container)
+	if not container then return end
+	for _, v in ipairs(container:GetDescendants()) do
+		if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then AttachNotifyHook(v) end
+	end
+end
+
+local function ListenToFishCatch()
+	pcall(function()
+		ScanContainerForNotify(ReplicatedStorage)
+		ReplicatedStorage.DescendantAdded:Connect(function(v)
+			if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then AttachNotifyHook(v) end
+		end)
+		local function ScanCharacter(char)
+			if not char then return end
+			ScanContainerForNotify(char)
+			char.DescendantAdded:Connect(function(v)
+				if v:IsA("RemoteEvent") and v.Name == "NotifyClient" then AttachNotifyHook(v) end
+			end)
+		end
+		if LocalPlayer.Character then ScanCharacter(LocalPlayer.Character) end
+		LocalPlayer.CharacterAdded:Connect(ScanCharacter)
+	end)
+end
+task.spawn(function() task.wait(1); ListenToFishCatch() end)
 
 ------------------------------------------------------------------
+-- AUTO EQUIP ROD
+------------------------------------------------------------------
+local function AutoEquipRod()
+	pcall(function()
+		local character = LocalPlayer.Character
+		if not character then return end
+		for _, child in ipairs(character:GetChildren()) do
+			if child:IsA("Tool") and (string.find(string.lower(child.Name), "rod") or string.find(string.lower(child.Name), "pancing")) then return end
+		end
+		local backpack = LocalPlayer:FindFirstChild("Backpack")
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if backpack and humanoid then
+			for _, item in ipairs(backpack:GetChildren()) do
+				if item:IsA("Tool") then
+					local n = string.lower(item.Name)
+					if string.find(n, "rod") or string.find(n, "pancing") then
+						humanoid:EquipTool(item)
+						break
+					end
+				end
+			end
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- AUTO FISHING BAWAAN GAME & TAP CLICKER
+------------------------------------------------------------------
+local function EnableGameAutoFishing(state)
+	if state == nil then state = true end
+	local fired = false
+	pcall(function()
+		local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
+		local r = mancing and (mancing:FindFirstChild("Auto") or mancing:FindFirstChild("AutoFishing"))
+		if r and r:IsA("RemoteEvent") then
+			r:FireServer(state)
+			fired = true
+		end
+	end)
+	return fired
+end
+
+local function ClickGameAutoButton()
+	pcall(function()
+		local hub = PlayerGui:FindFirstChild("UbeyHub")
+		for _, v in ipairs(PlayerGui:GetDescendants()) do
+			if (v:IsA("TextButton") or v:IsA("ImageButton")) and not (hub and v:IsDescendantOf(hub)) then
+				local n = string.lower(v.Name)
+				local t = v:IsA("TextButton") and string.lower(v.Text) or ""
+				if string.find(n, "auto") or string.find(t, "auto") then
+					if firesignal then
+						pcall(function() firesignal(v.MouseButton1Click) end)
+						if v.Activated then pcall(function() firesignal(v.Activated) end) end
+					elseif getconnections then
+						pcall(function() for _, c in ipairs(getconnections(v.MouseButton1Click)) do c:Fire() end end)
+					end
+					return
+				end
+			end
+		end
+	end)
+end
+
+local function PerformTapClicker()
+	local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+	if isMobile then
+		pcall(function()
+			local char = LocalPlayer.Character
+			local tool = char and char:FindFirstChildOfClass("Tool")
+			if tool then tool:Activate() end
+		end)
+		return
+	end
+	local cam = Workspace.CurrentCamera
+	local vp = cam and cam.ViewportSize or Vector2.new(800, 600)
+	local mousePos = UIS:GetMouseLocation()
+	local pos = (mousePos.X > 0 and mousePos.Y > 0) and mousePos or Vector2.new(vp.X * 0.5, vp.Y * 0.5)
+	pcall(function()
+		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
+		task.wait(0.02)
+		VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
+	end)
+end
+
 -- AUTO RECONNECT
-------------------------------------------------------------------
 task.spawn(function()
 	pcall(function()
 		CoreGui.ChildAdded:Connect(function(child)
@@ -272,8 +307,192 @@ task.spawn(function()
 	end)
 end)
 
+-- GLOBAL STATES
+getgenv().AutoFishingEventRunning = false
+getgenv().BiteDelayInput = getgenv().UbeyConfig.BiteDelay
+getgenv().SelectedFishingSpot = getgenv().UbeyConfig.SelectedSpot
+getgenv().AutoSellRunning = false
+getgenv().AutoSellTimerInput = getgenv().UbeyConfig.AutoSellTimer
+getgenv().AutoGalatamaRunning = false
+getgenv().AutoSummitRunning = false
+getgenv().AntiAFKRunning = false
+getgenv().HideNameRunning = false
+getgenv().FakeNameInput = "UBEY HUB"
+getgenv().CurrentSelectedHalo = nil
+getgenv().AutoDetectCoreEvent = false
+
+getgenv().LoopSpotEnabled = false
+getgenv().SpotLoopConfig = {
+	["Spot Mancing Core"] = { Enabled = false, Timer = "10" },
+	["Spot Mancing Ikan Anomali"] = { Enabled = false, Timer = "10" }
+}
+
+getgenv().AutoFavoriteRunning = false
+getgenv().FavRarities = {["Common"]=false, ["UnCommon"]=false, ["Rare"]=false, ["Epic"]=false, ["Legendary"]=true, ["Mythical"]=true, ["Secret"]=true, ["Forgotten"]=true}
+getgenv().FavMutations = {["Galaxy"]=false, ["Corrupt"]=false, ["Gemstone"]=false, ["Ghost"]=false, ["Lightning"]=false, ["Fairy Dust"]=true, ["Gold"]=false, ["Midnight"]=false, ["Radioactive"]=false, ["Stone"]=false, ["Holographic"]=false, ["Albino"]=false, ["Sandy"]=false, ["Cosmic"]=false, ["Normal"]=false, ["Elemental"]=false, ["Festive"]=false, ["8-Bit"]=false, ["Bloodmoon"]=false, ["Abyssal"]=false, ["Strawberry"]=false, ["Void"]=false, ["Cupid"]=false}
+getgenv().FavNames = {}
+getgenv().UnfavNames = {}
+getgenv().UnfavRarities = {["Common"]=false, ["UnCommon"]=false, ["Rare"]=false, ["Epic"]=false, ["Legendary"]=false, ["Mythical"]=false, ["Secret"]=false, ["Forgotten"]=false}
+getgenv().UnfavMutations = {["Galaxy"]=false, ["Corrupt"]=false, ["Gemstone"]=false, ["Ghost"]=false, ["Lightning"]=false, ["Fairy Dust"]=false, ["Gold"]=false, ["Midnight"]=false, ["Radioactive"]=false, ["Stone"]=false, ["Holographic"]=false, ["Albino"]=false, ["Sandy"]=false, ["Cosmic"]=false, ["Normal"]=false, ["Elemental"]=false, ["Festive"]=false, ["8-Bit"]=false, ["Bloodmoon"]=false, ["Abyssal"]=false, ["Strawberry"]=false, ["Void"]=false, ["Cupid"]=false}
+
+local FishingSpots = {
+	["Spot Mancing Core"] = CFrame.new(-9069.33887, 1250.32092, -6510.3374, 0.99812746, -7.96398965e-08, -0.0611686334, 8.05492206e-08, 1, 1.24000188e-08, 0.0611686334, -1.73038845e-08, 0.99812746),
+	["Spot Mancing Ikan Anomali"] = CFrame.new(-8199.52832, 1238.83752, -6278.13135, -0.999144316, 1.1644854e-08, -0.0413601957, 1.63464247e-08, 1, -1.13335595e-07, 0.0413601957, -1.13914709e-07, -0.999144316)
+}
+local SpotNames = {"Spot Mancing Core", "Spot Mancing Ikan Anomali"}
+
+if not FishingSpots[getgenv().SelectedFishingSpot] then
+	getgenv().SelectedFishingSpot = "Spot Mancing Core"
+	getgenv().UbeyConfig.SelectedSpot = "Spot Mancing Core"
+end
+
+local NpcSellCFrame = CFrame.new(-6668.01416, 1312.69983, -9965.2998, 0.999977231, 1.08366018e-08, -0.00675115408, -1.09201403e-08, 1, -1.2337189e-08, 0.00675115408, 1.24106316e-08, 0.999977231)
+
+local function GetEquippedRod()
+	local char = LocalPlayer.Character
+	if not char then return nil end
+	local rod = char:FindFirstChild("Withering Rod")
+	if rod then return rod end
+	for _, c in ipairs(char:GetChildren()) do
+		if c:IsA("Tool") and c:FindFirstChild("Mechanics") then return c end
+	end
+	return nil
+end
+
+------------------------------------------------------------------
+-- ROD SETTINGS & AUTO FISHING
+------------------------------------------------------------------
+local OriginalRodValues = {}
+local function OptimizeRodSettings()
+	pcall(function()
+		local rod = GetEquippedRod()
+		local s = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Settings")
+		if not s then return end
+		local t = s:FindFirstChild("Time_before_getfish")
+		if t then
+			if OriginalRodValues[t] == nil then OriginalRodValues[t] = t.Value end
+			t.Value = 0.05
+		end
+		local m = s:FindFirstChild("EnableMiniGame")
+		if m then
+			if OriginalRodValues[m] == nil then OriginalRodValues[m] = m.Value end
+			m.Value = false
+		end
+	end)
+end
+
+local function RestoreRodSettings()
+	pcall(function()
+		for inst, val in pairs(OriginalRodValues) do
+			if inst and inst.Parent then inst.Value = val end
+			OriginalRodValues[inst] = nil
+		end
+	end)
+end
+
+local function RunAutoFishCycle(remoteFolder)
+	if not remoteFolder then return end
+	pcall(function()
+		local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
+		local castEvt = remoteFolder:FindFirstChild("CastEvent")
+		local notifyEvt = remoteFolder:FindFirstChild("NotifyClient")
+		local miniEvt = remoteFolder:FindFirstChild("MiniGame")
+		if not castEvt or not notifyEvt then return end
+		OptimizeRodSettings()
+		castEvt:FireServer(true)
+		task.wait(0.05)
+		castEvt:FireServer(false, 100, hrp.CFrame.LookVector)
+		local hooked = false
+		local conn = notifyEvt.OnClientEvent:Connect(function(actionType)
+			if type(actionType) ~= "string" then return end
+			if actionType == "Bite" or actionType == "Hook" then hooked = true end
+		end)
+		local start = tick()
+		while not hooked and getgenv().AutoFishingEventRunning and getgenv().UbeyConfig.MinigameMode == "Instant" do
+			if tick() - start > 8 then break end
+			task.wait(0.05)
+		end
+		if conn then conn:Disconnect() end
+
+		if hooked and getgenv().AutoFishingEventRunning and getgenv().UbeyConfig.MinigameMode == "Instant" then
+			task.wait(tonumber(getgenv().BiteDelayInput) or 0.5)
+			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
+			local tandaSeruRemote = remoteFolder:FindFirstChild("TandaSeruBersama")
+			if tandaSeruRemote then
+				local color1 = Color3.fromRGB(23, 255, 151)
+				local color2 = Color3.fromRGB(20, 20, 20)
+				local seq = ColorSequence.new({ColorSequenceKeypoint.new(0, color1), ColorSequenceKeypoint.new(1, color1)})
+				tandaSeruRemote:FireServer(color1, color2, seq, 1.5)
+			end
+			task.wait(0.1)
+			if getgenv().UbeyConfig.MinigameMode ~= "Instant" then return end
+			if miniEvt then miniEvt:FireServer(true) end
+			task.wait(0.3)
+		end
+	end)
+end
+
+getgenv().FishLoopId = 0
+local function StartFishingLoop()
+	getgenv().FishLoopId = getgenv().FishLoopId + 1
+	local myId = getgenv().FishLoopId
+	task.spawn(function()
+		local lastAuto, clickedGui, restored = 0, false, false
+		while getgenv().AutoFishingEventRunning and getgenv().FishLoopId == myId do
+			if not IsKeyVerified then getgenv().AutoFishingEventRunning = false; break end
+			local mode = getgenv().UbeyConfig.MinigameMode or "Legit"
+			AutoEquipRod()
+			if mode == "Legit" then
+				if not restored then
+					restored = true
+					RestoreRodSettings()
+					lastAuto = 0
+				end
+				if tick() - lastAuto > 10 then
+					lastAuto = tick()
+					local viaRemote = EnableGameAutoFishing(true)
+					if not viaRemote and not clickedGui then
+						clickedGui = true
+						ClickGameAutoButton()
+					end
+				end
+				PerformTapClicker()
+				task.wait(tonumber(getgenv().UbeyConfig.TapDelay) or 0.12)
+			else
+				restored = false
+				pcall(function()
+					local rod = GetEquippedRod()
+					local rf = rod and rod:FindFirstChild("Mechanics") and rod.Mechanics:FindFirstChild("Remotes")
+					if rf then RunAutoFishCycle(rf) else task.wait(1) end
+				end)
+				task.wait(0.1)
+			end
+		end
+		if getgenv().FishLoopId == myId and (getgenv().UbeyConfig.MinigameMode or "Legit") == "Legit" then
+			EnableGameAutoFishing(false)
+		end
+	end)
+end
+
+local function TriggerSellToNpc()
+	pcall(function()
+		local character = LocalPlayer.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		if not hrp then return end
+		local currentSpotCFrame = hrp.CFrame
+		hrp.CFrame = NpcSellCFrame + Vector3.new(0, 5, 0)
+		task.wait(0.8)
+		local mancing = ReplicatedStorage:FindFirstChild("Remote") and ReplicatedStorage.Remote:FindFirstChild("Mancing")
+		local jualSemua = mancing and mancing:FindFirstChild("JualSemua")
+		if jualSemua then jualSemua:InvokeServer() end
+		task.wait(0.8)
+		if hrp and hrp.Parent then hrp.CFrame = currentSpotCFrame end
+	end)
+end
+
 -- ==============================================================================
---                                  NEW GUI (UBEY STYLE)
+--                                  GUI BARU
 -- ==============================================================================
 pcall(function()
 	local old = PlayerGui:FindFirstChild("UbeyHub")
@@ -391,7 +610,6 @@ MakeDraggable(Main, Header)
 Label(Header, HUB_TITLE, 15, C.text, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 5), UDim2.new(0, 110, 0, 20))
 Label(Header, "PREMIUM", 10, C.warn, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 23), UDim2.new(0, 110, 0, 14))
 Label(Header, HUB_DISCORD, 10, C.sub, Enum.Font.Gotham, UDim2.new(0, 112, 0, 0), UDim2.new(0, 130, 1, 0))
-
 local StatLabel = Label(Header, "📡 -- ms", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 245, 0, 0), UDim2.new(1, -330, 1, 0), Enum.TextXAlignment.Right)
 
 local MinimizeBtn = New("TextButton", {
@@ -434,7 +652,7 @@ task.spawn(function()
 			local elapsed = os.time() - getgenv().SessionStartTime
 			local h, m, s = math.floor(elapsed / 3600), math.floor((elapsed % 3600) / 60), elapsed % 60
 			local t = h > 0 and string.format("%dh %02dm", h, m) or string.format("%02dm %02ds", m, s)
-			StatLabel.Text = string.format("📡 %d ms | 🎣 %d | ⛰️ %d | ⏱ %s", ping, getgenv().TotalFishCaught, getgenv().TotalSummitRun, t)
+			StatLabel.Text = string.format("📡 %d ms  |  🐟 %d  |  ⏱ %s", ping, getgenv().TotalFishCaught, t)
 		end)
 		task.wait(1)
 	end
@@ -560,6 +778,37 @@ function UI.Input(page, title, desc, default, placeholder, cb)
 	return box
 end
 
+function UI.Dropdown(page, title, desc, options, current, onSelect)
+	local card = Card(page)
+	card.ClipsDescendants = true
+	CardText(card, title, desc, 220)
+	local head = New("TextButton", {Text = "", BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 54)}, card)
+	local val = Label(head, tostring(current) .. " ▾", 11, C.accent, Enum.Font.GothamBold, UDim2.new(1, -212, 0, 0), UDim2.new(0, 200, 1, 0), Enum.TextXAlignment.Right)
+	local holder = New("Frame", {Position = UDim2.new(0, 8, 0, 58), Size = UDim2.new(1, -16, 0, #options * 30), BackgroundTransparency = 1}, card)
+	New("UIListLayout", {Padding = UDim.new(0, 4)}, holder)
+	local open = false
+	local function setOpen(v)
+		open = v
+		TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+			Size = UDim2.new(1, -4, 0, open and (62 + #options * 30) or 54)
+		}):Play()
+	end
+	head.MouseButton1Click:Connect(function() setOpen(not open) end)
+	for _, opt in ipairs(options) do
+		local o = New("TextButton", {
+			Size = UDim2.new(1, 0, 0, 26), BackgroundColor3 = C.bg, Text = "  " .. opt, TextColor3 = C.text,
+			Font = Enum.Font.Gotham, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left
+		}, holder)
+		Round(o, 8)
+		o.MouseButton1Click:Connect(function()
+			val.Text = opt .. " ▾"
+			setOpen(false)
+			task.spawn(onSelect, opt)
+		end)
+	end
+	return {SetValue = function(t) val.Text = tostring(t) .. " ▾" end}
+end
+
 local function Flash(btn, text, ok)
 	local old = btn.Text
 	local oldColor = btn.BackgroundColor3
@@ -571,15 +820,18 @@ local function Flash(btn, text, ok)
 end
 
 ------------------------------------------------------------------
--- TABS
+-- TABS SETUP
 ------------------------------------------------------------------
 local FishingPage = UI.Tab("Fishing & Sell", "🎣")
-local SummitPage = UI.Tab("Summit Farm", "⛰️")
+local GalatamaPage = UI.Tab("Galatama", "🏆")
+local SummitPage = UI.Tab("Summit", "⛰️")
+local PlayerPage = UI.Tab("Player", "⚡")
+local PrivacyPage = UI.Tab("Privacy", "🛡️")
 local SettingsPage = UI.Tab("Settings", "⚙️")
 local CreditsPage = UI.Tab("Credits", "💎")
 
 ------------------------------------------------------------------
--- KEY VALIDATION (SECURE)
+-- KEY VALIDATION (UPDATED & FIXED)
 ------------------------------------------------------------------
 GetKeyDiscordBtn.MouseButton1Click:Connect(function()
 	local ok = pcall(function() setclipboard(DISCORD_LINK) end)
@@ -629,7 +881,7 @@ local function ValidateKey(enteredKey, isAutoLogin)
 	end
 
 	task.spawn(function()
-		local requestFunc = (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
+		local requestFunc = GetRequestFunc()
 		local success, response = pcall(function()
 			if requestFunc then
 				local res = requestFunc({
@@ -661,35 +913,41 @@ local function ValidateKey(enteredKey, isAutoLogin)
 		local record = data[1]
 		local currentUser = LocalPlayer.Name
 
-		-- Cek Status Key (Lebih Aman)
-		local statusStr = tostring(record.status):lower()
-		if record.status == false or statusStr == "inactive" or statusStr == "used" or statusStr == "false" then
+		-- [FIX] Cek Status/Active dengan sangat toleran
+		local isActive = true -- Default ke TRUE agar tidak error jika kolom kosong
+		if record.status ~= nil then
+			local s = tostring(record.status):lower()
+			if s == "false" or s == "inactive" or s == "used" then isActive = false end
+		elseif record.active ~= nil then
+			local a = tostring(record.active):lower()
+			if a == "false" or a == "inactive" or a == "used" then isActive = false end
+		end
+
+		if not isActive then
 			KeyFail(isAutoLogin, "Key sudah tidak aktif / kadaluwarsa!")
 			return
 		end
 
-		-- Cek Username
 		if record.roblox_username and record.roblox_username ~= "" then
 			if not CheckUsernameInList(record.roblox_username, currentUser) then
-				KeyFail(isAutoLogin, "Username (" .. currentUser .. ") tidak terdaftar!")
+				KeyFail(isAutoLogin, "Username (" .. currentUser .. ") tidak terdaftar pada key ini!")
 				return
 			end
 		else
 			PatchKey(requestFunc, enteredKey, {roblox_username = currentUser})
 		end
 
-		-- Cek HWID
-		if record.hwid_value and record.hwid_value ~= "" then
-			if record.hwid_value ~= CurrentHWID then
+		if record.hwid and record.hwid ~= "" then
+			if record.hwid ~= CurrentHWID then
 				KeyFail(isAutoLogin, "Key terikat di perangkat (HWID) lain!")
 				return
 			end
 		else
-			PatchKey(requestFunc, enteredKey, {hwid_value = CurrentHWID})
+			PatchKey(requestFunc, enteredKey, {hwid = CurrentHWID})
 		end
 
 		pcall(function() if writefile then writefile(KEY_FILE, enteredKey) end end)
-		IsKeyVerified = true -- [SECURITY FIX]
+		IsKeyVerified = true
 		KeyFrame.Visible = false
 		Main.Visible = true
 	end)
@@ -710,95 +968,435 @@ task.spawn(function()
 end)
 
 ------------------------------------------------------------------
--- PAGE 1: FISHING
+-- 1. FISHING PAGE
 ------------------------------------------------------------------
-UI.Section(FishingPage, "AUTO FISHING")
+UI.Section(FishingPage, "AUTO FISHING & SELL")
 
-local infoCard = Card(FishingPage, 45)
-local infoLbl = Label(infoCard, "⚠️ Pastikan kamu sudah memegang (equip) pancingan!\nScript akan mendeteksi nama rod secara otomatis.", 11, C.warn, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
-infoLbl.TextWrapped = true
-infoLbl.TextYAlignment = Enum.TextYAlignment.Center
+local SpotDD = UI.Dropdown(FishingPage, "Spot Mancing", "Lokasi teleport saat Smart Auto Fishing + Teleport",
+	SpotNames, getgenv().SelectedFishingSpot or SpotNames[1], function(name)
+		getgenv().SelectedFishingSpot = name
+		getgenv().UbeyConfig.SelectedSpot = name
+		SaveConfig()
+	end)
+local function SetSpotDisplay(text) SpotDD.SetValue(text) end
 
-UI.Toggle(FishingPage, "Auto Fishing", "Memancing secara otomatis (Dynamic Rod).", false, function(v)
-	if v and not IsKeyVerified then return end -- [SECURITY FIX]
-	getgenv().AutoFishingRunning = v
+UI.Dropdown(FishingPage, "Mode Fishing", "Legit = auto bawaan + tap  |  Instant = bypass cepat",
+	{"Legit", "Instant"}, getgenv().UbeyConfig.MinigameMode or "Legit", function(value)
+		local oldMode = getgenv().UbeyConfig.MinigameMode
+		getgenv().UbeyConfig.MinigameMode = value
+		SaveConfig()
+		if oldMode ~= value then
+			task.spawn(function()
+				local wasRunning = getgenv().AutoFishingEventRunning
+				getgenv().FishLoopId = getgenv().FishLoopId + 1
+				EnableGameAutoFishing(false)
+				task.wait(0.6)
+				RestoreRodSettings()
+				pcall(function()
+					local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+					if hum then hum:UnequipTools() end
+				end)
+				task.wait(0.4)
+				AutoEquipRod()
+				if wasRunning and getgenv().AutoFishingEventRunning then StartFishingLoop() end
+			end)
+		end
+	end)
+
+UI.Toggle(FishingPage, "Smart Auto Fishing + Teleport", "Teleport ke spot terpilih lalu mulai memancing.", false, function(v)
+	if v and not IsKeyVerified then return end
+	getgenv().AutoFishingEventRunning = v
+	if v then
+		pcall(function()
+			local hrp = LocalPlayer.Character and LocalPlayer.Character:WaitForChild("HumanoidRootPart", 5)
+			if hrp then hrp.CFrame = FishingSpots[getgenv().SelectedFishingSpot] + Vector3.new(0, 5, 0) end
+		end)
+		StartFishingLoop()
+	end
 end)
 
-UI.Toggle(FishingPage, "Auto Sell Ikan", "Jual semua ikan secara otomatis via timer.", false, function(v)
-	if v and not IsKeyVerified then return end -- [SECURITY FIX]
+UI.Toggle(FishingPage, "Smart Auto Fishing (Di Tempat)", "Memancing di posisi sekarang tanpa teleport.", false, function(v)
+	if v and not IsKeyVerified then return end
+	getgenv().AutoFishingEventRunning = v
+	if v then StartFishingLoop() end
+end)
+
+UI.Input(FishingPage, "Bite Delay", "Detik, mode Instant", getgenv().UbeyConfig.BiteDelay, "0.5", function(t)
+	getgenv().BiteDelayInput = t
+	getgenv().UbeyConfig.BiteDelay = t
+	SaveConfig()
+end)
+
+UI.Input(FishingPage, "Jeda Tap", "Detik, mode Legit", getgenv().UbeyConfig.TapDelay or "0.12", "0.12", function(t)
+	getgenv().UbeyConfig.TapDelay = t
+	SaveConfig()
+end)
+
+UI.Toggle(FishingPage, "Auto Sell ke NPC", "Teleport ke NPC lalu jual semua ikan sesuai timer.", false, function(v)
+	if v and not IsKeyVerified then return end
 	getgenv().AutoSellRunning = v
 	if v then
 		task.spawn(function()
-			local lastSell = tick()
+			local lastSellTime = tick()
 			while getgenv().AutoSellRunning do
-				if not IsKeyVerified then getgenv().AutoSellRunning = false; break end -- [SECURITY FIX]
+				if not IsKeyVerified then getgenv().AutoSellRunning = false; break end
 				task.wait(1)
-				if ((tick() - lastSell) / 60) >= (tonumber(getgenv().UbeyConfig.AutoSellTimer) or 5) then
-					TriggerSellAll()
-					lastSell = tick()
+				if ((tick() - lastSellTime) / 60) >= (tonumber(getgenv().AutoSellTimerInput) or 5) then
+					TriggerSellToNpc()
+					lastSellTime = tick()
 				end
 			end
 		end)
 	end
 end)
 
-UI.Input(FishingPage, "Jeda Jual", "Waktu jeda auto sell (Menit)", tostring(getgenv().UbeyConfig.AutoSellTimer), "5", function(t)
-	local val = tonumber(t)
-	if val then
-		getgenv().UbeyConfig.AutoSellTimer = tostring(val)
-		SaveConfig()
+UI.Input(FishingPage, "Jeda Jual", "Menit", getgenv().UbeyConfig.AutoSellTimer, "5", function(t)
+	getgenv().AutoSellTimerInput = t
+	getgenv().UbeyConfig.AutoSellTimer = t
+	SaveConfig()
+end)
+
+------------------------------------------------------------------
+-- 2. GALATAMA PAGE
+------------------------------------------------------------------
+UI.Section(GalatamaPage, "GALATAMA & CORE EVENT")
+UI.Button(GalatamaPage, "Teleport ke Galatama", "Pindah ke lokasi Galatama.", "Teleport", function()
+	if not IsKeyVerified then return end
+	pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-8008.12744, 1227.96838, -6091.92627) + Vector3.new(0, 5, 0) end)
+end)
+
+UI.Toggle(GalatamaPage, "Auto Join Galatama", "Ikut Galatama otomatis tiap 10 detik.", false, function(v)
+	if v and not IsKeyVerified then return end
+	getgenv().AutoGalatamaRunning = v
+	if v then
+		task.spawn(function()
+			while getgenv().AutoGalatamaRunning do
+				if not IsKeyVerified then getgenv().AutoGalatamaRunning = false; break end
+				pcall(function()
+					local r = ReplicatedStorage:FindFirstChild("Remote")
+						and ReplicatedStorage.Remote:FindFirstChild("Glatama")
+						and ReplicatedStorage.Remote.Glatama:FindFirstChild("Ikut")
+					if r then r:InvokeServer() end
+				end)
+				task.wait(10)
+			end
+		end)
 	end
 end)
 
-UI.Section(FishingPage, "PENGATURAN FISHING (DETIK)", C.good)
-UI.Input(FishingPage, "Wait Time", "Jeda tunggu ikan (Detik)", tostring(getgenv().UbeyConfig.WaitTime), "4.0", function(t)
-	local val = tonumber(t)
-	if val then
-		getgenv().UbeyConfig.WaitTime = val
-		SaveConfig()
-	end
+UI.Section(GalatamaPage, "AUTO DETECT WITHERING CORE EVENT", C.warn)
+UI.Toggle(GalatamaPage, "Auto Teleport Saat Event Core", "Pindah ke Spot Core saat event berlangsung.", false, function(v) 
+	if v and not IsKeyVerified then return end
+	getgenv().AutoDetectCoreEvent = v 
 end)
 
-UI.Input(FishingPage, "Loop Delay", "Jeda antar cast (Detik)", tostring(getgenv().UbeyConfig.LoopDelay), "0.1", function(t)
-	local val = tonumber(t)
-	if val then
-		getgenv().UbeyConfig.LoopDelay = val
-		SaveConfig()
+local SavedPreviousSpot, IsAtCoreEvent = nil, false
+task.spawn(function()
+	while true do
+		if getgenv().AutoDetectCoreEvent then
+			pcall(function()
+				if not IsKeyVerified then getgenv().AutoDetectCoreEvent = false; return end
+				local currentMinute = tonumber(os.date("%M"))
+				local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if currentMinute <= 10 then
+					if not IsAtCoreEvent then
+						SavedPreviousSpot = getgenv().SelectedFishingSpot
+						IsAtCoreEvent = true
+					end
+					getgenv().SelectedFishingSpot = "Spot Mancing Core"
+					SetSpotDisplay("Spot Mancing Core (⚡ Event)")
+					local target = FishingSpots["Spot Mancing Core"]
+					if hrp and target and (hrp.Position - target.Position).Magnitude > 20 then
+						hrp.CFrame = target + Vector3.new(0, 5, 0)
+					end
+				elseif IsAtCoreEvent then
+					IsAtCoreEvent = false
+					if SavedPreviousSpot and FishingSpots[SavedPreviousSpot] then
+						getgenv().SelectedFishingSpot = SavedPreviousSpot
+						SetSpotDisplay(SavedPreviousSpot)
+						if hrp then hrp.CFrame = FishingSpots[SavedPreviousSpot] + Vector3.new(0, 5, 0) end
+					end
+				end
+			end)
+		end
+		task.wait(5)
 	end
 end)
 
 ------------------------------------------------------------------
--- PAGE 2: SUMMIT FARM
+-- 3. SUMMIT PAGE
 ------------------------------------------------------------------
-UI.Section(SummitPage, "AUTO SUMMIT FARM")
+UI.Section(SummitPage, "AUTO SUMMIT FARM (INSTANT TP)")
 
-local sumInfoCard = Card(SummitPage, 45)
-local sumInfoLbl = Label(sumInfoCard, "⚠️ Otomatis mendaki via Waypoint (31 Titik) & Bypass Timer.\nJangan bergerak selama Auto Summit ON.", 11, C.warn, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
-sumInfoLbl.TextWrapped = true
-sumInfoLbl.TextYAlignment = Enum.TextYAlignment.Center
+local SUMMIT_DELAY = 1.5
+local SUMMIT_CP_HEIGHT = 1.5
+local SUMMIT_MID_HEIGHT = 6
+local BC_CFRAME = CFrame.new(-6830.49854, 1315.599, -9845.91797, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+local FINISH_CFRAME = CFrame.new(-6766.44629, 1320.69983, -10083.8037)
 
-UI.Toggle(SummitPage, "Auto Climb Summit (Loop)", "Mendaki gunung secara otomatis tanpa henti.", false, function(v)
-	if v and not IsKeyVerified then return end -- [SECURITY FIX]
+local SummitPoints = {
+	{"Cp1", CFrame.new(464.845001, 452.719116, -8948.57227, 0.997986674, 0.00330765732, -0.063337639, 5.851164e-10, 0.998639166, 0.0521515608, 0.0634239465, -0.0520465635, 0.996628582)},
+	{"Tengah 1", CFrame.new(474.590057, 447.956573, -9159.24023, 0.999968529, -0.000852574885, -0.00788716134, -1.21188393e-10, 0.994208276, -0.107470497, 0.0079331072, 0.107467115, 0.994176984)},
+	{"Cp2", CFrame.new(451.694855, 499.646576, -9572.44434, 0.99949652, 0.000553500664, 0.0317238159, 1.04904453e-10, 0.999847829, -0.0174448304, -0.0317286439, 0.0174360462, 0.999344409)},
+	{"Tengah 2", CFrame.new(445.483307, 621.606934, -9778.32324, 0.997986615, -0.0062114615, 0.0631198436, 2.39959358e-10, 0.995192885, 0.0979343653, -0.0634247363, -0.0977371857, 0.993189156)},
+	{"Cp3", CFrame.new(397.967834, 639.463623, -10116.7002, 0.999716818, -0.000510056969, -0.02379141, 4.97792363e-11, 0.999770284, -0.0214337762, 0.0237968769, 0.0214277059, 0.999487162)},
+	{"Tengah 3", CFrame.new(395.853546, 635.549683, -10386.791, 0.999716818, 0.00315287593, -0.0235871132, 5.91942884e-10, 0.991184175, 0.132491052, 0.0237969011, -0.132453531, 0.990903497)},
+	{"Cp4", CFrame.new(489.159821, 642.277039, -10681.7002, -0.0475802682, 0.0602015518, -0.997051597, 1.55177843e-10, 0.998182118, 0.060269814, 0.998867393, 0.00286765373, -0.0474937744)},
+	{"Tengah 4", CFrame.new(956.084595, 697.091187, -10802.7363, 0.795761228, -0.0310973153, -0.604811549, -1.72196937e-10, 0.99868077, -0.0513487086, 0.60561049, 0.0408613123, 0.794711471)},
+	{"Cp5", CFrame.new(1086.91284, 731.401855, -11160.585, 0.998458445, 0.000272808335, 0.0555039383, 3.18766229e-11, 0.9999879, -0.00491505768, -0.0555046089, 0.00490748091, 0.998446345)},
+	{"Tengah 5", CFrame.new(1057.28174, 733.071716, -11465.1123, 0.986154497, 0.0050284788, -0.165753007, 1.63842329e-09, 0.99954015, 0.030323239, 0.165829256, -0.0299033988, 0.985700965)},
+	{"Cp6", CFrame.new(971.530334, 740.581787, -11810.3145, 0.126592144, -0.0387375578, 0.991198182, 2.35382769e-10, 0.99923718, 0.0390517339, -0.991954863, -0.00494364277, 0.126495585)},
+	{"Tengah 6", CFrame.new(691.74884, 797.521545, -11823.7451, 0.0396752357, -0.102132671, 0.993979275, -7.48076157e-10, 0.99476254, 0.102213152, -0.999212623, -0.00405533146, 0.0394674353)},
+	{"Cp7", CFrame.new(388.335876, 895.511658, -11840.2939, 0.0238173455, -0.0717899501, 0.997135341, -6.08690737e-11, 0.997418284, 0.07181032, -0.999716341, -0.0017103313, 0.0237558559)},
+	{"Tengah 7", CFrame.new(49.462944, 888.104858, -11861.6387, -0.34944579, -0.19423911, 0.916601777, -3.19386761e-09, 0.978275597, 0.207308546, -0.936956584, 0.0724430978, -0.341854304)},
+	{"Cp8", CFrame.new(-328.146729, 853.138916, -11739.3906, 0.00795334298, -0.0638618842, 0.99792707, -8.82961412e-11, 0.997958601, 0.0638639033, -0.99996835, -0.000507931632, 0.00793710724)},
+	{"Tengah 8", CFrame.new(-586.720459, 854.341248, -11757.834, -0.0317074656, -0.143703595, 0.989112675, -3.78500481e-10, 0.989610255, 0.14377588, -0.999497175, 0.00455876859, -0.0313780345)},
+	{"Cp9", CFrame.new(-873.571655, 857.913574, -11736.6006, -0.0475608706, -0.0613531955, 0.996982336, -8.74402217e-11, 0.998111844, 0.0614227057, -0.998868346, 0.00292131724, -0.0474710688)},
+	{"Tengah 9", CFrame.new(-1278.78198, 862.183228, -11790.2275, 0.987442195, -0.0267404672, 0.155701235, 5.12804066e-09, 0.985570729, 0.169264019, -0.157980785, -0.167138427, 0.973194122)},
+	{"Cp10", CFrame.new(-1282.57056, 863.854065, -12096.4014, 0.999212563, 5.95095444e-05, -0.0396771468, -1.05802248e-12, 0.999998868, 0.00149984262, 0.0396771915, -0.00149866159, 0.999211431)},
+	{"Tengah 10", CFrame.new(-1163.88379, 880.556641, -12491.4229, 0.999716282, 0.00329811801, -0.0235888157, 4.36980556e-11, 0.990366638, 0.138470113, 0.0238182656, -0.138430834, 0.990085661)},
+	{"Cp11", CFrame.new(-1314.84912, 896.930481, -12835.1504, -0.0317075849, -0.0382487178, 0.998765051, -2.9176847e-10, 0.999267519, 0.0382679589, -0.999497175, 0.00121338433, -0.0316843614)},
+	{"Tengah 11", CFrame.new(-1935.85815, 918.891724, -12822.8037, 0.0555249788, -0.118038259, 0.991455495, 5.07237197e-10, 0.992987335, 0.118220635, -0.998457313, -0.0065641976, 0.0551356003)},
+	{"Cp12", CFrame.new(-2322.29541, 919.173645, -12668.2285, -0.99745357, 0.00879278593, -0.0707743391, -2.61384775e-10, 0.992370784, 0.123289101, 0.0713184401, 0.122975156, -0.989843845)},
+	{"Tengah 12", CFrame.new(-2335.94287, 919.825073, -12331.4092, -0.999212563, 0.000273454934, 0.0396762192, 4.04826658e-11, 0.999976277, -0.00689199753, -0.0396771617, -0.00688657025, -0.99918884)},
+	{"Cp13", CFrame.new(-2311.24023, 923.90979, -11851.917, -0.99745059, -0.00294975913, 0.0712991208, -1.04126284e-10, 0.999145269, 0.0413362421, -0.0713601112, 0.0412308611, -0.996598065)},
+	{"Tengah 13", CFrame.new(-2340.36206, 951.430298, -11351.1699, -0.999497175, 0.00360921631, -0.03150158, -6.74113487e-10, 0.993500471, 0.113827907, 0.0317076631, 0.113770671, -0.993000925)},
+	{"Cp14", CFrame.new(-2448.27344, 964.254089, -11057.0312, 0.0476028472, -0.0647127628, 0.996767879, 3.43433559e-10, 0.997899175, 0.0647862107, -0.99886632, -0.00308400765, 0.0475028418)},
+	{"Tengah 14", CFrame.new(-3044.74292, 981.493469, -11030.8037, 0.0238184482, -0.0852627605, 0.996073782, -5.87034976e-10, 0.996356428, 0.08528696, -0.999716282, -0.00203140359, 0.0237316638)},
+	{"Cp15", CFrame.new(-3483.43945, 988.503296, -11013.0811, 0.0396763459, -0.0475526191, 0.998080432, -1.16498686e-10, 0.998866975, 0.0475900918, -0.999212563, -0.00188820099, 0.0396313891)},
+	{"Tengah 15", CFrame.new(-3854.48242, 985.936829, -11009.2061, -0.0950342268, -0.142578945, 0.985210478, -2.72903367e-09, 0.989689827, 0.14322719, -0.995473981, 0.0136114825, -0.0940544084)},
+	{"Cp16", CFrame.new(-4231.1875, 1006.55963, -11017.707, 0.0950784385, -0.0579245724, 0.993783116, -6.25444918e-10, 0.998305619, 0.0581881776, -0.995469809, -0.00553244166, 0.0949173421)},
+	{"Tengah 16", CFrame.new(-4490.48242, 1038.65771, -11328.7051, 0.990922332, -0.00802882854, 0.134195656, -4.68678207e-10, 0.99821502, 0.0597224832, -0.134435624, -0.0591803417, 0.989153564)},
+	{"Cp17", CFrame.new(-4655.4458, 1085.97107, -11667.3447, -0.110815927, 0.02199829, 0.993597448, 2.2579081e-11, 0.999755025, -0.0221346188, -0.993840933, -0.00245286827, -0.110788777)},
+	{"Tengah 17", CFrame.new(-5027.59277, 1094.36035, -11674.2949, 0.0238194466, -0.060855411, 0.997862339, -6.60101834e-11, 0.998145521, 0.0608726814, -0.999716282, -0.00144995365, 0.0237752739)},
+	{"Cp18", CFrame.new(-5545.39404, 1107.8219, -11650.6357, -0.00791138876, -0.0912490711, 0.99579668, -1.18666341e-10, 0.995827854, 0.0912519246, -0.999968708, 0.000721929304, -0.00787838083)},
+	{"Tengah 18", CFrame.new(-6414.31885, 1107.92029, -11711.4941, 0.39367038, -0.111929558, 0.912411869, 1.31374795e-08, 0.992559373, 0.121761598, -0.91925168, -0.0479339212, 0.390741229)},
+	{"Cp19", CFrame.new(-6766.26074, 1105.58411, -11503.3955, -0.999874473, 0.000155506685, -0.015843736, -2.90724042e-12, 0.999951839, 0.00981455389, 0.0158444997, 0.00981332175, -0.999826312)},
+	{"Tengah 19", CFrame.new(-6762.13184, 1099.67126, -11186.042, -0.998868346, 0.00112270634, -0.0475471318, -5.17564568e-11, 0.999721348, 0.0236059148, 0.0475603864, 0.0235792007, -0.998589993)},
+	{"Cp20", CFrame.new(-6746.04248, 1108.37537, -10794.8271, -0.993840754, 0.0067165764, -0.11061395, -6.0127392e-10, 0.998161554, 0.060609255, 0.110817678, 0.0602359474, -0.992013633)}
+}
+
+local function SetPlatformStand(state)
+	pcall(function()
+		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if hum then hum.PlatformStand = state end
+	end)
+end
+
+local function SafeGetHRP()
+	local char = LocalPlayer.Character
+	if not char or not char.Parent or not char:FindFirstChild("HumanoidRootPart") then
+		local start = tick()
+		while (tick() - start) < 10 do
+			task.wait(0.5)
+			char = LocalPlayer.Character
+			if char and char.Parent and char:FindFirstChild("HumanoidRootPart") then
+				return char.HumanoidRootPart
+			end
+		end
+		return nil
+	end
+	return char.HumanoidRootPart
+end
+
+local _partCache = nil
+local function RefreshPartCache()
+	_partCache = {}
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and v.Parent and not v:IsDescendantOf(LocalPlayer.Character) then
+			table.insert(_partCache, v)
+		end
+	end
+end
+
+local function GetPartForPos(pos, isCp, cpNum)
+	if isCp then
+		local folder = workspace:FindFirstChild("Checkpoint")
+		if folder then return folder:FindFirstChild("Checkpoint " .. tostring(cpNum)) end
+		return nil
+	end
+	if not _partCache then RefreshPartCache() end
+	local closest, dist = nil, 15
+	for _, v in ipairs(_partCache) do
+		if v.Parent then
+			local d = (v.Position - pos).Magnitude
+			if d < dist then closest, dist = v, d end
+		end
+	end
+	return closest
+end
+
+local function SummitTeleportAndTouch(targetCF, label, isCp, cpNum)
+	local hrp = SafeGetHRP()
+	if not hrp then return end
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	hrp.AssemblyAngularVelocity = Vector3.zero
+	hrp.CFrame = targetCF
+	task.wait(0.3)
+
+	local part = GetPartForPos(targetCF.Position, isCp, cpNum)
+	if part and part:IsA("BasePart") then
+		hrp.CFrame = CFrame.new(part.Position + Vector3.new(0, part.Size.Y / 2 + 2, 0))
+		task.wait(0.1)
+		if firetouchinterest then
+			pcall(function()
+				firetouchinterest(hrp, part, 0)
+				task.wait(0.05)
+				firetouchinterest(hrp, part, 1)
+			end)
+		end
+	end
+end
+
+UI.Toggle(SummitPage, "Auto Summit Loop (Instant TP)", "BC → Cp1-Cp20 → Finish → kembali ke BC, berulang.", false, function(v)
+	if v and not IsKeyVerified then return end
 	getgenv().AutoSummitRunning = v
+	if not v then
+		SetPlatformStand(false)
+		pcall(function()
+			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.AssemblyAngularVelocity = Vector3.zero
+			end
+		end)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		if getgenv().AutoSummitRunning then
+			if not IsKeyVerified then getgenv().AutoSummitRunning = false; SetPlatformStand(false); break end
+			local success, err = pcall(function()
+				SummitTeleportAndTouch(BC_CFRAME, "BC Start", false, nil)
+				task.wait(0.8)
+				for _, point in ipairs(SummitPoints) do
+					if not getgenv().AutoSummitRunning then break end
+					local name, cf = point[1], point[2]
+					local cpIndexStr = string.match(name, "^Cp(%d+)$")
+					local height = cpIndexStr and SUMMIT_CP_HEIGHT or SUMMIT_MID_HEIGHT
+					SummitTeleportAndTouch(cf + Vector3.new(0, height, 0), name, cpIndexStr ~= nil, cpIndexStr)
+					if cpIndexStr then
+						pcall(function()
+							local cpRemote = ReplicatedStorage:FindFirstChild("Remote")
+								and ReplicatedStorage.Remote:FindFirstChild("Checkpoint")
+								and ReplicatedStorage.Remote.Checkpoint:FindFirstChild("TpToCheckpoint")
+							if cpRemote then cpRemote:FireServer(tonumber(cpIndexStr)) end
+						end)
+						task.wait(SUMMIT_DELAY)
+					else
+						task.wait(0.2)
+					end
+				end
+				if not getgenv().AutoSummitRunning then return end
+				SummitTeleportAndTouch(FINISH_CFRAME, "Finish", false, nil)
+				task.wait(2)
+				if not getgenv().AutoSummitRunning then return end
+				SummitTeleportAndTouch(BC_CFRAME, "BC Return", false, nil)
+				task.wait(1.5)
+			end)
+			if not success then task.wait(2) end
+			task.wait(0.3)
+		else
+			task.wait(0.5)
+		end
+	end
 end)
 
 ------------------------------------------------------------------
--- PAGE 3: SETTINGS
+-- 4. PLAYER PAGE
 ------------------------------------------------------------------
-UI.Section(SettingsPage, "OPTIMASI")
-UI.Button(SettingsPage, "Anti-Lag", "Matikan bayangan untuk menaikkan FPS.", "Aktifkan", function(btn)
+UI.Section(PlayerPage, "PLAYER SETTINGS")
+UI.Input(PlayerPage, "WalkSpeed", "Kecepatan jalan karakter", "", "50", function(t)
+	local num = tonumber(t)
+	if num then
+		pcall(function()
+			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			if hum then hum.WalkSpeed = num end
+		end)
+	end
+end)
+UI.Toggle(PlayerPage, "Anti-AFK", "Cegah kick karena idle.", false, function(v) getgenv().AntiAFKRunning = v end)
+LocalPlayer.Idled:Connect(function()
+	if getgenv().AntiAFKRunning then
+		VirtualUser:CaptureController()
+		VirtualUser:ClickButton2(Vector2.new(0, 0))
+	end
+end)
+
+------------------------------------------------------------------
+-- 5. PRIVACY PAGE
+------------------------------------------------------------------
+UI.Section(PrivacyPage, "PRIVACY & ANTI-ADMIN")
+UI.Input(PrivacyPage, "Nama Samaran", "Dipakai saat Privacy Mode aktif", "UBEY HUB", "UBEY HUB", function(t)
+	getgenv().FakeNameInput = t
+end)
+
+UI.Toggle(PrivacyPage, "Privacy Mode (Hide Name)", "Ganti nama di atas kepala.", false, function(v)
+	if v and not IsKeyVerified then return end
+	getgenv().HideNameRunning = v
+	if v then
+		task.spawn(function()
+			while getgenv().HideNameRunning do
+				if not IsKeyVerified then getgenv().HideNameRunning = false; break end
+				pcall(function()
+					local fakeName = getgenv().FakeNameInput or "UBEY HUB"
+					local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+					if head then
+						for _, child in ipairs(head:GetDescendants()) do
+							if child:IsA("TextLabel") or child:IsA("TextMesh") then
+								local txt = child.Text
+								if string.find(txt, LocalPlayer.Name) or string.find(txt, LocalPlayer.DisplayName) then
+									child.Text = fakeName
+								end
+							end
+						end
+					end
+				end)
+				task.wait(1)
+			end
+		end)
+	end
+end)
+
+UI.Toggle(PrivacyPage, "Anti-Admin Protect", "Pindah server otomatis jika admin grup masuk.", getgenv().UbeyConfig.AntiAdminEnabled, function(v)
+	getgenv().UbeyConfig.AntiAdminEnabled = v
+	SaveConfig()
+end)
+
+local function CheckPlayerIsAdmin(player)
+	local ok, rank = pcall(function() return player:GetRankInGroup(getgenv().UbeyConfig.TargetGroupId or 7019573) end)
+	return ok and rank and rank > 1
+end
+
+Players.PlayerAdded:Connect(function(player)
+	if player ~= LocalPlayer then
+		task.spawn(function()
+			task.wait(1.5)
+			if getgenv().UbeyConfig.AntiAdminEnabled and CheckPlayerIsAdmin(player) then
+				TeleportService:Teleport(game.PlaceId, LocalPlayer)
+			end
+		end)
+	end
+end)
+
+------------------------------------------------------------------
+-- 6. SETTINGS & CREDITS
+------------------------------------------------------------------
+UI.Section(SettingsPage, "SETTINGS & PERFORMANCE")
+UI.Button(SettingsPage, "Anti-Lag", "Matikan bayangan untuk naikkan FPS.", "Aktifkan", function(btn)
 	pcall(function()
 		Lighting.GlobalShadows = false
 		Lighting.FogEnd = 999999
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then v.Enabled = false end
+		end
 		Flash(btn, "Aktif ✓", true)
 	end)
 end)
 
-------------------------------------------------------------------
--- PAGE 4: CREDITS
-------------------------------------------------------------------
-UI.Section(CreditsPage, "INFORMASI")
-UI.Button(CreditsPage, "Created By UBEY", "Terima kasih sudah memakai hub ini.", "Discord", function(btn)
+UI.Section(CreditsPage, "CREDITS")
+UI.Button(CreditsPage, "Created By UBEY", "Terima kasih sudah memakai " .. HUB_TITLE .. ".", "Discord", function(btn)
 	local ok = pcall(function() setclipboard(DISCORD_LINK) end)
 	Flash(btn, ok and "Disalin ✓" or "Gagal", ok)
 end, Color3.fromRGB(88, 101, 242))
