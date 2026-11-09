@@ -21,7 +21,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- ====== PENGATURAN TAMPILAN (EDIT DI SINI) ======
-local HUB_TITLE = "Ubey Hub Premium👑"
+local HUB_TITLE = "UBEY HUB"
 local HUB_DISCORD = "discord.gg/YXuYeEpnXE"
 local DISCORD_LINK = "https://discord.gg/YXuYeEpnXE"
 local LOGO_ASSET = "rbxassetid://90770802417381"
@@ -34,7 +34,7 @@ getgenv().SessionStartTime = os.time()
 -- CONFIG & FILE SAVE
 ------------------------------------------------------------------
 local CONFIG_FILE = "UbeyHubV3_Config.json"
-local KEY_FILE = "UbeyHub_SavedKey.txt"
+local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 local function DefaultConfig()
 	return {
@@ -345,6 +345,7 @@ getgenv().FavMutations = {
 	["Strawberry"] = false, ["Void"] = false, ["Cupid"] = false
 }
 getgenv().FavNames = {}
+getgenv().UnfavNames = {}
 getgenv().UnfavRarities = {
 	["Common"] = false, ["UnCommon"] = false, ["Rare"] = false, ["Epic"] = false,
 	["Legendary"] = false, ["Mythical"] = false, ["Secret"] = false, ["Forgotten"] = false
@@ -620,7 +621,7 @@ local function UnfavoriteByFilter()
 			local remote = GetInventoryRemote()
 			if not remote then return end
 			for _, fish in ipairs(GetServerFishData()) do
-				if MatchFilter(fish, getgenv().UnfavRarities, getgenv().UnfavMutations) and fish.IsFavorited then
+				if MatchFilter(fish, getgenv().UnfavRarities, getgenv().UnfavMutations, getgenv().UnfavNames) and fish.IsFavorited then
 					remote:FireServer(fish.UUID, false)
 					task.wait(0.08)
 				end
@@ -745,7 +746,8 @@ New("UIStroke", {Color = C.line, Thickness = 1.5}, Main)
 
 local Header = New("Frame", {Size = UDim2.new(1, 0, 0, 42), BackgroundTransparency = 1}, Main)
 MakeDraggable(Main, Header)
-Label(Header, HUB_TITLE, 15, C.text, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 0), UDim2.new(0, 100, 1, 0))
+Label(Header, HUB_TITLE, 15, C.text, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 5), UDim2.new(0, 110, 0, 20))
+Label(Header, "PREMIUM", 10, C.warn, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 23), UDim2.new(0, 110, 0, 14))
 Label(Header, HUB_DISCORD, 10, C.sub, Enum.Font.Gotham, UDim2.new(0, 112, 0, 0), UDim2.new(0, 130, 1, 0))
 local StatLabel = Label(Header, "📡 -- ms", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 245, 0, 0), UDim2.new(1, -330, 1, 0), Enum.TextXAlignment.Right)
 
@@ -1394,6 +1396,7 @@ UI.SearchMultiDropdown(FavoritePage, "Fav Filter Nama Ikan", "Favoritkan ikan be
 UI.Section(FavoritePage, "UNFAVORITE FILTER", C.bad)
 UI.MultiDropdown(FavoritePage, "Unfav Filter Rarity", "Rarity yang di-unfavorite", rarityList, getgenv().UnfavRarities)
 UI.MultiDropdown(FavoritePage, "Unfav Filter Mutasi", "Mutasi yang di-unfavorite", mutationList, getgenv().UnfavMutations)
+UI.SearchMultiDropdown(FavoritePage, "Unfav Filter Nama Ikan", "Unfavorite ikan berdasarkan nama", fishNameList, getgenv().UnfavNames)
 UI.Button(FavoritePage, "Unfavorite By Filter", "Hapus favorit sesuai filter unfav.", "Jalankan", function() UnfavoriteByFilter() end, Color3.fromRGB(200, 100, 30))
 UI.Button(FavoritePage, "Unfavorite All Fish", "Hapus favorit pada semua ikan.", "Unfav Semua", function() UnfavoriteAllFish() end, Color3.fromRGB(220, 70, 70))
 
