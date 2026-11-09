@@ -115,10 +115,7 @@ task.spawn(function()
 	local FishGiver = FS:WaitForChild("FishGiver")
 
 	while true do
-		if getgenv().AutoFishingRunning then
-			-- [SECURITY FIX] Cek Key
-			if not IsKeyVerified then getgenv().AutoFishingRunning = false; continue end
-			
+		if getgenv().AutoFishingRunning and IsKeyVerified then
 			pcall(function()
 				local char = LocalPlayer.Character
 				local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -185,10 +182,7 @@ local waypoints = {
 
 task.spawn(function()
 	while true do
-		if getgenv().AutoSummitRunning then
-			-- [SECURITY FIX] Cek Key
-			if not IsKeyVerified then getgenv().AutoSummitRunning = false; continue end
-			
+		if getgenv().AutoSummitRunning and IsKeyVerified then
 			pcall(function()
 				local permisiFolder = workspace:FindFirstChild("permisi")
 				local basecampFolder = workspace:FindFirstChild("BASECAMP")
@@ -667,13 +661,9 @@ local function ValidateKey(enteredKey, isAutoLogin)
 		local record = data[1]
 		local currentUser = LocalPlayer.Name
 
-		-- Cek Status Key
-		local rawStatus = record.status
-		local isActive = false
-		if type(rawStatus) == "boolean" then isActive = rawStatus
-		elseif type(rawStatus) == "string" then isActive = (string.lower(rawStatus) ~= "inactive" and string.lower(rawStatus) ~= "used") end
-
-		if not isActive then
+		-- Cek Status Key (Lebih Aman)
+		local statusStr = tostring(record.status):lower()
+		if record.status == false or statusStr == "inactive" or statusStr == "used" or statusStr == "false" then
 			KeyFail(isAutoLogin, "Key sudah tidak aktif / kadaluwarsa!")
 			return
 		end
@@ -725,8 +715,9 @@ end)
 UI.Section(FishingPage, "AUTO FISHING")
 
 local infoCard = Card(FishingPage, 45)
-Label(infoCard, "⚠️ Pastikan kamu sudah memegang (equip) pancingan!\nScript akan mendeteksi nama rod secara otomatis.", 11, C.warn, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
-infoCard.TextWrapped = true
+local infoLbl = Label(infoCard, "⚠️ Pastikan kamu sudah memegang (equip) pancingan!\nScript akan mendeteksi nama rod secara otomatis.", 11, C.warn, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
+infoLbl.TextWrapped = true
+infoLbl.TextYAlignment = Enum.TextYAlignment.Center
 
 UI.Toggle(FishingPage, "Auto Fishing", "Memancing secara otomatis (Dynamic Rod).", false, function(v)
 	if v and not IsKeyVerified then return end -- [SECURITY FIX]
@@ -782,8 +773,9 @@ end)
 UI.Section(SummitPage, "AUTO SUMMIT FARM")
 
 local sumInfoCard = Card(SummitPage, 45)
-Label(sumInfoCard, "⚠️ Otomatis mendaki via Waypoint (31 Titik) & Bypass Timer.\nJangan bergerak selama Auto Summit ON.", 11, C.warn, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
-sumInfoCard.TextWrapped = true
+local sumInfoLbl = Label(sumInfoCard, "⚠️ Otomatis mendaki via Waypoint (31 Titik) & Bypass Timer.\nJangan bergerak selama Auto Summit ON.", 11, C.warn, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
+sumInfoLbl.TextWrapped = true
+sumInfoLbl.TextYAlignment = Enum.TextYAlignment.Center
 
 UI.Toggle(SummitPage, "Auto Climb Summit (Loop)", "Mendaki gunung secara otomatis tanpa henti.", false, function(v)
 	if v and not IsKeyVerified then return end -- [SECURITY FIX]
