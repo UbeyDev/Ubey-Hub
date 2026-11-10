@@ -360,9 +360,11 @@ local Header = New("Frame", {Size = UDim2.new(1, 0, 0, 42), BackgroundTransparen
 MakeDraggable(Main, Header)
 Label(Header, HUB_TITLE, 15, C.text, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 5), UDim2.new(0, 110, 0, 20))
 Label(Header, HUB_SUBTITLE, 10, C.warn, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 23), UDim2.new(0, 110, 0, 14))
-Label(Header, HUB_DISCORD, 10, C.sub, Enum.Font.Gotham, UDim2.new(0, 130, 0, 0), UDim2.new(0, 160, 1, 0))
 
-local PingLabel = Label(Header, "📡 -- ms", 11, C.good, Enum.Font.GothamBold, UDim2.new(0, 290, 0, 0), UDim2.new(1, -380, 1, 0), Enum.TextXAlignment.Right)
+-- Statistik dipindahkan ke atas (menggantikan teks discord)
+local StatLabel = Label(Header, "📊 Fish: 0  |  ⛰️ Summit: 0  |  ⏱️ 00s", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 130, 0, 0), UDim2.new(0, 260, 1, 0))
+
+local PingLabel = Label(Header, "📡 -- ms", 11, C.good, Enum.Font.GothamBold, UDim2.new(0, 380, 0, 0), UDim2.new(1, -470, 1, 0), Enum.TextXAlignment.Right)
 
 local MinimizeBtn = New("TextButton", {
 	Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(1, -78, 0, 6), BackgroundTransparency = 1,
@@ -373,17 +375,8 @@ local CloseBtn = New("TextButton", {
 	Text = "✕", TextColor3 = C.text, Font = Enum.Font.GothamBold, TextSize = 16
 }, Header)
 
--- ====== STAT BAR (DI ATAS) ======
-local TopStatBar = New("Frame", {
-	Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0, 10, 0, 44),
-	BackgroundColor3 = C.card, BorderSizePixel = 0
-}, Main)
-Round(TopStatBar, 8)
-New("UIStroke", {Color = C.line, Thickness = 1}, TopStatBar)
-local StatLabel = Label(TopStatBar, "📊 Fish: 0  |  ⛰️ Summit: 0  |  ⏱️ 00s", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 10, 0, 0), UDim2.new(1, -20, 1, 0), Enum.TextXAlignment.Center)
-
--- ====== BODY (DI BAWAH STAT BAR) ======
-local Body = New("Frame", {Size = UDim2.new(1, 0, 1, -78), Position = UDim2.new(0, 0, 0, 78), BackgroundTransparency = 1}, Main)
+-- Body mengisi sisa tinggi di bawah header
+local Body = New("Frame", {Size = UDim2.new(1, 0, 1, -42), Position = UDim2.new(0, 0, 0, 42), BackgroundTransparency = 1}, Main)
 
 local Sidebar = New("ScrollingFrame", {
 	Size = UDim2.new(0, 150, 1, -10), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
@@ -401,7 +394,6 @@ local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
 	isMinimized = not isMinimized
 	Body.Visible = not isMinimized
-	TopStatBar.Visible = not isMinimized
 	TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
 		Size = UDim2.new(0, WIN_W, 0, isMinimized and 42 or WIN_H)
 	}):Play()
@@ -721,11 +713,26 @@ UI.Toggle(TabFish, "Auto Sell Ikan", "Jual ikan otomatis per interval.", false, 
 		end)
 	end
 end)
--- Dipindah ke bawah Auto Sell
 UI.Input(TabFish, "Jeda Jual (Menit)", "Interval auto-sell dalam menit.", tostring(getgenv().UbeyConfig.AutoSellTimer), "5", function(text)
 	local val = tonumber(text)
 	if val then
 		getgenv().UbeyConfig.AutoSellTimer = tostring(val)
+		SaveConfig()
+	end
+end)
+
+-- Wait Time & Loop Delay dipindahkan ke sini (bawah Auto Sell)
+UI.Input(TabFish, "Wait Time (detik)", "Jeda antara cast & ambil ikan.", tostring(getgenv().UbeyConfig.WaitTime), "4.0", function(text)
+	local val = tonumber(text)
+	if val then
+		getgenv().UbeyConfig.WaitTime = val
+		SaveConfig()
+	end
+end)
+UI.Input(TabFish, "Loop Delay (detik)", "Jeda antar loop fishing.", tostring(getgenv().UbeyConfig.LoopDelay), "0.1", function(text)
+	local val = tonumber(text)
+	if val then
+		getgenv().UbeyConfig.LoopDelay = val
 		SaveConfig()
 	end
 end)
@@ -737,24 +744,7 @@ UI.Toggle(TabSummit, "Auto Climb Summit", "Otomatis mendaki 31 waypoint + bypass
 end)
 
 -- SETTINGS TAB
-UI.Section(TabSettings, "KONFIGURASI")
-UI.Input(TabSettings, "Wait Time (detik)", "Jeda antara cast & ambil ikan.", tostring(getgenv().UbeyConfig.WaitTime), "4.0", function(text)
-	local val = tonumber(text)
-	if val then
-		getgenv().UbeyConfig.WaitTime = val
-		SaveConfig()
-	end
-end)
-UI.Input(TabSettings, "Loop Delay (detik)", "Jeda antar loop fishing.", tostring(getgenv().UbeyConfig.LoopDelay), "0.1", function(text)
-	local val = tonumber(text)
-	if val then
-		getgenv().UbeyConfig.LoopDelay = val
-		SaveConfig()
-	end
-end)
-
 UI.Section(TabSettings, "UTILITAS")
--- Anti-Lag Diperbaiki (Toggle + Matikan Efek)
 local isAntiLagActive = false
 UI.Button(TabSettings, "Anti-Lag", "Matikan efek berat untuk performa.", "Aktifkan", function(btn)
 	isAntiLagActive = not isAntiLagActive
@@ -800,7 +790,6 @@ New("UIStroke", {Color = C.line, Thickness = 1}, credCard)
 Label(credCard, "UBEY HUB", 16, C.accent, Enum.Font.GothamBold, UDim2.new(0, 0, 0, 14), UDim2.new(1, 0, 0, 22), Enum.TextXAlignment.Center)
 Label(credCard, "Created by UBEY", 12, C.text, Enum.Font.Gotham, UDim2.new(0, 0, 0, 38), UDim2.new(1, 0, 0, 18), Enum.TextXAlignment.Center)
 
--- Tombol Salin Discord
 UI.Button(TabCredits, "Discord Link", "Salin link discord ke clipboard.", "Salin", function(btn)
 	pcall(function()
 		if setclipboard then
