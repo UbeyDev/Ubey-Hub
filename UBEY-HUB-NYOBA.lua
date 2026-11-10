@@ -23,7 +23,7 @@ local HUB_TITLE = "UBEY HUB"
 local HUB_SUBTITLE = "PREMIUM"
 local HUB_DISCORD = "discord.gg/YXuYeEpnXE"
 local LOGO_ASSET = "rbxassetid://90770802417381"
-local WIN_W, WIN_H = 580, 370
+local WIN_W, WIN_H = 580, 360
 
 local CONFIG_FILE = "UbeyHub_Config.json"
 local KEY_FILE = "UbeyHub_SavedKey.txt"
@@ -373,7 +373,17 @@ local CloseBtn = New("TextButton", {
 	Text = "✕", TextColor3 = C.text, Font = Enum.Font.GothamBold, TextSize = 16
 }, Header)
 
-local Body = New("Frame", {Size = UDim2.new(1, 0, 1, -42), Position = UDim2.new(0, 0, 0, 42), BackgroundTransparency = 1}, Main)
+-- ====== STAT BAR (DI ATAS) ======
+local TopStatBar = New("Frame", {
+	Size = UDim2.new(1, -20, 0, 28), Position = UDim2.new(0, 10, 0, 44),
+	BackgroundColor3 = C.card, BorderSizePixel = 0
+}, Main)
+Round(TopStatBar, 8)
+New("UIStroke", {Color = C.line, Thickness = 1}, TopStatBar)
+local StatLabel = Label(TopStatBar, "📊 Fish: 0  |  ⛰️ Summit: 0  |  ⏱️ 00s", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 10, 0, 0), UDim2.new(1, -20, 1, 0), Enum.TextXAlignment.Center)
+
+-- ====== BODY (DI BAWAH STAT BAR) ======
+local Body = New("Frame", {Size = UDim2.new(1, 0, 1, -78), Position = UDim2.new(0, 0, 0, 78), BackgroundTransparency = 1}, Main)
 
 local Sidebar = New("ScrollingFrame", {
 	Size = UDim2.new(0, 150, 1, -10), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
@@ -385,20 +395,13 @@ New("Frame", {Size = UDim2.new(0, 2, 1, -24), Position = UDim2.new(0, 166, 0, 4)
 
 local Content = New("Frame", {Size = UDim2.new(1, -186, 1, 0), Position = UDim2.new(0, 178, 0, 0), BackgroundTransparency = 1}, Body)
 local PageTitle = Label(Content, "", 19, C.text, Enum.Font.GothamBold, UDim2.new(0, 2, 0, 0), UDim2.new(1, 0, 0, 30))
-local PagesHolder = New("Frame", {Size = UDim2.new(1, 0, 1, -74), Position = UDim2.new(0, 0, 0, 38), BackgroundTransparency = 1}, Content)
-
-local StatBar = New("Frame", {
-	Size = UDim2.new(1, 0, 0, 28), Position = UDim2.new(0, 0, 1, -32),
-	BackgroundColor3 = C.card, BorderSizePixel = 0
-}, Content)
-Round(StatBar, 8)
-New("UIStroke", {Color = C.line, Thickness = 1}, StatBar)
-local StatLabel = Label(StatBar, "📊 Fish: 0  |  ⛰️ Summit: 0  |  ⏱️ 00s", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 10, 0, 0), UDim2.new(1, -20, 1, 0))
+local PagesHolder = New("Frame", {Size = UDim2.new(1, 0, 1, -44), Position = UDim2.new(0, 0, 0, 38), BackgroundTransparency = 1}, Content)
 
 local isMinimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
 	isMinimized = not isMinimized
 	Body.Visible = not isMinimized
+	TopStatBar.Visible = not isMinimized
 	TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
 		Size = UDim2.new(0, WIN_W, 0, isMinimized and 42 or WIN_H)
 	}):Play()
@@ -718,6 +721,7 @@ UI.Toggle(TabFish, "Auto Sell Ikan", "Jual ikan otomatis per interval.", false, 
 		end)
 	end
 end)
+-- Dipindah ke bawah Auto Sell
 UI.Input(TabFish, "Jeda Jual (Menit)", "Interval auto-sell dalam menit.", tostring(getgenv().UbeyConfig.AutoSellTimer), "5", function(text)
 	local val = tonumber(text)
 	if val then
@@ -750,12 +754,37 @@ UI.Input(TabSettings, "Loop Delay (detik)", "Jeda antar loop fishing.", tostring
 end)
 
 UI.Section(TabSettings, "UTILITAS")
-UI.Button(TabSettings, "Anti-Lag", "Matikan shadow & fog untuk performa.", "Aktifkan", function(btn)
-	pcall(function()
-		Lighting.GlobalShadows = false
-		Lighting.FogEnd = 999999
-		btn.Text = "Aktif!"
-	end)
+-- Anti-Lag Diperbaiki (Toggle + Matikan Efek)
+local isAntiLagActive = false
+UI.Button(TabSettings, "Anti-Lag", "Matikan efek berat untuk performa.", "Aktifkan", function(btn)
+	isAntiLagActive = not isAntiLagActive
+	if isAntiLagActive then
+		pcall(function()
+			Lighting.GlobalShadows = false
+			Lighting.FogEnd = 9e9
+			for _, v in ipairs(Lighting:GetDescendants()) do
+				if v:IsA("PostEffect") or v:IsA("Atmosphere") then
+					v.Enabled = false
+				end
+			end
+			Workspace.Terrain.WaterWaveSize = 0
+			Workspace.Terrain.WaterWaveSpeed = 0
+		end)
+		btn.Text = "Matikan"
+		btn.BackgroundColor3 = C.bad
+	else
+		pcall(function()
+			Lighting.GlobalShadows = true
+			Lighting.FogEnd = 100000
+			for _, v in ipairs(Lighting:GetDescendants()) do
+				if v:IsA("PostEffect") or v:IsA("Atmosphere") then
+					v.Enabled = true
+				end
+			end
+		end)
+		btn.Text = "Aktifkan"
+		btn.BackgroundColor3 = C.accent
+	end
 end)
 UI.Button(TabSettings, "Hapus Key Tersimpan", "Reset key yang tersimpan di perangkat.", "Hapus", function()
 	pcall(function()
@@ -770,7 +799,18 @@ Round(credCard, 10)
 New("UIStroke", {Color = C.line, Thickness = 1}, credCard)
 Label(credCard, "UBEY HUB", 16, C.accent, Enum.Font.GothamBold, UDim2.new(0, 0, 0, 14), UDim2.new(1, 0, 0, 22), Enum.TextXAlignment.Center)
 Label(credCard, "Created by UBEY", 12, C.text, Enum.Font.Gotham, UDim2.new(0, 0, 0, 38), UDim2.new(1, 0, 0, 18), Enum.TextXAlignment.Center)
-Label(credCard, HUB_DISCORD, 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 0, 0, 58), UDim2.new(1, 0, 0, 18), Enum.TextXAlignment.Center)
+
+-- Tombol Salin Discord
+UI.Button(TabCredits, "Discord Link", "Salin link discord ke clipboard.", "Salin", function(btn)
+	pcall(function()
+		if setclipboard then
+			setclipboard("https://" .. HUB_DISCORD)
+			btn.Text = "Tersalin!"
+			task.wait(2)
+			btn.Text = "Salin"
+		end
+	end)
+end, Color3.fromRGB(88, 101, 242))
 
 -- ====== FLOATING LOGO ======
 local Float = New("ImageButton", {
