@@ -720,8 +720,6 @@ UI.Input(TabFish, "Jeda Jual (Menit)", "Interval auto-sell dalam menit.", tostri
 		SaveConfig()
 	end
 end)
-
--- Wait Time & Loop Delay dipindahkan ke sini (bawah Auto Sell)
 UI.Input(TabFish, "Wait Time (detik)", "Jeda antara cast & ambil ikan.", tostring(getgenv().UbeyConfig.WaitTime), "4.0", function(text)
 	local val = tonumber(text)
 	if val then
@@ -743,7 +741,7 @@ UI.Toggle(TabSummit, "Auto Climb Summit", "Otomatis mendaki 31 waypoint + bypass
 	getgenv().AutoSummitRunning = v
 end)
 
--- SETTINGS TAB
+-- SETTINGS TAB (Hanya Anti-Lag, Tombol Hapus Key sudah dihilangkan)
 UI.Section(TabSettings, "UTILITAS")
 local isAntiLagActive = false
 UI.Button(TabSettings, "Anti-Lag", "Matikan efek berat untuk performa.", "Aktifkan", function(btn)
@@ -776,11 +774,6 @@ UI.Button(TabSettings, "Anti-Lag", "Matikan efek berat untuk performa.", "Aktifk
 		btn.BackgroundColor3 = C.accent
 	end
 end)
-UI.Button(TabSettings, "Hapus Key Tersimpan", "Reset key yang tersimpan di perangkat.", "Hapus", function()
-	pcall(function()
-		if delfile and isfile and isfile(KEY_FILE) then delfile(KEY_FILE) end
-	end)
-end, Color3.fromRGB(180, 50, 50))
 
 -- CREDITS TAB
 UI.Section(TabCredits, "CREDITS")
