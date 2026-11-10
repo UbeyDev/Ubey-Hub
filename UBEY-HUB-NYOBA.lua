@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | MERGED (GUI TEMPLATE + FULL FUNCTIONALITY)
+-- UBEY HUB | MERGED (GUI TEMPLATE + FULL FUNCTIONALITY + AUTO DAILY)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -61,6 +61,7 @@ LoadConfig()
 getgenv().AutoFishingRunning = false
 getgenv().AutoSellRunning = false
 getgenv().AutoSummitRunning = false
+getgenv().AutoDailyRunning = false -- Tambahan untuk Daily
 getgenv().TotalFishCaught = 0
 getgenv().TotalSummitRun = 0
 getgenv().SessionStartTime = os.time()
@@ -127,6 +128,22 @@ task.spawn(function()
 		else
 			task.wait(0.5)
 		end
+	end
+end)
+
+-- ====== AUTO DAILY LOGIN LOGIC ======
+task.spawn(function()
+	task.wait(5) -- Tunggu game load sebentar
+	while true do
+		if getgenv().AutoDailyRunning then
+			pcall(function()
+				local DailyReward = ReplicatedStorage:FindFirstChild("DailyReward")
+				if DailyReward then
+					DailyReward:InvokeServer("claim")
+				end
+			end)
+		end
+		task.wait(30) -- Cek setiap 30 detik agar tidak spam server
 	end
 end)
 
@@ -361,7 +378,6 @@ MakeDraggable(Main, Header)
 Label(Header, HUB_TITLE, 15, C.text, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 5), UDim2.new(0, 110, 0, 20))
 Label(Header, HUB_SUBTITLE, 10, C.warn, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 23), UDim2.new(0, 110, 0, 14))
 
--- Statistik dipindahkan ke atas (menggantikan teks discord)
 local StatLabel = Label(Header, "📊 Fish: 0  |  ⛰️ Summit: 0  |  ⏱️ 00s", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 130, 0, 0), UDim2.new(0, 260, 1, 0))
 
 local PingLabel = Label(Header, "📡 -- ms", 11, C.good, Enum.Font.GothamBold, UDim2.new(0, 380, 0, 0), UDim2.new(1, -470, 1, 0), Enum.TextXAlignment.Right)
@@ -375,7 +391,6 @@ local CloseBtn = New("TextButton", {
 	Text = "✕", TextColor3 = C.text, Font = Enum.Font.GothamBold, TextSize = 16
 }, Header)
 
--- Body mengisi sisa tinggi di bawah header
 local Body = New("Frame", {Size = UDim2.new(1, 0, 1, -42), Position = UDim2.new(0, 0, 0, 42), BackgroundTransparency = 1}, Main)
 
 local Sidebar = New("ScrollingFrame", {
@@ -690,6 +705,7 @@ end
 -- ====== TABS ======
 local TabFish = UI.Tab("Fishing", "🎣")
 local TabSummit = UI.Tab("Summit", "⛰️")
+local TabDaily = UI.Tab("Daily", "📅") -- TAB BARU
 local TabSettings = UI.Tab("Settings", "⚙️")
 local TabCredits = UI.Tab("Credits", "👑")
 
@@ -741,7 +757,13 @@ UI.Toggle(TabSummit, "Auto Climb Summit", "Otomatis mendaki 31 waypoint + bypass
 	getgenv().AutoSummitRunning = v
 end)
 
--- SETTINGS TAB (Hanya Anti-Lag, Tombol Hapus Key sudah dihilangkan)
+-- DAILY TAB (BARU)
+UI.Section(TabDaily, "AUTO DAILY LOGIN")
+UI.Toggle(TabDaily, "Auto Claim Daily", "Klaim otomatis hadiah login harian.", false, function(v)
+	getgenv().AutoDailyRunning = v
+end)
+
+-- SETTINGS TAB
 UI.Section(TabSettings, "UTILITAS")
 local isAntiLagActive = false
 UI.Button(TabSettings, "Anti-Lag", "Matikan efek berat untuk performa.", "Aktifkan", function(btn)
