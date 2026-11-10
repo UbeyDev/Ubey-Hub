@@ -262,23 +262,28 @@ end
 
 -- ambil daftar ikan dari penggiling (RemoteFunction GrindList)
 -- field dari game: uniqueId, rarity, name, weight, isFavorited, timestamp
+-- daftar ikan bisa berada di dalam tabel bersarang, jadi dicari secara rekursif
 local function GetGrindList()
 	local r = CookRemote("CookingSystem", "GrindList")
 	if not r then return {} end
 	local ok, res = pcall(function() return r:InvokeServer() end)
 	if not ok or type(res) ~= "table" then return {} end
 	local out = {}
-	for _, v in pairs(res) do
-		if type(v) == "table" then
-			local id = v.uniqueId or v.uniqueID or v.UniqueId or v.id or v.Id or v.uuid
+	local function collect(t, depth)
+		if type(t) ~= "table" or depth > 5 then return end
+		local id = t.uniqueId or t.uniqueID or t.UniqueId
+		if id then
 			table.insert(out, {
 				id = id,
-				rarity = tostring(v.rarity or ""):lower(),
-				name = v.name,
-				fav = v.isFavorited == true,
+				rarity = tostring(t.rarity or ""):lower(),
+				name = t.name,
+				fav = t.isFavorited == true,
 			})
+			return
 		end
+		for _, v in pairs(t) do collect(v, depth + 1) end
 	end
+	collect(res, 0)
 	return out
 end
 
@@ -359,6 +364,7 @@ local function GrindNow()
 			if #ids >= limit then break end
 		end
 	end
+	if #ids == 0 then warn("[Cooking] tidak ada ikan yang cocok untuk digiling (cek rarity yang dipilih / ikan favorit)") end
 	local slots = math.max(1, tonumber(CookCfg.GrindSlots) or 10)
 	for i = 1, #ids, slots do
 		local chunk = {}
@@ -991,6 +997,73 @@ function UI.Input(page, title, desc, default, placeholder, cb)
 	return box
 end
 
+-- Picker: daftar pilihan yang bisa di-scroll (klik untuk buka/tutup)
+function UI.Picker(page, title, getOptions, getSelected, onSelect, getDesc)
+	local card = Card(page, 54)
+	card.ClipsDescendants = true
+	Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 8), UDim2.new(1, -160, 0, 18))
+	local descLbl = Label(card, "", 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -160, 0, 18))
+	local btn = New("TextButton", {
+		Size = UDim2.new(0, 132, 0, 30), Position = UDim2.new(1, -144, 0, 12),
+		BackgroundColor3 = C.accent, Text = "Pilih ▾", TextColor3 = Color3.new(1, 1, 1),
+		Font = Enum.Font.GothamBold, TextSize = 12, TextTruncate = Enum.TextTruncate.AtEnd
+	}, card)
+	Round(btn, 8)
+	local LIST_H = 124
+	local list = New("ScrollingFrame", {
+		Size = UDim2.new(1, -24, 0, LIST_H), Position = UDim2.new(0, 12, 0, 60),
+		BackgroundColor3 = C.bg, BorderSizePixel = 0, Visible = false,
+		ScrollBarThickness = 3, ScrollBarImageColor3 = C.accent,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y
+	}, card)
+	Round(list, 8)
+	New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, list)
+	New("UIPadding", {
+		PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 8)
+	}, list)
+
+	local open = false
+	local self = {}
+
+	local function setOpen(v)
+		open = v
+		list.Visible = v
+		card.Size = UDim2.new(1, -4, 0, v and (60 + LIST_H + 8) or 54)
+	end
+
+	function self.Refresh()
+		local selected = getSelected()
+		local opts = getOptions()
+		for _, ch in ipairs(list:GetChildren()) do
+			if ch:IsA("TextButton") then ch:Destroy() end
+		end
+		local selLabel = "Pilih"
+		for i, o in ipairs(opts) do
+			local isSel = (o.value == selected)
+			if isSel then selLabel = o.label end
+			local row = New("TextButton", {
+				Size = UDim2.new(1, 0, 0, 28), LayoutOrder = i, AutoButtonColor = false,
+				BackgroundColor3 = isSel and C.accent or C.card, Text = o.label,
+				TextColor3 = C.text, Font = Enum.Font.GothamMedium, TextSize = 12,
+				TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd
+			}, list)
+			Round(row, 6)
+			New("UIPadding", {PaddingLeft = UDim.new(0, 10)}, row)
+			row.MouseButton1Click:Connect(function()
+				setOpen(false)
+				onSelect(o.value)
+			end)
+		end
+		btn.Text = selLabel .. " ▾"
+		descLbl.Text = getDesc and getDesc() or ""
+	end
+
+	btn.MouseButton1Click:Connect(function() setOpen(not open) end)
+	self.Refresh()
+	return self
+end
+
 -- ====== TABS ======
 local TabFish = UI.Tab("Fishing", "🎣")
 local TabSummit = UI.Tab("Summit", "⛰️")
@@ -1078,21 +1151,38 @@ UI.Input(TabCook, "Maks Ikan Digiling", "Batas jumlah ikan sekali giling.", Cook
 end)
 
 UI.Section(TabCook, "2. MASAK: PILIH RARITY & RESEP")
-local RefreshCook
-local _, rarityCard = UI.Button(TabCook, "Rarity Masak", "-", "Ganti", function()
-	CycleRarity()
-	RefreshCook()
-end)
-local _, recipeCard = UI.Button(TabCook, "Resep", "-", "Ganti", function()
-	CycleRecipe()
-	RefreshCook()
-end)
-RefreshCook = function()
-	local m = CurrentMenu()
-	SetCard(rarityCard, "Rarity Masak: " .. m.Rarity, "Pakai Daging " .. m.Rarity .. " (1 daging = 1 porsi)")
-	SetCard(recipeCard, "Resep: " .. m.Name, IngredientText(m.Id) .. " /porsi")
-end
-RefreshCook()
+local RarityPicker, RecipePicker
+RarityPicker = UI.Picker(TabCook, "Rarity Masak / Daging",
+	function()
+		local o = {}
+		for _, R in ipairs(RarityList) do table.insert(o, { label = R, value = R }) end
+		return o
+	end,
+	function() return CurrentMenu().Rarity end,
+	function(R)
+		local list = MenusOfRarity(R)
+		if #list > 0 then CookCfg.Index = list[1] end
+		RarityPicker.Refresh()
+		RecipePicker.Refresh()
+	end,
+	function() return "Pakai Daging " .. CurrentMenu().Rarity .. " (1 daging = 1 porsi)" end
+)
+RecipePicker = UI.Picker(TabCook, "Resep",
+	function()
+		local o = {}
+		for _, idx in ipairs(MenusOfRarity(CurrentMenu().Rarity)) do
+			local m = CookData.Menus[idx]
+			table.insert(o, { label = m.Name, value = idx })
+		end
+		return o
+	end,
+	function() return CookCfg.Index end,
+	function(idx)
+		CookCfg.Index = idx
+		RecipePicker.Refresh()
+	end,
+	function() return "Bahan: " .. IngredientText(CurrentMenu().Id) .. " /porsi" end
+)
 UI.Input(TabCook, "Jumlah Porsi", "Porsi sekali masak (= jumlah daging).", CookCfg.Amount, "6", function(t)
 	local v = tonumber(t); if v and v >= 1 then CookCfg.Amount = math.floor(v) end
 end)
