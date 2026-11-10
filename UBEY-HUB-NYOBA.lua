@@ -172,6 +172,9 @@ local CookCfg = {
 	BuyCap = 15,      -- kapasitas beli per klik (samakan dgn tab UPGRADE toko)
 	GrindSlots = 10,  -- slot penggiling (MAKS 10, +5 tiap upgrade)
 	Interval = 10,    -- jeda antar siklus auto (detik)
+	FirePrompt = false, -- true = otomatis "tekan E" di prompt stasiun
+	GrindRarity = { common = true }, -- rarity ikan yang digiling (bisa lebih dari satu)
+	GrindLimit = 6,   -- maks ikan sekali giling
 }
 
 local function CookRemote(folder, name)
@@ -192,21 +195,88 @@ local function IngredientText(menuId)
 	return table.concat(parts, ", ")
 end
 
+-- ---- STASIUN: semua aksi harus dekat prompt, jadi karakter di-teleport dulu ----
+local StationCache = {}
+
+local function GetHRP()
+	local char = LocalPlayer.Character
+	return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function PromptPos(p)
+	local par = p.Parent
+	if not par then return nil end
+	if par:IsA("BasePart") then return par.Position end
+	if par:IsA("Attachment") then return par.WorldPosition end
+	if par:IsA("Model") then return par:GetPivot().Position end
+	return nil
+end
+
+-- cari ProximityPrompt berdasarkan teks (ActionText + ObjectText)
+local function FindStation(key)
+	local cached = StationCache[key]
+	if cached and cached.Parent then return cached end
+	for _, d in ipairs(Workspace:GetDescendants()) do
+		if d:IsA("ProximityPrompt") then
+			local t = (d.ActionText .. " " .. d.ObjectText):lower()
+			if t:find(key, 1, true) then
+				StationCache[key] = d
+				return d
+			end
+		end
+	end
+	return nil
+end
+
+local function GoToStation(key)
+	local prompt = FindStation(key)
+	local hrp = GetHRP()
+	if not prompt or not hrp then
+		warn("[Cooking] stasiun tidak ketemu: " .. key)
+		return false
+	end
+	local pos = PromptPos(prompt)
+	if not pos then return false end
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+	task.wait(0.6)
+	if CookCfg.FirePrompt and fireproximityprompt then
+		pcall(function() fireproximityprompt(prompt) end)
+		task.wait(0.4)
+	end
+	return true
+end
+
+-- jalankan fn lalu kembalikan karakter ke posisi awal
+local function RunAtStations(fn)
+	local hrp = GetHRP()
+	local home = hrp and hrp.CFrame
+	local ok, err = pcall(fn)
+	if not ok then warn("[Cooking] " .. tostring(err)) end
+	hrp = GetHRP()
+	if hrp and home then
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.CFrame = home
+	end
+end
+
 -- ambil daftar ikan dari penggiling (RemoteFunction GrindList)
+-- field dari game: uniqueId, rarity, name, weight, isFavorited, timestamp
 local function GetGrindList()
 	local r = CookRemote("CookingSystem", "GrindList")
 	if not r then return {} end
 	local ok, res = pcall(function() return r:InvokeServer() end)
 	if not ok or type(res) ~= "table" then return {} end
 	local out = {}
-	for k, v in pairs(res) do
+	for _, v in pairs(res) do
 		if type(v) == "table" then
-			local id = v.id or v.Id or v.ID or v.uuid or v.UUID or v.guid or v.Guid or v.uid
-			if not id and type(k) == "string" then id = k end
-			local rar = tostring(v.rarity or v.Rarity or v.tier or v.Tier or ""):lower()
-			table.insert(out, { id = id, rarity = rar, name = v.name or v.Name })
-		elseif type(v) == "string" then
-			table.insert(out, { id = v, rarity = "" })
+			local id = v.uniqueId or v.uniqueID or v.UniqueId or v.id or v.Id or v.uuid
+			table.insert(out, {
+				id = id,
+				rarity = tostring(v.rarity or ""):lower(),
+				name = v.name,
+				fav = v.isFavorited == true,
+			})
 		end
 	end
 	return out
@@ -214,47 +284,78 @@ end
 
 -- cetak struktur GrindList ke console (F9) untuk cek nama field
 local function DumpGrindList()
-	local r = CookRemote("CookingSystem", "GrindList")
-	if not r then warn("GrindList tidak ketemu") return end
-	local ok, res = pcall(function() return r:InvokeServer() end)
-	print("[GrindList] ok =", ok, "type =", typeof(res))
-	if type(res) ~= "table" then return end
-	local function dump(t, ind)
-		for k, v in pairs(t) do
+	RunAtStations(function()
+		GoToStation("giling")
+		local r = CookRemote("CookingSystem", "GrindList")
+		if not r then warn("GrindList tidak ketemu") return end
+		local ok, res = pcall(function() return r:InvokeServer() end)
+		print("[GrindList] ok =", ok, "type =", typeof(res))
+		if type(res) ~= "table" then return end
+		local shown = 0
+		for k, v in pairs(res) do
+			shown = shown + 1
+			if shown > 3 then break end
+			print("[" .. tostring(k) .. "]")
 			if type(v) == "table" then
-				print(ind .. tostring(k) .. " = {")
-				dump(v, ind .. "  ")
-				print(ind .. "}")
+				for kk, vv in pairs(v) do print("   " .. tostring(kk) .. " = " .. tostring(vv)) end
 			else
-				print(ind .. tostring(k) .. " = " .. tostring(v))
+				print("   " .. tostring(v))
 			end
 		end
+	end)
+end
+
+-- ---- pilihan rarity giling & resep masak ----
+local RarityList = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Unknown", "Forgotten" }
+
+local function MenusOfRarity(r)
+	local out = {}
+	for i, m in ipairs(CookData.Menus) do
+		if m.Rarity == r then table.insert(out, i) end
 	end
-	local shown = 0
-	for k, v in pairs(res) do
-		shown = shown + 1
-		if shown > 5 then break end
-		if type(v) == "table" then
-			print("[" .. tostring(k) .. "] = {")
-			dump(v, "  ")
-			print("}")
-		else
-			print("[" .. tostring(k) .. "] = " .. tostring(v))
-		end
+	return out
+end
+
+-- ganti rarity masak (lompat ke resep pertama di rarity berikutnya yang punya resep)
+local function CycleRarity()
+	local cur = CurrentMenu().Rarity
+	local at = 1
+	for i, R in ipairs(RarityList) do if R == cur then at = i end end
+	for step = 1, #RarityList do
+		local R = RarityList[(at - 1 + step) % #RarityList + 1]
+		local list = MenusOfRarity(R)
+		if #list > 0 then CookCfg.Index = list[1] return end
 	end
 end
 
--- giling ikan yang rarity-nya sama dengan resep terpilih, return jumlah ikan digiling
+-- ganti resep di dalam rarity yang sedang dipilih
+local function CycleRecipe()
+	local list = MenusOfRarity(CurrentMenu().Rarity)
+	if #list == 0 then return end
+	local pos = 1
+	for i, idx in ipairs(list) do if idx == CookCfg.Index then pos = i end end
+	CookCfg.Index = list[pos % #list + 1]
+end
+
+local function GrinderTimeOf(rarityLower)
+	for _, R in ipairs(RarityList) do
+		if R:lower() == rarityLower then return CookData.GrinderTime[R] or 2 end
+	end
+	return 2
+end
+
+-- giling ikan sesuai rarity yang dipilih (ikan favorit dilewati)
+-- return: total ikan digiling, tabel jumlah per rarity (huruf kecil)
 local function GrindNow()
 	local r = CookRemote("CookingSystem", "GrindRequest")
-	if not r then return 0 end
-	local menu = CurrentMenu()
-	local want = tostring(menu.Rarity):lower()
-	local limit = math.max(1, tonumber(CookCfg.Amount) or 6)
-	local ids = {}
+	if not r then return 0, {} end
+	if not GoToStation("giling") then return 0, {} end
+	local limit = math.max(1, tonumber(CookCfg.GrindLimit) or 6)
+	local ids, counts = {}, {}
 	for _, it in ipairs(GetGrindList()) do
-		if it.id and it.rarity == want then
+		if it.id and not it.fav and CookCfg.GrindRarity[it.rarity] then
 			table.insert(ids, it.id)
+			counts[it.rarity] = (counts[it.rarity] or 0) + 1
 			if #ids >= limit then break end
 		end
 	end
@@ -266,12 +367,14 @@ local function GrindNow()
 		task.wait(1)
 	end
 	if #ids > 0 then
-		task.wait((CookData.GrinderTime[menu.Rarity] or 2) * #ids + 1)
+		local t = 1
+		for rar, c in pairs(counts) do t = t + GrinderTimeOf(rar) * c end
+		task.wait(t)
 	end
-	return #ids
+	return #ids, counts
 end
 
--- beli bahan, dipecah sesuai kapasitas beli
+-- beli satu bahan, dipecah sesuai kapasitas beli (harus sudah di dekat toko)
 local function BuyNow(item, total)
 	local r = CookRemote("TokoEvents", "TokoBuy")
 	if not r then return end
@@ -285,32 +388,46 @@ local function BuyNow(item, total)
 	end
 end
 
-local function BuyForRecipe()
+local function BuyForRecipe(amt)
+	if not GoToStation("toko bahan") then return end
 	local menu = CurrentMenu()
-	local amt = math.max(1, tonumber(CookCfg.Amount) or 6)
+	amt = math.max(1, tonumber(amt) or tonumber(CookCfg.Amount) or 6)
 	for name, qty in pairs(CookData.Ingredients[menu.Id] or {}) do
 		BuyNow(name, qty * amt)
 	end
 end
 
--- beli bahan lalu masak, tunggu sampai selesai
-local function CookNow()
+-- beli bahan, ke kompor, masak, tunggu sampai selesai
+local function CookNow(amt)
 	local r = CookRemote("CookingSystem", "CookingCook")
 	if not r then return end
 	local menu = CurrentMenu()
-	local amt = math.max(1, tonumber(CookCfg.Amount) or 6)
-	BuyForRecipe()
+	amt = math.max(1, tonumber(amt) or tonumber(CookCfg.Amount) or 6)
+	BuyForRecipe(amt)
+	if not GoToStation("resep") then return end
 	pcall(function() r:FireServer(menu.Id, amt) end)
 	task.wait((CookData.CookTime[menu.Rarity] or 2) * amt + 2)
 end
 
--- pipeline otomatis: giling -> (kalau ada yang digiling) beli bahan + masak
+-- versi manual (otomatis balik ke posisi awal) untuk tombol GUI
+local function GrindManual()
+	local cnt = 0
+	RunAtStations(function() cnt = GrindNow() end)
+	return cnt
+end
+local function BuyManual() RunAtStations(function() BuyForRecipe() end) end
+local function CookManual() RunAtStations(function() CookNow() end) end
+
+-- pipeline otomatis: giling -> masak HANYA kalau ikan rarity resep ikut tergiling -> balik
 task.spawn(function()
 	while true do
 		if getgenv().AutoCookPipeline then
-			pcall(function()
-				local n = GrindNow()
-				if n > 0 and getgenv().AutoCookPipeline then CookNow() end
+			RunAtStations(function()
+				local _, counts = GrindNow()
+				local have = counts[tostring(CurrentMenu().Rarity):lower()] or 0
+				if have > 0 and getgenv().AutoCookPipeline then
+					CookNow(math.min(have, tonumber(CookCfg.Amount) or 6))
+				end
 			end)
 			task.wait(tonumber(CookCfg.Interval) or 10)
 		else
@@ -937,36 +1054,55 @@ UI.Toggle(TabDaily, "Auto Claim Daily", "Klaim otomatis hadiah login harian.", f
 end)
 
 -- COOKING TAB
-UI.Section(TabCook, "PILIH RESEP")
-local recipeBtn, recipeCard = UI.Button(TabCook, "Resep", "", "Ganti", function()
-	CookCfg.Index = CookCfg.Index % #CookData.Menus + 1
+local function SetCard(card, title, desc)
 	local labels = {}
-	for _, ch in ipairs(recipeCard:GetChildren()) do
+	for _, ch in ipairs(card:GetChildren()) do
 		if ch:IsA("TextLabel") then table.insert(labels, ch) end
 	end
-	local m = CurrentMenu()
-	if labels[1] then labels[1].Text = "Resep: " .. m.Name end
-	if labels[2] then labels[2].Text = m.Rarity .. " | " .. IngredientText(m.Id) end
-end)
-do
-	-- isi awal judul & deskripsi kartu resep
-	local labels = {}
-	for _, ch in ipairs(recipeCard:GetChildren()) do
-		if ch:IsA("TextLabel") then table.insert(labels, ch) end
-	end
-	local m = CurrentMenu()
-	if labels[1] then labels[1].Text = "Resep: " .. m.Name end
-	if labels[2] then labels[2].Text = m.Rarity .. " | " .. IngredientText(m.Id) end
-	if not labels[2] then
-		Label(recipeCard, m.Rarity .. " | " .. IngredientText(m.Id), 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -130, 0, 18))
+	if labels[1] then labels[1].Text = title end
+	if labels[2] then
+		labels[2].Text = desc
+	else
+		Label(card, desc, 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -130, 0, 18))
 	end
 end
+
+UI.Section(TabCook, "1. GILING: PILIH RARITY IKAN")
+for _, R in ipairs(RarityList) do
+	UI.Toggle(TabCook, "Giling " .. R, "Ikan " .. R .. " ikut digiling.", CookCfg.GrindRarity[R:lower()] == true, function(v)
+		CookCfg.GrindRarity[R:lower()] = v or nil
+	end)
+end
+UI.Input(TabCook, "Maks Ikan Digiling", "Batas jumlah ikan sekali giling.", CookCfg.GrindLimit, "6", function(t)
+	local v = tonumber(t); if v and v >= 1 then CookCfg.GrindLimit = math.floor(v) end
+end)
+
+UI.Section(TabCook, "2. MASAK: PILIH RARITY & RESEP")
+local RefreshCook
+local _, rarityCard = UI.Button(TabCook, "Rarity Masak", "-", "Ganti", function()
+	CycleRarity()
+	RefreshCook()
+end)
+local _, recipeCard = UI.Button(TabCook, "Resep", "-", "Ganti", function()
+	CycleRecipe()
+	RefreshCook()
+end)
+RefreshCook = function()
+	local m = CurrentMenu()
+	SetCard(rarityCard, "Rarity Masak: " .. m.Rarity, "Pakai Daging " .. m.Rarity .. " (1 daging = 1 porsi)")
+	SetCard(recipeCard, "Resep: " .. m.Name, IngredientText(m.Id) .. " /porsi")
+end
+RefreshCook()
 UI.Input(TabCook, "Jumlah Porsi", "Porsi sekali masak (= jumlah daging).", CookCfg.Amount, "6", function(t)
 	local v = tonumber(t); if v and v >= 1 then CookCfg.Amount = math.floor(v) end
 end)
 
+UI.Toggle(TabCook, "Trigger Prompt", "Aktifkan jika masih gagal: tekan E stasiun otomatis.", false, function(v)
+	CookCfg.FirePrompt = v
+end)
+
 UI.Section(TabCook, "AUTO")
-UI.Toggle(TabCook, "Auto Giling + Masak", "Giling ikan, beli bahan, masak, ulangi.", false, function(v)
+UI.Toggle(TabCook, "Auto Giling + Masak", "Giling, beli bahan, masak, ulangi.", false, function(v)
 	getgenv().AutoCookPipeline = v
 end)
 UI.Input(TabCook, "Jeda Siklus (detik)", "Jeda antar siklus auto.", CookCfg.Interval, "10", function(t)
@@ -974,23 +1110,23 @@ UI.Input(TabCook, "Jeda Siklus (detik)", "Jeda antar siklus auto.", CookCfg.Inte
 end)
 
 UI.Section(TabCook, "MANUAL")
-UI.Button(TabCook, "Giling Ikan", "Giling ikan sesuai rarity resep.", "Giling", function(btn)
+UI.Button(TabCook, "Giling Ikan", "Giling ikan sesuai rarity pilihan.", "Giling", function(btn)
 	btn.Text = "..."
-	local n = GrindNow()
+	local n = GrindManual()
 	btn.Text = n .. " ikan"
 	task.wait(2)
 	btn.Text = "Giling"
 end)
 UI.Button(TabCook, "Beli Bahan", "Beli bahan sesuai resep & porsi.", "Beli", function(btn)
 	btn.Text = "..."
-	BuyForRecipe()
+	BuyManual()
 	btn.Text = "Selesai"
 	task.wait(2)
 	btn.Text = "Beli"
 end)
 UI.Button(TabCook, "Masak Sekarang", "Beli bahan lalu masak.", "Masak", function(btn)
 	btn.Text = "Memasak..."
-	CookNow()
+	CookManual()
 	btn.Text = "Masak"
 end)
 
