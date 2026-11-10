@@ -1,5 +1,5 @@
 -- ==============================================================================
--- UBEY HUB | MERGED (GUI TEMPLATE + FULL FUNCTIONALITY + AUTO DAILY)
+-- UBEY HUB | MERGED (GUI TEMPLATE + FULL FUNCTIONALITY + AUTO DAILY + COOKING)
 -- ==============================================================================
 
 local HttpService = game:GetService("HttpService")
@@ -62,6 +62,7 @@ getgenv().AutoFishingRunning = false
 getgenv().AutoSellRunning = false
 getgenv().AutoSummitRunning = false
 getgenv().AutoDailyRunning = false -- Tambahan untuk Daily
+getgenv().AutoCookPipeline = false -- Tambahan untuk Cooking
 getgenv().TotalFishCaught = 0
 getgenv().TotalSummitRun = 0
 getgenv().SessionStartTime = os.time()
@@ -144,6 +145,177 @@ task.spawn(function()
 			end)
 		end
 		task.wait(30) -- Cek setiap 30 detik agar tidak spam server
+	end
+end)
+
+-- ====== COOKING LOGIC ======
+-- Data resep dibaca langsung dari FishCookingConfig milik game
+local CookData = { Menus = {}, Ingredients = {}, GrinderTime = {}, CookTime = {} }
+pcall(function()
+	local cfg = require(ReplicatedStorage.CookingSystem.FishCookingConfig)
+	CookData.Menus = cfg.Menus or {}
+	CookData.Ingredients = cfg.MenuIngredients or {}
+	CookData.GrinderTime = cfg.GrinderTime or {}
+	CookData.CookTime = cfg.CookTime or {}
+end)
+if #CookData.Menus == 0 then
+	-- cadangan kalau require gagal
+	CookData.Menus = { { Id = "ikan_bakar", Rarity = "Common", Name = "Ikan Bakar" } }
+	CookData.Ingredients = { ikan_bakar = { ["Bumbu Dapur"] = 1 } }
+	CookData.GrinderTime = { Common = 2 }
+	CookData.CookTime = { Common = 2 }
+end
+
+local CookCfg = {
+	Index = 1,        -- resep yang dipilih (urutan di CookData.Menus)
+	Amount = 6,       -- jumlah porsi sekali masak
+	BuyCap = 15,      -- kapasitas beli per klik (samakan dgn tab UPGRADE toko)
+	GrindSlots = 10,  -- slot penggiling (MAKS 10, +5 tiap upgrade)
+	Interval = 10,    -- jeda antar siklus auto (detik)
+}
+
+local function CookRemote(folder, name)
+	local f = ReplicatedStorage:FindFirstChild(folder)
+	return f and f:FindFirstChild(name)
+end
+
+local function CurrentMenu()
+	return CookData.Menus[CookCfg.Index] or CookData.Menus[1]
+end
+
+local function IngredientText(menuId)
+	local parts = {}
+	for name, qty in pairs(CookData.Ingredients[menuId] or {}) do
+		table.insert(parts, name .. " x" .. qty)
+	end
+	table.sort(parts)
+	return table.concat(parts, ", ")
+end
+
+-- ambil daftar ikan dari penggiling (RemoteFunction GrindList)
+local function GetGrindList()
+	local r = CookRemote("CookingSystem", "GrindList")
+	if not r then return {} end
+	local ok, res = pcall(function() return r:InvokeServer() end)
+	if not ok or type(res) ~= "table" then return {} end
+	local out = {}
+	for k, v in pairs(res) do
+		if type(v) == "table" then
+			local id = v.id or v.Id or v.ID or v.uuid or v.UUID or v.guid or v.Guid or v.uid
+			if not id and type(k) == "string" then id = k end
+			local rar = tostring(v.rarity or v.Rarity or v.tier or v.Tier or ""):lower()
+			table.insert(out, { id = id, rarity = rar, name = v.name or v.Name })
+		elseif type(v) == "string" then
+			table.insert(out, { id = v, rarity = "" })
+		end
+	end
+	return out
+end
+
+-- cetak struktur GrindList ke console (F9) untuk cek nama field
+local function DumpGrindList()
+	local r = CookRemote("CookingSystem", "GrindList")
+	if not r then warn("GrindList tidak ketemu") return end
+	local ok, res = pcall(function() return r:InvokeServer() end)
+	print("[GrindList] ok =", ok, "type =", typeof(res))
+	if type(res) ~= "table" then return end
+	local function dump(t, ind)
+		for k, v in pairs(t) do
+			if type(v) == "table" then
+				print(ind .. tostring(k) .. " = {")
+				dump(v, ind .. "  ")
+				print(ind .. "}")
+			else
+				print(ind .. tostring(k) .. " = " .. tostring(v))
+			end
+		end
+	end
+	local shown = 0
+	for k, v in pairs(res) do
+		shown = shown + 1
+		if shown > 5 then break end
+		if type(v) == "table" then
+			print("[" .. tostring(k) .. "] = {")
+			dump(v, "  ")
+			print("}")
+		else
+			print("[" .. tostring(k) .. "] = " .. tostring(v))
+		end
+	end
+end
+
+-- giling ikan yang rarity-nya sama dengan resep terpilih, return jumlah ikan digiling
+local function GrindNow()
+	local r = CookRemote("CookingSystem", "GrindRequest")
+	if not r then return 0 end
+	local menu = CurrentMenu()
+	local want = tostring(menu.Rarity):lower()
+	local limit = math.max(1, tonumber(CookCfg.Amount) or 6)
+	local ids = {}
+	for _, it in ipairs(GetGrindList()) do
+		if it.id and it.rarity == want then
+			table.insert(ids, it.id)
+			if #ids >= limit then break end
+		end
+	end
+	local slots = math.max(1, tonumber(CookCfg.GrindSlots) or 10)
+	for i = 1, #ids, slots do
+		local chunk = {}
+		for j = i, math.min(i + slots - 1, #ids) do table.insert(chunk, ids[j]) end
+		pcall(function() r:FireServer(chunk) end)
+		task.wait(1)
+	end
+	if #ids > 0 then
+		task.wait((CookData.GrinderTime[menu.Rarity] or 2) * #ids + 1)
+	end
+	return #ids
+end
+
+-- beli bahan, dipecah sesuai kapasitas beli
+local function BuyNow(item, total)
+	local r = CookRemote("TokoEvents", "TokoBuy")
+	if not r then return end
+	local left = total
+	local cap = math.max(1, tonumber(CookCfg.BuyCap) or 15)
+	while left > 0 do
+		local n = math.min(left, cap)
+		pcall(function() r:InvokeServer(item, n) end)
+		left = left - n
+		task.wait(0.4)
+	end
+end
+
+local function BuyForRecipe()
+	local menu = CurrentMenu()
+	local amt = math.max(1, tonumber(CookCfg.Amount) or 6)
+	for name, qty in pairs(CookData.Ingredients[menu.Id] or {}) do
+		BuyNow(name, qty * amt)
+	end
+end
+
+-- beli bahan lalu masak, tunggu sampai selesai
+local function CookNow()
+	local r = CookRemote("CookingSystem", "CookingCook")
+	if not r then return end
+	local menu = CurrentMenu()
+	local amt = math.max(1, tonumber(CookCfg.Amount) or 6)
+	BuyForRecipe()
+	pcall(function() r:FireServer(menu.Id, amt) end)
+	task.wait((CookData.CookTime[menu.Rarity] or 2) * amt + 2)
+end
+
+-- pipeline otomatis: giling -> (kalau ada yang digiling) beli bahan + masak
+task.spawn(function()
+	while true do
+		if getgenv().AutoCookPipeline then
+			pcall(function()
+				local n = GrindNow()
+				if n > 0 and getgenv().AutoCookPipeline then CookNow() end
+			end)
+			task.wait(tonumber(CookCfg.Interval) or 10)
+		else
+			task.wait(0.5)
+		end
 	end
 end)
 
@@ -706,6 +878,7 @@ end
 local TabFish = UI.Tab("Fishing", "🎣")
 local TabSummit = UI.Tab("Summit", "⛰️")
 local TabDaily = UI.Tab("Daily", "📅") -- TAB BARU
+local TabCook = UI.Tab("Cooking", "🍳") -- TAB COOKING
 local TabSettings = UI.Tab("Settings", "⚙️")
 local TabCredits = UI.Tab("Credits", "👑")
 
@@ -762,6 +935,89 @@ UI.Section(TabDaily, "AUTO DAILY LOGIN")
 UI.Toggle(TabDaily, "Auto Claim Daily", "Klaim otomatis hadiah login harian.", false, function(v)
 	getgenv().AutoDailyRunning = v
 end)
+
+-- COOKING TAB
+UI.Section(TabCook, "PILIH RESEP")
+local recipeBtn, recipeCard = UI.Button(TabCook, "Resep", "", "Ganti", function()
+	CookCfg.Index = CookCfg.Index % #CookData.Menus + 1
+	local labels = {}
+	for _, ch in ipairs(recipeCard:GetChildren()) do
+		if ch:IsA("TextLabel") then table.insert(labels, ch) end
+	end
+	local m = CurrentMenu()
+	if labels[1] then labels[1].Text = "Resep: " .. m.Name end
+	if labels[2] then labels[2].Text = m.Rarity .. " | " .. IngredientText(m.Id) end
+end)
+do
+	-- isi awal judul & deskripsi kartu resep
+	local labels = {}
+	for _, ch in ipairs(recipeCard:GetChildren()) do
+		if ch:IsA("TextLabel") then table.insert(labels, ch) end
+	end
+	local m = CurrentMenu()
+	if labels[1] then labels[1].Text = "Resep: " .. m.Name end
+	if labels[2] then labels[2].Text = m.Rarity .. " | " .. IngredientText(m.Id) end
+	if not labels[2] then
+		Label(recipeCard, m.Rarity .. " | " .. IngredientText(m.Id), 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -130, 0, 18))
+	end
+end
+UI.Input(TabCook, "Jumlah Porsi", "Porsi sekali masak (= jumlah daging).", CookCfg.Amount, "6", function(t)
+	local v = tonumber(t); if v and v >= 1 then CookCfg.Amount = math.floor(v) end
+end)
+
+UI.Section(TabCook, "AUTO")
+UI.Toggle(TabCook, "Auto Giling + Masak", "Giling ikan, beli bahan, masak, ulangi.", false, function(v)
+	getgenv().AutoCookPipeline = v
+end)
+UI.Input(TabCook, "Jeda Siklus (detik)", "Jeda antar siklus auto.", CookCfg.Interval, "10", function(t)
+	local v = tonumber(t); if v then CookCfg.Interval = v end
+end)
+
+UI.Section(TabCook, "MANUAL")
+UI.Button(TabCook, "Giling Ikan", "Giling ikan sesuai rarity resep.", "Giling", function(btn)
+	btn.Text = "..."
+	local n = GrindNow()
+	btn.Text = n .. " ikan"
+	task.wait(2)
+	btn.Text = "Giling"
+end)
+UI.Button(TabCook, "Beli Bahan", "Beli bahan sesuai resep & porsi.", "Beli", function(btn)
+	btn.Text = "..."
+	BuyForRecipe()
+	btn.Text = "Selesai"
+	task.wait(2)
+	btn.Text = "Beli"
+end)
+UI.Button(TabCook, "Masak Sekarang", "Beli bahan lalu masak.", "Masak", function(btn)
+	btn.Text = "Memasak..."
+	CookNow()
+	btn.Text = "Masak"
+end)
+
+UI.Section(TabCook, "PENGATURAN & UPGRADE", C.warn)
+UI.Input(TabCook, "Kapasitas Beli", "Samakan dgn upgrade toko (awal 15).", CookCfg.BuyCap, "15", function(t)
+	local v = tonumber(t); if v and v >= 1 then CookCfg.BuyCap = math.floor(v) end
+end)
+UI.Input(TabCook, "Slot Giling", "Maks ikan sekali giling (awal 10).", CookCfg.GrindSlots, "10", function(t)
+	local v = tonumber(t); if v and v >= 1 then CookCfg.GrindSlots = math.floor(v) end
+end)
+UI.Button(TabCook, "Upgrade Kapasitas Toko", "+5 kapasitas, biaya 1.000.000 koin.", "Upgrade", function()
+	local r = CookRemote("TokoEvents", "TokoUpgrade")
+	if r then
+		local ok, res = pcall(function() return r:InvokeServer() end)
+		print("[TokoUpgrade]", ok, res)
+	end
+end, C.bad)
+UI.Button(TabCook, "Upgrade Slot Giling", "+5 slot, biaya 25 juta (belum diuji).", "Upgrade", function()
+	local r = CookRemote("CookingSystem", "GrindUpgrade")
+	if r then
+		local ok, res = pcall(function() return r:InvokeServer() end)
+		print("[GrindUpgrade]", ok, res)
+	end
+end, C.bad)
+UI.Button(TabCook, "Cek Struktur Giling", "Cetak isi GrindList ke console (F9).", "Cetak", function()
+	DumpGrindList()
+end, C.off)
 
 -- SETTINGS TAB
 UI.Section(TabSettings, "UTILITAS")
