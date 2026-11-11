@@ -50,7 +50,7 @@ getgenv().UbeyConfig = {
 	AutoSellTimer = "5",
 	SellFoodMode = "Coins",
 	SellFoodInterval = "5",
-	LuckInterval = "15",
+	LuckInterval = "14",
 	LuckTier = "1",
 }
 
@@ -547,21 +547,27 @@ task.spawn(function()
 end)
 
 -- ====== LUCK GENERATOR LOGIC ======
+-- Path remote yang benar (dari Cobalt):
+-- ReplicatedStorage.FishingSystem.LuckGenerator.LuckGeneratorPurchase  -> FireServer(1)
 local function BuyLuckGenerator(tier)
-	local lg = ReplicatedStorage:FindFirstChild("LuckGenerator")
-	local purchaseEvent = lg and lg:FindFirstChild("LuckGeneratorPurchase")
-	if not purchaseEvent then return false end
-	local ok = pcall(function() purchaseEvent:FireServer(tonumber(tier) or 1) end)
-	return ok
+	local fs = ReplicatedStorage:FindFirstChild("FishingSystem")
+	local lg = fs and fs:FindFirstChild("LuckGenerator")
+	local ev = lg and lg:FindFirstChild("LuckGeneratorPurchase")
+	if not ev then return false end
+	return pcall(function() ev:FireServer(tonumber(tier) or 1) end)
 end
 
 task.spawn(function()
 	while true do
 		if getgenv().AutoLuckRunning then
 			if not SecureData.IsKeyVerified then getgenv().AutoLuckRunning = false; break end
-			BuyLuckGenerator(getgenv().UbeyConfig.LuckTier)
-			local minutes = tonumber(getgenv().UbeyConfig.LuckInterval) or 15
-			task.wait(math.max(minutes, 1) * 60)
+			local ok = BuyLuckGenerator(getgenv().UbeyConfig.LuckTier)
+			if ok then
+				local minutes = tonumber(getgenv().UbeyConfig.LuckInterval) or 14
+				task.wait(math.max(minutes, 1) * 60)
+			else
+				task.wait(10)
+			end
 		else
 			task.wait(0.5)
 		end
@@ -592,7 +598,8 @@ end)
 local function BuyBeanRemote(itemId)
 	local ev = ReplicatedStorage:FindFirstChild("BeanbagShopEvent")
 	if not ev then return false end
-	return pcall(function() ev:FireServer("buy", itemId) end)
+	-- Contoh remote asli: FireServer("buy", "CONTROLLER") -> ID huruf besar
+	return pcall(function() ev:FireServer("buy", tostring(itemId):upper()) end)
 end
 
 local function BuyPetRemote(itemId)
@@ -1131,9 +1138,9 @@ function UI.Button(page, title, desc, btnText, cb, color)
 		Font = Enum.Font.GothamBold, TextSize = 12, TextTruncate = Enum.TextTruncate.AtEnd
 	}, card)
 	Round(b, 8)
-	b.MouseButton1Click:Connect(function() 
+	b.MouseButton1Click:Connect(function()
 		if not SecureData.IsKeyVerified then return end
-		task.spawn(cb, b) 
+		task.spawn(cb, b)
 	end)
 	return b, card
 end
@@ -1218,8 +1225,8 @@ end
 -- ====== TABS ======
 local TabFish = UI.Tab("Fishing", "🎣")
 local TabSummit = UI.Tab("Summit", "⛰️")
-local TabDaily = UI.Tab("Daily", "📅") 
-local TabCook = UI.Tab("Cooking", "🍳") 
+local TabDaily = UI.Tab("Daily", "📅")
+local TabCook = UI.Tab("Cooking", "🍳")
 local TabLuck = UI.Tab("Luck", "🍀")
 local TabShop = UI.Tab("Shop", "🛒")
 local TabSettings = UI.Tab("Settings", "⚙️")
@@ -1502,10 +1509,10 @@ end, C.bad)
 
 -- LUCK TAB
 UI.Section(TabLuck, "LUCK GENERATOR")
-UI.Toggle(TabLuck, "Auto Beli Luck Generator", "Beli ulang otomatis setiap kali durasinya habis.", false, function(v)
+UI.Toggle(TabLuck, "Auto Beli Luck Generator", "Beli ulang otomatis (boost bisa menumpuk).", false, function(v)
 	getgenv().AutoLuckRunning = v
 end)
-UI.Input(TabLuck, "Interval Beli Ulang (Menit)", "Samakan dengan durasi Luck Generator (biasanya 15 menit).", getgenv().UbeyConfig.LuckInterval, "15", function(t)
+UI.Input(TabLuck, "Interval Beli Ulang (Menit)", "Sedikit di bawah durasi boost (15 menit) agar tidak putus.", getgenv().UbeyConfig.LuckInterval, "14", function(t)
 	local val = tonumber(t)
 	if val and val > 0 then
 		getgenv().UbeyConfig.LuckInterval = tostring(val)
@@ -1529,9 +1536,8 @@ end)
 
 -- SHOP TAB (Bean / Pet / Rod)
 -- Daftar, gambar, dan harga diambil LANGSUNG dari GUI toko asli game (PetShopGui /
--- RodShopGui) saat tab ini dibuka, jadi otomatis akurat tanpa perlu di-update manual
--- kalau game menambah item baru. Kalau daftar kosong, berarti GUI toko itu belum
--- pernah termuat -- buka toko itu sekali secara manual di game, lalu tekan Refresh.
+-- RodShopGui) saat tab ini dibuka. Kalau daftar kosong, script membuka GUI toko
+-- sebentar (Enabled = true) supaya game membuat cards-nya, lalu mengembalikannya.
 
 local function BuildShopItemCard(container, item, buyFn)
 	local card = Card(container, 60)
@@ -1561,7 +1567,7 @@ local function BuildShopItemCard(container, item, buyFn)
 	end)
 end
 
-local function CreateShopSection(page, sectionTitle, scanFn, buyFn)
+local function CreateShopSection(page, sectionTitle, scanFn, buyFn, guiName)
 	UI.Section(page, sectionTitle)
 	local container = New("Frame", {
 		Size = UDim2.new(1, -4, 0, 0),
@@ -1575,9 +1581,25 @@ local function CreateShopSection(page, sectionTitle, scanFn, buyFn)
 			if not ch:IsA("UIListLayout") then ch:Destroy() end
 		end
 		local items = scanFn()
+
+		-- kalau kosong, buka GUI toko sebentar supaya game membuat cards-nya
+		if #items == 0 and guiName then
+			local gui = PlayerGui:FindFirstChild(guiName)
+			if gui and gui:IsA("ScreenGui") then
+				local was = gui.Enabled
+				gui.Enabled = true
+				for _ = 1, 15 do
+					task.wait(0.2)
+					items = scanFn()
+					if #items > 0 then break end
+				end
+				gui.Enabled = was
+			end
+		end
+
 		if #items == 0 then
 			local card = Card(container, 54)
-			local lbl = Label(card, "Belum ada data. Buka toko ini sekali secara manual di game, lalu tekan Refresh.", 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
+			local lbl = Label(card, "Daftar masih kosong. Tekan Refresh sekali lagi.", 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 1, -16))
 			lbl.TextWrapped = true
 		else
 			for _, item in ipairs(items) do
@@ -1590,7 +1612,7 @@ local function CreateShopSection(page, sectionTitle, scanFn, buyFn)
 		Rebuild()
 	end)
 
-	Rebuild()
+	task.spawn(Rebuild)
 end
 
 local function BuyBean(item, btn)
@@ -1629,9 +1651,9 @@ local function BuyRod(item, btn)
 	btn.Text = "Beli"
 end
 
-CreateShopSection(TabShop, "BEAN — PILIH & BELI", ScanBeanShop, BuyBean)
-CreateShopSection(TabShop, "PET — PILIH & BELI", ScanPetShop, BuyPet)
-CreateShopSection(TabShop, "ROD — PILIH & BELI", ScanRodShop, BuyRod)
+CreateShopSection(TabShop, "BEAN — PILIH & BELI", ScanBeanShop, BuyBean, "BeanbagShopGui")
+CreateShopSection(TabShop, "PET — PILIH & BELI", ScanPetShop, BuyPet, "PetShopGui")
+CreateShopSection(TabShop, "ROD — PILIH & BELI", ScanRodShop, BuyRod, "RodShopGui")
 
 -- SETTINGS TAB
 UI.Section(TabSettings, "ANTI-AFK")
@@ -1734,4 +1756,3 @@ task.spawn(function()
 		KeyFrame.Visible = true
 	end
 end)
-
