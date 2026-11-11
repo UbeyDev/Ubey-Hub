@@ -108,6 +108,24 @@ local function TriggerSellAll()
 	end)
 end
 
+-- ====== FISHING ANIMATIONS ======
+local FISH_ANIM = {
+	Equipped = "rbxassetid://89604053251259",
+	Pulling = "rbxassetid://123395663531909",
+	Waiting = "rbxassetid://96286683902029",
+}
+
+local function PlayFishAnim(character, animId)
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local animator = humanoid and humanoid:FindFirstChildOfClass("Animator")
+	if not animator then return nil end
+	local anim = Instance.new("Animation")
+	anim.AnimationId = animId
+	local ok, track = pcall(function() return animator:LoadAnimation(anim) end)
+	if ok and track then track:Play() end
+	return track
+end
+
 task.spawn(function()
 	local FS = ReplicatedStorage:WaitForChild("FishingSystem", 10)
 	if not FS then return end
@@ -126,11 +144,22 @@ task.spawn(function()
 					local pPos = root.Position
 					local castVec = pPos + (root.CFrame.LookVector * 15)
 					local hookVec = castVec - Vector3.new(0, 8, 0)
+
 					CleanupCast:FireServer()
 					task.wait(0.05)
 					CastReplication:FireServer(castVec, Vector3.new(0, 5, 24), currentRod, 90)
+
+					-- animasi menunggu pancingan selama WaitTime
+					local waitTrack = PlayFishAnim(char, FISH_ANIM.Waiting)
 					task.wait(tonumber(getgenv().UbeyConfig.WaitTime) or 4.0)
+					if waitTrack then waitTrack:Stop() end
+
+					-- animasi menarik sesaat sebelum ambil ikan
+					local pullTrack = PlayFishAnim(char, FISH_ANIM.Pulling)
 					FishGiver:FireServer({ hookPosition = hookVec, powerPercent = 0 })
+					task.wait(0.4)
+					if pullTrack then pullTrack:Stop() end
+
 					task.wait(0.1)
 					CleanupCast:FireServer()
 					getgenv().TotalFishCaught = getgenv().TotalFishCaught + 1
@@ -1181,9 +1210,6 @@ UI.Button(TabCook, "Upgrade Slot Giling", "+5 slot giling, biaya 25 juta (belum 
 		print("[GrindUpgrade]", ok, res)
 	end
 end, C.bad)
-UI.Button(TabCook, "Cek Struktur Giling (Debug)", "Cetak isi GrindList ke console (buka dengan F9).", "Cetak", function()
-	DumpGrindList()
-end, C.off)
 
 -- SETTINGS TAB
 UI.Section(TabSettings, "UTILITAS")
