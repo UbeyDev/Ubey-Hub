@@ -1076,14 +1076,6 @@ UI.Toggle(TabDaily, "Auto Claim Daily", "Klaim otomatis hadiah login harian.", f
 end)
 
 -- COOKING TAB
--- ==============================================================================
--- COOKING TAB (VERSI RAPI)
--- Cara pakai: cari blok "-- COOKING TAB" sampai sebelum "-- SETTINGS TAB"
--- di script UBEY HUB kamu, lalu ganti seluruhnya dengan isi file ini.
--- Variabel yang dipakai (CookData, CookCfg, RarityList, CookRemote, dst.)
--- TIDAK berubah — hanya urutan & pengelompokan tombolnya yang dirapikan.
--- ==============================================================================
-
 -- ---------- LANGKAH 1: PILIH IKAN YANG AKAN DIGILING ----------
 UI.Section(TabCook, "LANGKAH 1 — PILIH IKAN UNTUK DIGILING")
 for _, R in ipairs(RarityList) do
@@ -1279,55 +1271,4 @@ task.spawn(function()
 	else
 		KeyFrame.Visible = true
 	end
-end)3 = C.card}, TabCredits)
-Round(credCard, 10)
-New("UIStroke", {Color = C.line, Thickness = 1}, credCard)
-Label(credCard, "UBEY HUB", 16, C.accent, Enum.Font.GothamBold, UDim2.new(0, 0, 0, 14), UDim2.new(1, 0, 0, 22), Enum.TextXAlignment.Center)
-Label(credCard, "Created by UBEY", 12, C.text, Enum.Font.Gotham, UDim2.new(0, 0, 0, 38), UDim2.new(1, 0, 0, 18), Enum.TextXAlignment.Center)
-
-UI.Button(TabCredits, "Discord Link", "Salin link discord ke clipboard.", "Salin", function(btn)
-	pcall(function()
-		if setclipboard then
-			setclipboard("https://" .. HUB_DISCORD)
-			btn.Text = "Tersalin!"
-			task.wait(2)
-			btn.Text = "Salin"
-		end
-	end)
-end, Color3.fromRGB(88, 101, 242))
-
--- ====== FLOATING LOGO ======
-local Float = New("ImageButton", {
-	Size = UDim2.new(0, 60, 0, 60), Position = UDim2.new(0, 20, 0, 120),
-	Image = LOGO_ASSET, BackgroundColor3 = C.bg, AutoButtonColor = false, ZIndex = 50
-}, Gui)
-Round(Float, 30)
-New("UIStroke", {Color = C.accent, Thickness = 2}, Float)
-local floatMoved = MakeDraggable(Float)
-
-Float.MouseButton1Click:Connect(function()
-	if floatMoved() then return end
-	if not getgenv().KeyVerified then
-		KeyFrame.Visible = not KeyFrame.Visible
-		Main.Visible = false
-	else
-		Main.Visible = not Main.Visible
-		KeyFrame.Visible = false
-	end
 end)
-
--- ====== AUTO LOGIN ======
-task.spawn(function()
-	if readfile and isfile and isfile(KEY_FILE) then
-		local savedKey = readfile(KEY_FILE)
-		if savedKey and savedKey ~= "" then
-			KeyBox.Text = savedKey
-			ValidateKey(savedKey, true)
-		else
-			KeyFrame.Visible = true
-		end
-	else
-		KeyFrame.Visible = true
-	end
-end)
-
