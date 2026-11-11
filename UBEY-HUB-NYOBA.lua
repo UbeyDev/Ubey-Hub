@@ -412,17 +412,24 @@ end
 local function BuyManual() RunAtStations(function() BuyForRecipe() end) end
 local function CookManual() RunAtStations(function() CookNow() end) end
 
+-- Auto Cooking SENGAJA tidak memakai RunAtStations: fungsi itu selalu mengembalikan
+-- karakter ke posisi awal setelah tiap siklus, yang justru bikin bolak-balik tidak perlu
+-- saat mode auto dipakai terus-menerus. Di sini karakter dibiarkan tetap di area stasiun
+-- antar siklus, supaya giling -> beli -> masak bisa langsung lanjut tanpa jeda posisi.
 task.spawn(function()
 	while true do
 		if getgenv().AutoCookPipeline then
 			if not SecureData.IsKeyVerified then getgenv().AutoCookPipeline = false; break end
-			RunAtStations(function()
+			local ok, err = pcall(function()
 				local _, counts = GrindNow()
 				local have = counts[tostring(CurrentMenu().Rarity):lower()] or 0
 				if have > 0 and getgenv().AutoCookPipeline and SecureData.IsKeyVerified then
 					CookNow(math.min(have, tonumber(CookCfg.Amount) or 6))
 				end
 			end)
+			if not ok then
+				warn("[AutoCook] Error (diabaikan, lanjut siklus berikutnya): " .. tostring(err))
+			end
 			task.wait(tonumber(CookCfg.Interval) or 10)
 		else
 			task.wait(0.5)
@@ -1407,4 +1414,3 @@ task.spawn(function()
 		KeyFrame.Visible = true
 	end
 end)
-
