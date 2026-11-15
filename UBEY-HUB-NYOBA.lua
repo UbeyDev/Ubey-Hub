@@ -330,7 +330,7 @@ end
 ------------------------------------------------------------------
 local ID_KEYS = {"id", "uid", "u", "fishid", "guid", "index", "key"}
 local NAME_KEYS = {"name", "n", "fishname", "fish", "displayname", "type"}
-local RARITY_KEYS = {"rarity", "tier", "grade"}
+local RARITY_KEYS = {"rarity", "r", "rar", "tier", "grade"}
 local FAV_KEYS = {"f", "favorite", "favourite", "favorited", "locked", "isfavorite"}
 
 local function pick(t, keys)
@@ -375,40 +375,99 @@ local Rar = {
 for _, r in ipairs(Rar.List) do Rar.Known[string.lower(r)] = r end
 
 -- Data inventori tidak membawa rarity, jadi dicari dari aset game (ReplicatedStorage):
--- atribut/value "Rarity", atau nama folder induk yang berupa nama rarity.
+-- atribut / value "Rarity", folder induk berupa nama rarity, atau tabel di ModuleScript.
 local rarityIndex
-local function BuildRarityIndex()
-	rarityIndex = {}
+local rarityStats = {n = 0, mods = 0}
+
+local function NKey(s)
+	return string.lower((tostring(s):gsub("[^%w]", "")))
+end
+
+local function NormRarity(r)
+	if type(r) == "number" then return Rar.List[r] end
+	if type(r) == "string" and r ~= "" then return Rar.Known[string.lower(r)] end
+end
+
+local function ScanTable(t, depth, visited, add)
+	if depth > 6 or visited[t] then return end
+	visited[t] = true
 	pcall(function()
-		local rs = game:GetService("ReplicatedStorage")
-		local function norm(r)
-			if type(r) == "string" and r ~= "" then return Rar.Known[string.lower(r)] or r end
-		end
-		for _, inst in ipairs(rs:GetDescendants()) do
-			local nm = inst.Name
-			if rarityIndex[nm] == nil and not Rar.Known[string.lower(nm)] then
-				local r = norm(inst:GetAttribute("Rarity")) or norm(inst:GetAttribute("Tier"))
-				if not r then
-					local rv = inst:FindFirstChild("Rarity")
-					if rv and rv:IsA("StringValue") then r = norm(rv.Value) end
+		local nm = pick(t, NAME_KEYS)
+		local r = pick(t, RARITY_KEYS)
+		if type(nm) == "string" and r ~= nil then add(nm, r) end
+		for k, v in pairs(t) do
+			if type(v) == "table" then
+				if type(k) == "string" then
+					local rv = pick(v, RARITY_KEYS)
+					if rv ~= nil then add(k, rv) end
 				end
-				if not r then
-					local par = inst.Parent
-					while par and par ~= rs do
-						local k = Rar.Known[string.lower(par.Name)]
-						if k then r = k break end
-						par = par.Parent
-					end
-				end
-				if r then rarityIndex[nm] = r end
+				ScanTable(v, depth + 1, visited, add)
 			end
 		end
 	end)
 end
 
+local function BuildRarityIndex()
+	local idx, count, mods = {}, 0, 0
+	local function add(nm, r)
+		local rr = NormRarity(r)
+		if rr and type(nm) == "string" and nm ~= "" then
+			local key = NKey(nm)
+			if idx[key] == nil then idx[key] = rr; count = count + 1 end
+		end
+	end
+	pcall(function()
+		local rs = game:GetService("ReplicatedStorage")
+		-- Sumber utama: ReplicatedStorage.Shared.Config.FishConfig.ByName[nama].Rarity
+		pcall(function()
+			local fc = rs:FindFirstChild("FishConfig", true)
+			if fc and fc:IsA("ModuleScript") then
+				local ok, res = pcall(require, fc)
+				if ok and type(res) == "table" and type(res.ByName) == "table" then
+					mods = mods + 1
+					for nm, d in pairs(res.ByName) do
+						if type(d) == "table" then add(d.Name or nm, d.Rarity) end
+					end
+				end
+			end
+		end)
+		for _, inst in ipairs(rs:GetDescendants()) do
+			pcall(function()
+				for an, av in pairs(inst:GetAttributes()) do
+					local l = string.lower(an)
+					if string.find(l, "rarity") or string.find(l, "tier") then add(inst.Name, av) end
+				end
+				if inst:IsA("ValueBase") and inst.Parent and string.find(string.lower(inst.Name), "rarity") then
+					add(inst.Parent.Name, inst.Value)
+				end
+				local par = inst.Parent
+				if par and Rar.Known[string.lower(par.Name)] and not Rar.Known[string.lower(inst.Name)] then
+					add(inst.Name, par.Name)
+				elseif inst:IsA("Model") or inst:IsA("Folder") or inst:IsA("Tool") then
+					while par and par ~= rs do
+						local k = Rar.Known[string.lower(par.Name)]
+						if k then add(inst.Name, k) break end
+						par = par.Parent
+					end
+				end
+				if inst:IsA("ModuleScript") then
+					local ok, res = pcall(require, inst)
+					if ok and type(res) == "table" then
+						mods = mods + 1
+						ScanTable(res, 0, {}, add)
+					end
+				end
+			end)
+		end
+	end)
+	rarityStats.n, rarityStats.mods = count, mods
+	if count > 0 then rarityIndex = idx end -- kosong = coba lagi nanti
+	return idx
+end
+
 local function LookupRarity(name)
-	if not rarityIndex then BuildRarityIndex() end
-	return rarityIndex[name]
+	local idx = rarityIndex or BuildRarityIndex()
+	return idx[NKey(name)]
 end
 
 local function CollectFish(node, key, out, depth)
@@ -1211,6 +1270,7 @@ UI.Button(SellPage, "Cek Data Ikan", "Cetak isi GetFish ke console (F9).", "Cek"
 	local list = {}
 	CollectFish(res, nil, list, 0)
 	print("[Ubey] terbaca sebagai ikan: " .. #list)
+	print(string.format("[Ubey] rarity terbaca dari aset: %d nama (%d modul)", rarityStats.n, rarityStats.mods))
 	for i = 1, math.min(#list, 8) do
 		local f = list[i]
 		print(string.format("[Ubey] #%d id=%s | %s | %s | fav=%s", i, tostring(f.id), tostring(f.name), tostring(f.rarity), tostring(f.fav)))
