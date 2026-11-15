@@ -69,7 +69,6 @@ local function DefaultConfig()
 	return {
 		AutoAnim = true, AutoOK = true, AutoEquip = true,
 		AutoSellTimer = "5", SellFilterMode = false, SellFilter = "",
-		HideExtra = "",
 		AntiAdminEnabled = false, TargetGroupId = "0"
 	}
 end
@@ -329,10 +328,10 @@ end
 ------------------------------------------------------------------
 -- AUTO SELL (SellAll / SellFish / GetFish + teleport ke NPC)
 ------------------------------------------------------------------
-local ID_KEYS = {"id", "uid", "fishid", "guid", "index", "key"}
-local NAME_KEYS = {"name", "fishname", "fish", "displayname", "type"}
+local ID_KEYS = {"id", "uid", "u", "fishid", "guid", "index", "key"}
+local NAME_KEYS = {"name", "n", "fishname", "fish", "displayname", "type"}
 local RARITY_KEYS = {"rarity", "tier", "grade"}
-local FAV_KEYS = {"favorite", "favourite", "favorited", "locked", "isfavorite"}
+local FAV_KEYS = {"f", "favorite", "favourite", "favorited", "locked", "isfavorite"}
 
 local function pick(t, keys)
 	for k, v in pairs(t) do
@@ -362,22 +361,54 @@ local function PickName(t)
 	if type(n) == "string" and n ~= "" then return n end
 end
 
--- Cari rarity dari folder FishAssets.Fish jika data inventori tidak membawanya
-local rarityCache = {}
-local function LookupRarity(name)
-	if rarityCache[name] ~= nil then return rarityCache[name] or nil end
-	local found = false
+-- Daftar rarity game (urut sesuai Fish Index)
+local Rar = {
+	List = {"Common", "Uncommon", "Rare", "Epic", "Mythic", "Secret", "Supremacy", "Primordial"},
+	Colors = {
+		Common = Color3.fromRGB(175, 175, 185), Uncommon = Color3.fromRGB(70, 205, 95),
+		Rare = Color3.fromRGB(80, 145, 255), Epic = Color3.fromRGB(175, 100, 255),
+		Mythic = Color3.fromRGB(235, 80, 70), Secret = Color3.fromRGB(235, 205, 70),
+		Supremacy = Color3.fromRGB(205, 70, 205), Primordial = Color3.fromRGB(120, 235, 70)
+	},
+	Known = {}
+}
+for _, r in ipairs(Rar.List) do Rar.Known[string.lower(r)] = r end
+
+-- Data inventori tidak membawa rarity, jadi dicari dari aset game (ReplicatedStorage):
+-- atribut/value "Rarity", atau nama folder induk yang berupa nama rarity.
+local rarityIndex
+local function BuildRarityIndex()
+	rarityIndex = {}
 	pcall(function()
-		local fa = game:GetService("ReplicatedStorage"):FindFirstChild("FishAssets")
-		local folder = fa and fa:FindFirstChild("Fish")
-		local m = folder and folder:FindFirstChild(name, true)
-		if m then
-			local r = m:GetAttribute("Rarity") or (m:FindFirstChild("Rarity") and m.Rarity.Value)
-			if type(r) == "string" then found = r end
+		local rs = game:GetService("ReplicatedStorage")
+		local function norm(r)
+			if type(r) == "string" and r ~= "" then return Rar.Known[string.lower(r)] or r end
+		end
+		for _, inst in ipairs(rs:GetDescendants()) do
+			local nm = inst.Name
+			if rarityIndex[nm] == nil and not Rar.Known[string.lower(nm)] then
+				local r = norm(inst:GetAttribute("Rarity")) or norm(inst:GetAttribute("Tier"))
+				if not r then
+					local rv = inst:FindFirstChild("Rarity")
+					if rv and rv:IsA("StringValue") then r = norm(rv.Value) end
+				end
+				if not r then
+					local par = inst.Parent
+					while par and par ~= rs do
+						local k = Rar.Known[string.lower(par.Name)]
+						if k then r = k break end
+						par = par.Parent
+					end
+				end
+				if r then rarityIndex[nm] = r end
+			end
 		end
 	end)
-	rarityCache[name] = found
-	return found or nil
+end
+
+local function LookupRarity(name)
+	if not rarityIndex then BuildRarityIndex() end
+	return rarityIndex[name]
 end
 
 local function CollectFish(node, key, out, depth)
@@ -421,12 +452,12 @@ local function ParseFilters(text)
 	return list
 end
 
--- Rarity harus sama persis, nama cukup mengandung kata filter
+-- Rarity harus sama persis dengan yang dicentang
 local function MatchFilter(f, filters)
-	local n = string.lower(tostring(f.name or ""))
 	local r = string.lower(tostring(f.rarity or ""))
+	if r == "" then return false end
 	for _, flt in ipairs(filters) do
-		if r == flt or (n ~= "" and string.find(n, flt, 1, true)) then return true end
+		if r == flt then return true end
 	end
 	return false
 end
@@ -466,12 +497,19 @@ local function SellFiltered()
 	if not okG then error("GetFish gagal") end
 	local list = {}
 	CollectFish(res, nil, list, 0)
+	local sold, unknown = 0, 0
 	for _, f in ipairs(list) do
-		if not f.fav and MatchFilter(f, filters) then
-			pcall(Call, sellR, tonumber(f.id) or f.id)
-			task.wait(0.15)
+		if not f.fav then
+			if not f.rarity then
+				unknown = unknown + 1
+			elseif MatchFilter(f, filters) then
+				pcall(Call, sellR, tonumber(f.id) or f.id)
+				sold = sold + 1
+				task.wait(0.15)
+			end
 		end
 	end
+	if sold == 0 and unknown > 0 then error("Rarity ikan tidak terbaca") end
 end
 
 -- return (berhasil, pesan pendek)
@@ -854,9 +892,11 @@ local function Card(page, h)
 end
 
 local function CardText(card, title, desc, rightPad)
-	Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 8), UDim2.new(1, -rightPad, 0, 18))
 	if desc and desc ~= "" then
+		Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 8), UDim2.new(1, -rightPad, 0, 18))
 		Label(card, desc, 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -rightPad, 0, 18))
+	else
+		Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 0), UDim2.new(1, -rightPad, 1, 0))
 	end
 end
 
@@ -1024,7 +1064,7 @@ end)
 ------------------------------------------------------------------
 UI.Section(FishingPage, "AUTO FISHING")
 
-TgFish = UI.Toggle(FishingPage, "Auto Fishing", "Cast → tunggu Bite → Reel, berulang otomatis.", false, function(v)
+TgFish = UI.Toggle(FishingPage, "Auto Fishing", "", false, function(v)
 	if v and not IsVerified() then return end
 	getgenv().AutoFishRunning = v
 	if v then
@@ -1034,8 +1074,6 @@ TgFish = UI.Toggle(FishingPage, "Auto Fishing", "Cast → tunggu Bite → Reel, 
 		StopAnim()
 	end
 end)
-
-UI.Section(FishingPage, "Power 1 · Reel 0.5s · Cast 0s · Timeout 15s", C.sub)
 
 ------------------------------------------------------------------
 -- 2. SELL PAGE
@@ -1068,15 +1106,95 @@ SellTimerBox = UI.Input(SellPage, "Jeda Jual", "Menit antar penjualan", getgenv(
 	SaveConfig()
 end)
 
-UI.Toggle(SellPage, "Mode Filter (Nama / Rarity)", "Mati = Sell All. Nyala = jual hanya yang cocok filter.", getgenv().UbeyConfig.SellFilterMode, function(v)
+UI.Toggle(SellPage, "Mode Filter (Nama / Rarity)", "Mati = Sell All. Nyala = jual hanya rarity yang dicentang.", getgenv().UbeyConfig.SellFilterMode, function(v)
 	getgenv().UbeyConfig.SellFilterMode = v
 	SaveConfig()
 end)
 
-UI.Input(SellPage, "Filter Ikan", "Pisah koma: Common, Uncommon, Tiger", getgenv().UbeyConfig.SellFilter, "Common, Uncommon", function(t)
-	getgenv().UbeyConfig.SellFilter = t
-	SaveConfig()
-end)
+local function BuildRarityPicker(page)
+	local card = Card(page, 200)
+	Label(card, "Filter Rarity", 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 8), UDim2.new(1, -170, 0, 18))
+	Label(card, "Centang yang mau dijual", 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -170, 0, 16))
+
+	local allBtn = New("TextButton", {
+		Size = UDim2.new(0, 68, 0, 26), Position = UDim2.new(1, -150, 0, 10), BackgroundColor3 = C.accent,
+		Text = "Semua", TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold, TextSize = 11
+	}, card)
+	Round(allBtn, 8)
+	local clearBtn = New("TextButton", {
+		Size = UDim2.new(0, 68, 0, 26), Position = UDim2.new(1, -78, 0, 10), BackgroundColor3 = Color3.fromRGB(180, 50, 50),
+		Text = "Hapus", TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold, TextSize = 11
+	}, card)
+	Round(clearBtn, 8)
+
+	local list = New("ScrollingFrame", {
+		Size = UDim2.new(1, -16, 1, -56), Position = UDim2.new(0, 8, 0, 48), BackgroundTransparency = 1,
+		BorderSizePixel = 0, ScrollBarThickness = 3, ScrollBarImageColor3 = C.accent,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y
+	}, card)
+	New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, list)
+	New("UIPadding", {PaddingRight = UDim.new(0, 6)}, list)
+
+	local selected = {}
+	for _, f in ipairs(ParseFilters(getgenv().UbeyConfig.SellFilter)) do selected[f] = true end
+
+	local rows = {}
+	local function refresh()
+		for _, name in ipairs(Rar.List) do
+			local on = selected[string.lower(name)] == true
+			rows[name].mark.Visible = on
+			rows[name].box.BackgroundColor3 = on and C.accent or C.off
+		end
+	end
+	local function save()
+		local parts = {}
+		for _, name in ipairs(Rar.List) do
+			if selected[string.lower(name)] then table.insert(parts, name) end
+		end
+		getgenv().UbeyConfig.SellFilter = table.concat(parts, ",")
+		SaveConfig()
+	end
+
+	for i, name in ipairs(Rar.List) do
+		local row = New("TextButton", {
+			Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = C.bg, AutoButtonColor = false,
+			Text = "", LayoutOrder = i
+		}, list)
+		Round(row, 8)
+		local box = New("Frame", {
+			Size = UDim2.new(0, 18, 0, 18), Position = UDim2.new(0, 10, 0.5, -9), BackgroundColor3 = C.off
+		}, row)
+		Round(box, 5)
+		local mark = Label(box, "✓", 13, Color3.new(1, 1, 1), Enum.Font.GothamBold, nil, nil, Enum.TextXAlignment.Center)
+		mark.Visible = false
+		Label(row, name, 12, Rar.Colors[name] or C.text, Enum.Font.GothamMedium, UDim2.new(0, 38, 0, 0), UDim2.new(1, -46, 1, 0))
+		rows[name] = {box = box, mark = mark}
+		row.MouseButton1Click:Connect(function()
+			if not IsVerified() then return end
+			local k = string.lower(name)
+			selected[k] = not selected[k] or nil
+			refresh()
+			save()
+		end)
+	end
+
+	allBtn.MouseButton1Click:Connect(function()
+		if not IsVerified() then return end
+		for _, name in ipairs(Rar.List) do selected[string.lower(name)] = true end
+		refresh()
+		save()
+	end)
+	clearBtn.MouseButton1Click:Connect(function()
+		if not IsVerified() then return end
+		selected = {}
+		refresh()
+		save()
+	end)
+
+	refresh()
+end
+
+BuildRarityPicker(SellPage)
 
 UI.Button(SellPage, "Jual Sekarang", "Langsung TP ke NPC dan jual sekali.", "Jual", function(btn)
 	local ok, msg = DoSell()
@@ -1189,11 +1307,6 @@ end
 local function HideNameStep()
 	local fake = tostring(getgenv().FakeNameInput or "UBEY HUB")
 	local names = {LocalPlayer.DisplayName, LocalPlayer.Name}
-	for part in string.gmatch(tostring(getgenv().UbeyConfig.HideExtra or ""), "[^,]+") do
-		part = (part:gsub("^%s+", ""))
-		part = (part:gsub("%s+$", ""))
-		if part ~= "" then table.insert(names, part) end
-	end
 
 	local function fix(lbl)
 		local txt = lbl.Text
@@ -1235,11 +1348,6 @@ end)
 UI.Section(PrivacyPage, "PRIVACY & ANTI-ADMIN")
 UI.Input(PrivacyPage, "Nama Samaran", "Dipakai saat Privacy Mode aktif", "UBEY HUB", "UBEY HUB", function(t)
 	getgenv().FakeNameInput = t
-end)
-
-UI.Input(PrivacyPage, "Nama Tambahan", "Nama lain yang ikut disamarkan (pisah koma)", getgenv().UbeyConfig.HideExtra, "Ubey", function(t)
-	getgenv().UbeyConfig.HideExtra = t
-	SaveConfig()
 end)
 
 UI.Toggle(PrivacyPage, "Privacy Mode (Hide Name)", "Samarkan nama di atas kepala, HUD, dan karakter.", false, function(v)
