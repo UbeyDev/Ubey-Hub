@@ -32,6 +32,13 @@ local SUPABASE_ANON_KEY = "sb_publishable_rMWL7Qrjw9iG0c29vGZ0bw_O3swXT6n"
 local HEARTBEAT_INTERVAL = 120 -- detik
 -- ================================
 
+-- ====== SETELAN AUTO FISHING (dikunci) ======
+local FISH_POWER = 1
+local REEL_DELAY = 0.5
+local CAST_DELAY = 0
+local BITE_TIMEOUT = 15
+-- ============================================
+
 getgenv().TotalFishCaught = 0
 getgenv().SessionStartTime = os.time()
 
@@ -46,6 +53,7 @@ end
 
 local function StopAll()
 	getgenv().AutoFishRunning = false
+	getgenv().AutoSellRunning = false
 	getgenv().HideNameRunning = false
 end
 
@@ -59,8 +67,9 @@ local KEY_FILE = "UbeyHubV3_SavedKey.txt"
 
 local function DefaultConfig()
 	return {
-		Power = "0.92", ReelDelay = "0", CastDelay = "0.3", BiteTimeout = "15",
 		AutoAnim = true, AutoOK = true, AutoEquip = true,
+		AutoSellTimer = "5", SellFilterMode = false, SellFilter = "",
+		HideExtra = "",
 		AntiAdminEnabled = false, TargetGroupId = "0"
 	}
 end
@@ -96,6 +105,11 @@ local function ResetConfig()
 end
 
 LoadConfig()
+
+-- Tiga fitur ini selalu aktif (tanpa tombol on/off)
+getgenv().UbeyConfig.AutoAnim = true
+getgenv().UbeyConfig.AutoEquip = true
+getgenv().UbeyConfig.AutoOK = true
 
 local function Num(key)
 	return tonumber(getgenv().UbeyConfig[key]) or tonumber(DefaultConfig()[key]) or 0
@@ -154,10 +168,13 @@ end)
 -- FISHING CORE (Cast / Reel / Server)
 ------------------------------------------------------------------
 getgenv().AutoFishRunning = false
+getgenv().AutoSellRunning = false
 getgenv().HideNameRunning = false
 getgenv().AntiAFKRunning = false
 getgenv().FakeNameInput = "UBEY HUB"
 getgenv().FishLoopId = 0
+
+local SellBusy = false
 
 local function GetRemote(name)
 	for _, v in ipairs(game:GetDescendants()) do
@@ -165,14 +182,30 @@ local function GetRemote(name)
 	end
 end
 
+-- Untuk remote jual: utamakan yang ada di path berisi "fish"
+local function GetFishRemote(name)
+	local best
+	for _, v in ipairs(game:GetDescendants()) do
+		if v.Name == name and (v:IsA("RemoteEvent") or v:IsA("RemoteFunction")) then
+			if string.find(string.lower(v:GetFullName()), "fish") then return v end
+			best = best or v
+		end
+	end
+	return best
+end
+
 local function Fire(r, ...)
 	if r:IsA("RemoteEvent") then r:FireServer(...) else r:InvokeServer(...) end
+end
+
+local function Call(r, ...)
+	if r:IsA("RemoteFunction") then return r:InvokeServer(...) end
+	r:FireServer(...)
 end
 
 local bitten = false
 local reelId, failedId = 0, -1
 
--- Dengarkan event dari server: "Bite" = ikan menggigit, "Failed" = tangkapan gagal
 task.spawn(function()
 	for _, v in ipairs(game:GetDescendants()) do
 		if v.Name == "Server" and v:IsA("RemoteEvent") then
@@ -250,6 +283,7 @@ local function StartFishingLoop()
 		end
 		while getgenv().AutoFishRunning and getgenv().FishLoopId == myId do
 			if not IsVerified() then getgenv().AutoFishRunning = false; break end
+			while SellBusy and getgenv().AutoFishRunning do task.wait(0.2) end
 			if getgenv().UbeyConfig.AutoEquip then AutoEquipRod() end
 
 			local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -258,22 +292,22 @@ local function StartFishingLoop()
 				local look = hrp.CFrame.LookVector
 				local dir = Vector3.new(look.X, 0, look.Z).Unit
 				PlayAnim("CastingAnimation")
-				pcall(Fire, Cast, dir, math.clamp(Num("Power"), 0, 1))
+				pcall(Fire, Cast, dir, FISH_POWER)
 				task.delay(0.7, function()
 					if getgenv().AutoFishRunning and getgenv().FishLoopId == myId and not bitten then
 						PlayAnim("WaitingAnimation", true)
 					end
 				end)
 
-				local t, timeout = 0, Num("BiteTimeout")
-				while not bitten and t < timeout and getgenv().AutoFishRunning and getgenv().FishLoopId == myId do
+				local t = 0
+				while not bitten and t < BITE_TIMEOUT and getgenv().AutoFishRunning
+					and getgenv().FishLoopId == myId and not SellBusy do
 					task.wait(0.05)
 					t = t + 0.05
 				end
 
-				if bitten and getgenv().AutoFishRunning and getgenv().FishLoopId == myId then
-					local rd = Num("ReelDelay")
-					if rd > 0 then task.wait(rd) end
+				if bitten and not SellBusy and getgenv().AutoFishRunning and getgenv().FishLoopId == myId then
+					if REEL_DELAY > 0 then task.wait(REEL_DELAY) end
 					PlayAnim("PullingAnimation")
 					reelId = reelId + 1
 					local id = reelId
@@ -286,10 +320,189 @@ local function StartFishingLoop()
 					end)
 				end
 			end
-			task.wait(Num("CastDelay"))
+			task.wait(CAST_DELAY)
 		end
 		if getgenv().FishLoopId == myId then StopAnim() end
 	end)
+end
+
+------------------------------------------------------------------
+-- AUTO SELL (SellAll / SellFish / GetFish + teleport ke NPC)
+------------------------------------------------------------------
+local ID_KEYS = {"id", "uid", "fishid", "guid", "index", "key"}
+local NAME_KEYS = {"name", "fishname", "fish", "displayname", "type"}
+local RARITY_KEYS = {"rarity", "tier", "grade"}
+local FAV_KEYS = {"favorite", "favourite", "favorited", "locked", "isfavorite"}
+
+local function pick(t, keys)
+	for k, v in pairs(t) do
+		if type(k) == "string" then
+			local lk = string.lower(k)
+			for _, want in ipairs(keys) do
+				if lk == want then return v end
+			end
+		end
+	end
+end
+
+local function pickDeep(t, keys)
+	local v = pick(t, keys)
+	if v ~= nil then return v end
+	for _, child in pairs(t) do
+		if type(child) == "table" then
+			v = pick(child, keys)
+			if v ~= nil then return v end
+		end
+	end
+end
+
+local function PickName(t)
+	local n = pickDeep(t, NAME_KEYS)
+	if type(n) == "table" then n = pick(n, NAME_KEYS) end
+	if type(n) == "string" and n ~= "" then return n end
+end
+
+-- Cari rarity dari folder FishAssets.Fish jika data inventori tidak membawanya
+local rarityCache = {}
+local function LookupRarity(name)
+	if rarityCache[name] ~= nil then return rarityCache[name] or nil end
+	local found = false
+	pcall(function()
+		local fa = game:GetService("ReplicatedStorage"):FindFirstChild("FishAssets")
+		local folder = fa and fa:FindFirstChild("Fish")
+		local m = folder and folder:FindFirstChild(name, true)
+		if m then
+			local r = m:GetAttribute("Rarity") or (m:FindFirstChild("Rarity") and m.Rarity.Value)
+			if type(r) == "string" then found = r end
+		end
+	end)
+	rarityCache[name] = found
+	return found or nil
+end
+
+local function CollectFish(node, key, out, depth)
+	if type(node) ~= "table" or depth > 4 then return end
+	local name = PickName(node)
+	local id = pick(node, ID_KEYS)
+	if id == nil and type(key) == "number" then id = key end
+	if name and id ~= nil then
+		local rarity = pickDeep(node, RARITY_KEYS)
+		if type(rarity) ~= "string" then rarity = LookupRarity(name) end
+		table.insert(out, {id = id, name = name, rarity = rarity, fav = (pick(node, FAV_KEYS) == true)})
+		return
+	end
+	for k, child in pairs(node) do CollectFish(child, k, out, depth + 1) end
+end
+
+local function Dump(v, indent, depth)
+	if type(v) ~= "table" then print(indent .. tostring(v)); return end
+	if depth > 3 then print(indent .. "{...}"); return end
+	local n = 0
+	for k, val in pairs(v) do
+		n = n + 1
+		if n > 12 then print(indent .. "... (dipotong)"); break end
+		if type(val) == "table" then
+			print(indent .. tostring(k) .. " = {")
+			Dump(val, indent .. "  ", depth + 1)
+			print(indent .. "}")
+		else
+			print(indent .. tostring(k) .. " = " .. tostring(val))
+		end
+	end
+end
+
+local function ParseFilters(text)
+	local list = {}
+	for part in string.gmatch(tostring(text or ""), "[^,]+") do
+		part = (part:gsub("^%s+", ""))
+		part = (part:gsub("%s+$", ""))
+		if part ~= "" then table.insert(list, string.lower(part)) end
+	end
+	return list
+end
+
+-- Rarity harus sama persis, nama cukup mengandung kata filter
+local function MatchFilter(f, filters)
+	local n = string.lower(tostring(f.name or ""))
+	local r = string.lower(tostring(f.rarity or ""))
+	for _, flt in ipairs(filters) do
+		if r == flt or (n ~= "" and string.find(n, flt, 1, true)) then return true end
+	end
+	return false
+end
+
+local function FindByName(names)
+	for _, nm in ipairs(names) do
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v.Name == nm and (v:IsA("Model") or v:IsA("BasePart")) then return v end
+		end
+	end
+end
+
+local function GetSellerCFrame()
+	local inst = FindByName({"Thalvior"})
+	if inst then
+		local root = inst:IsA("BasePart") and inst
+			or inst:FindFirstChild("HumanoidRootPart") or inst.PrimaryPart
+			or inst:FindFirstChildWhichIsA("BasePart", true)
+		if root then
+			local pos = root.Position + root.CFrame.LookVector * 5 + Vector3.new(0, 2, 0)
+			return CFrame.lookAt(pos, Vector3.new(root.Position.X, pos.Y, root.Position.Z))
+		end
+	end
+	local stand = FindByName({"SellFish Stand", "SellFish"})
+	if stand then
+		local pivot = stand:IsA("Model") and stand:GetPivot().Position or stand.Position
+		return CFrame.new(pivot + Vector3.new(0, 6, 0))
+	end
+end
+
+local function SellFiltered()
+	local getR, sellR = GetFishRemote("GetFish"), GetFishRemote("SellFish")
+	if not (getR and sellR) then error("Remote GetFish/SellFish tidak ketemu") end
+	local filters = ParseFilters(getgenv().UbeyConfig.SellFilter)
+	if #filters == 0 then error("Filter kosong") end
+	local okG, res = pcall(Call, getR)
+	if not okG then error("GetFish gagal") end
+	local list = {}
+	CollectFish(res, nil, list, 0)
+	for _, f in ipairs(list) do
+		if not f.fav and MatchFilter(f, filters) then
+			pcall(Call, sellR, tonumber(f.id) or f.id)
+			task.wait(0.15)
+		end
+	end
+end
+
+-- return (berhasil, pesan pendek)
+local function DoSell()
+	if SellBusy then return false, "Sedang jual" end
+	local char = LocalPlayer.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return false, "No karakter" end
+	local target = GetSellerCFrame()
+	if not target then return false, "NPC tidak ada" end
+
+	SellBusy = true
+	local back = hrp.CFrame
+	local ok, err = pcall(function()
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.CFrame = target
+		task.wait(0.8)
+		if getgenv().UbeyConfig.SellFilterMode then
+			SellFiltered()
+		else
+			local r = GetFishRemote("SellAll")
+			if not r then error("Remote SellAll tidak ketemu") end
+			Call(r)
+		end
+		task.wait(0.5)
+	end)
+	if hrp and hrp.Parent then hrp.CFrame = back end
+	SellBusy = false
+	if ok then return true, "Terjual ✓" end
+	warn("[Ubey Sell] " .. tostring(err))
+	return false, "Gagal (cek F9)"
 end
 
 -- ==============================================================================
@@ -728,6 +941,7 @@ end
 -- TABS
 ------------------------------------------------------------------
 local FishingPage = UI.Tab("Fishing", "🎣")
+local SellPage = UI.Tab("Sell", "💰")
 local PlayerPage = UI.Tab("Player", "⚡")
 local PlayerTpPage = UI.Tab("TP Player", "👥")
 local PrivacyPage = UI.Tab("Privacy", "🛡️")
@@ -806,6 +1020,7 @@ end)
 
 ------------------------------------------------------------------
 -- 1. FISHING PAGE
+-- (Animasi Lempar, Auto Equip Rod, Auto OK Level Up selalu aktif, tanpa tombol)
 ------------------------------------------------------------------
 UI.Section(FishingPage, "AUTO FISHING")
 
@@ -820,39 +1035,73 @@ TgFish = UI.Toggle(FishingPage, "Auto Fishing", "Cast → tunggu Bite → Reel, 
 	end
 end)
 
-local function NumInput(key, title, desc, minV, maxV)
-	local box
-	box = UI.Input(FishingPage, title, desc, getgenv().UbeyConfig[key], tostring(DefaultConfig()[key]), function(t)
-		local n = math.clamp(tonumber(t) or tonumber(DefaultConfig()[key]), minV, maxV)
-		getgenv().UbeyConfig[key] = tostring(n)
-		box.Text = tostring(n)
-		SaveConfig()
-	end)
-end
+UI.Section(FishingPage, "Power 1 · Reel 0.5s · Cast 0s · Timeout 15s", C.sub)
 
-NumInput("Power", "Power Cast", "0 - 1 (default 0.92)", 0, 1)
-NumInput("ReelDelay", "Jeda Reel", "Detik setelah Bite (0 = instan)", 0, 5)
-NumInput("CastDelay", "Jeda Cast", "Detik sebelum lempar lagi", 0, 5)
-NumInput("BiteTimeout", "Timeout Bite", "Detik, lempar ulang jika tidak ada Bite", 3, 60)
+------------------------------------------------------------------
+-- 2. SELL PAGE
+------------------------------------------------------------------
+UI.Section(SellPage, "AUTO SELL IKAN")
 
-UI.Toggle(FishingPage, "Animasi Lempar", "Putar animasi cast, tunggu, dan tarik.", getgenv().UbeyConfig.AutoAnim, function(v)
-	getgenv().UbeyConfig.AutoAnim = v
-	if not v then StopAnim() end
+UI.Toggle(SellPage, "Auto Sell", "TP ke NPC penjual, jual, lalu kembali ke posisi awal.", false, function(v)
+	if v and not IsVerified() then return end
+	getgenv().AutoSellRunning = v
+	if v then
+		task.spawn(function()
+			local last = tick()
+			while getgenv().AutoSellRunning do
+				if not IsVerified() then getgenv().AutoSellRunning = false; break end
+				task.wait(1)
+				if (tick() - last) / 60 >= math.max(0.1, Num("AutoSellTimer")) then
+					DoSell()
+					last = tick()
+				end
+			end
+		end)
+	end
+end)
+
+local SellTimerBox
+SellTimerBox = UI.Input(SellPage, "Jeda Jual", "Menit antar penjualan", getgenv().UbeyConfig.AutoSellTimer, "5", function(t)
+	local n = math.clamp(tonumber(t) or 5, 0.1, 120)
+	getgenv().UbeyConfig.AutoSellTimer = tostring(n)
+	SellTimerBox.Text = tostring(n)
 	SaveConfig()
 end)
 
-UI.Toggle(FishingPage, "Auto Equip Rod", "Pegang pancingan otomatis jika belum dipegang.", getgenv().UbeyConfig.AutoEquip, function(v)
-	getgenv().UbeyConfig.AutoEquip = v
+UI.Toggle(SellPage, "Mode Filter (Nama / Rarity)", "Mati = Sell All. Nyala = jual hanya yang cocok filter.", getgenv().UbeyConfig.SellFilterMode, function(v)
+	getgenv().UbeyConfig.SellFilterMode = v
 	SaveConfig()
 end)
 
-UI.Toggle(FishingPage, "Auto OK Level Up", "Tekan OK otomatis saat popup Naik Level muncul.", getgenv().UbeyConfig.AutoOK, function(v)
-	getgenv().UbeyConfig.AutoOK = v
+UI.Input(SellPage, "Filter Ikan", "Pisah koma: Common, Uncommon, Tiger", getgenv().UbeyConfig.SellFilter, "Common, Uncommon", function(t)
+	getgenv().UbeyConfig.SellFilter = t
 	SaveConfig()
+end)
+
+UI.Button(SellPage, "Jual Sekarang", "Langsung TP ke NPC dan jual sekali.", "Jual", function(btn)
+	local ok, msg = DoSell()
+	Flash(btn, msg, ok)
+end, C.good)
+
+UI.Button(SellPage, "Cek Data Ikan", "Cetak isi GetFish ke console (F9).", "Cek", function(btn)
+	local r = GetFishRemote("GetFish")
+	if not r then Flash(btn, "No GetFish", false); return end
+	local ok, res = pcall(Call, r)
+	if not ok then Flash(btn, "Gagal", false); return end
+	print("===== [Ubey] GetFish =====")
+	Dump(res, "", 0)
+	local list = {}
+	CollectFish(res, nil, list, 0)
+	print("[Ubey] terbaca sebagai ikan: " .. #list)
+	for i = 1, math.min(#list, 8) do
+		local f = list[i]
+		print(string.format("[Ubey] #%d id=%s | %s | %s | fav=%s", i, tostring(f.id), tostring(f.name), tostring(f.rarity), tostring(f.fav)))
+	end
+	Flash(btn, "Cek console", true)
 end)
 
 ------------------------------------------------------------------
--- 2. PLAYER PAGE
+-- 3. PLAYER PAGE
 ------------------------------------------------------------------
 UI.Section(PlayerPage, "PLAYER SETTINGS")
 UI.Input(PlayerPage, "WalkSpeed", "Kecepatan jalan karakter", "", "50", function(t)
@@ -874,7 +1123,7 @@ LocalPlayer.Idled:Connect(function()
 end)
 
 ------------------------------------------------------------------
--- 3. TP PLAYER PAGE
+-- 4. TP PLAYER PAGE
 ------------------------------------------------------------------
 local RefreshPlayerBtn = New("TextButton", {
 	Size = UDim2.new(1, 0, 0, 35), BackgroundColor3 = Color3.fromRGB(0, 100, 180),
@@ -918,35 +1167,91 @@ end)
 task.spawn(function() task.wait(2); ScanAndDisplayPlayers() end)
 
 ------------------------------------------------------------------
--- 4. PRIVACY & ANTI-ADMIN
+-- 5. PRIVACY & ANTI-ADMIN
 ------------------------------------------------------------------
+local function EscPat(s) return (tostring(s):gsub("%p", "%%%0")) end
+local function EscRep(s) return (tostring(s):gsub("%%", "%%%%")) end
+
+-- BillboardGui di workspace yang menempel ke karakter kita (papan nama di atas kepala)
+local extraBillboards = {}
+local function ScanBillboards()
+	extraBillboards = {}
+	local char = LocalPlayer.Character
+	if not char then return end
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v:IsA("BillboardGui") then
+			local ad = v.Adornee
+			if ad and ad:IsDescendantOf(char) then table.insert(extraBillboards, v) end
+		end
+	end
+end
+
+local function HideNameStep()
+	local fake = tostring(getgenv().FakeNameInput or "UBEY HUB")
+	local names = {LocalPlayer.DisplayName, LocalPlayer.Name}
+	for part in string.gmatch(tostring(getgenv().UbeyConfig.HideExtra or ""), "[^,]+") do
+		part = (part:gsub("^%s+", ""))
+		part = (part:gsub("%s+$", ""))
+		if part ~= "" then table.insert(names, part) end
+	end
+
+	local function fix(lbl)
+		local txt = lbl.Text
+		if txt == "" or string.find(txt, fake, 1, true) then return end
+		local new = txt
+		for _, n in ipairs(names) do
+			if n ~= "" and string.find(new, n, 1, true) then
+				new = string.gsub(new, EscPat(n), EscRep(fake))
+			end
+		end
+		if new ~= txt then lbl.Text = new end
+	end
+
+	local function scan(root)
+		for _, o in ipairs(root:GetDescendants()) do
+			if o:IsA("TextLabel") or o:IsA("TextButton") then fix(o) end
+		end
+	end
+
+	local char = LocalPlayer.Character
+	if char then
+		scan(char)
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+	end
+	for _, bb in ipairs(extraBillboards) do
+		if bb.Parent then scan(bb) end
+	end
+	for _, o in ipairs(PlayerGui:GetDescendants()) do
+		if (o:IsA("TextLabel") or o:IsA("TextButton")) and not o:IsDescendantOf(Gui) then fix(o) end
+	end
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+	task.wait(2)
+	if getgenv().HideNameRunning then pcall(ScanBillboards) end
+end)
+
 UI.Section(PrivacyPage, "PRIVACY & ANTI-ADMIN")
 UI.Input(PrivacyPage, "Nama Samaran", "Dipakai saat Privacy Mode aktif", "UBEY HUB", "UBEY HUB", function(t)
 	getgenv().FakeNameInput = t
 end)
 
-UI.Toggle(PrivacyPage, "Privacy Mode (Hide Name)", "Ganti nama di atas kepala dengan nama samaran.", false, function(v)
+UI.Input(PrivacyPage, "Nama Tambahan", "Nama lain yang ikut disamarkan (pisah koma)", getgenv().UbeyConfig.HideExtra, "Ubey", function(t)
+	getgenv().UbeyConfig.HideExtra = t
+	SaveConfig()
+end)
+
+UI.Toggle(PrivacyPage, "Privacy Mode (Hide Name)", "Samarkan nama di atas kepala, HUD, dan karakter.", false, function(v)
 	if v and not IsVerified() then return end
 	getgenv().HideNameRunning = v
 	if v then
 		task.spawn(function()
+			pcall(ScanBillboards)
 			while getgenv().HideNameRunning do
 				if not IsVerified() then getgenv().HideNameRunning = false; break end
-				pcall(function()
-					local fakeName = getgenv().FakeNameInput or "UBEY HUB"
-					local head = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-					if head then
-						for _, child in ipairs(head:GetDescendants()) do
-							if child:IsA("TextLabel") or child:IsA("TextMesh") then
-								local txt = child.Text
-								if string.find(txt, LocalPlayer.Name) or string.find(txt, LocalPlayer.DisplayName) then
-									child.Text = fakeName
-								end
-							end
-						end
-					end
-				end)
-				task.wait(1)
+				pcall(HideNameStep)
+				task.wait(0.7)
 			end
 		end)
 	end
@@ -984,7 +1289,7 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 ------------------------------------------------------------------
--- 5. SETTINGS
+-- 6. SETTINGS
 ------------------------------------------------------------------
 UI.Section(SettingsPage, "SETTINGS & PERFORMANCE")
 
@@ -1035,7 +1340,7 @@ UI.Button(SettingsPage, "Reset Konfigurasi & Clear Key", "Hapus config dan key t
 end, Color3.fromRGB(180, 50, 50))
 
 ------------------------------------------------------------------
--- 6. CREDITS
+-- 7. CREDITS
 ------------------------------------------------------------------
 UI.Section(CreditsPage, "CREDITS")
 UI.Button(CreditsPage, "Created By UBEY", "Terima kasih sudah memakai " .. HUB_TITLE .. ".", "Discord", function(btn)
