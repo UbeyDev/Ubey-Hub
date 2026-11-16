@@ -1,4 +1,4 @@
-local SCRIPT_NAME = "saujana"
+local SCRIPT_NAME = "Saujana"
 local KEY_FILE = "UbeyHub_SavedKey.txt"
 local FUNCTION_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/functions/v1/verify-key"
 local ANON_KEY = "sb_publishable_rMWL7Qrjw9iG0c29vGZ0bw_O3swXT6n"
