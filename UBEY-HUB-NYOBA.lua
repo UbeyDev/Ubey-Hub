@@ -1,6 +1,4485 @@
--- [KAMUS ENKRIPSI TELAH DIHAPUS]
-local _a=game:GetService("Players")local _b=game:GetService("TweenService")local _c=game:GetService("RunService")local _d=game:GetService("UserInputService")local _e=game:GetService("ReplicatedStorage")local _f=game:GetService("VirtualUser")local _g=game:GetService("VirtualInputManager")local _h=game:GetService("Lighting")if not game:IsLoaded()then game.Loaded:Wait()end local _i=_a.LocalPlayer while not _i do task.wait(0.1)_i=_a.LocalPlayer end local _j=(getgenv().PasarHutanRunId or(960-960))+(3656-3655)getgenv().PasarHutanRunId=_j getgenv().KepitingRunId=(getgenv().KepitingRunId or(5312-5312))+(4892-4891)if getgenv().KepitingConnections then for _k,_l in ipairs(getgenv().KepitingConnections)do pcall(function()_l:Disconnect()end)end getgenv().KepitingConnections=nil end if getgenv().PasarHutanConnections then for _m,_n in ipairs(getgenv().PasarHutanConnections)do pcall(function()_n:Disconnect()end)end end local _o={}getgenv().PasarHutanConnections=_o local function _p()return getgenv().PasarHutanRunId==_j end local function _q(_r)for _s,_t in ipairs(_r)do pcall(function()_t:Disconnect()end)end table.clear(_r)end local _u="hold"local _v=1.6 local _w=1.1 local _x=(-2458+2473)local _y=(-2570+2573)local _z=(-2754+2779)local _A=0.08 local _B=math.huge local _C="semua"local _D="semua"getgenv().WaterDuration=getgenv().WaterDuration or 2.0 local _E={2.0,2.5,3.0,3.5,4.0}local _F=(4534-4509)local _G=(-6041+6051)local _H="SateKepiting"local _I="PotongGagak"local _J={}local _K={}local _L={scriptFile="PasarHutan_v6_5_fixed118.lua",stateFile="PasarHutan_State_"..tostring(_i.UserId)..".json",http=game:GetService("HttpService"),state=nil,queued=false,lastJson="",}if getgenv().PasarHutanResume then getgenv().PasarHutanResume=nil _L.state=getgenv().PasarHutanSavedState if not _L.state and isfile and readfile then pcall(function()if isfile(_L.stateFile)then _L.state=_L.http:JSONDecode(readfile(_L.stateFile))end end)end end getgenv().AutoSemuaFarmActive=false getgenv().KepitingFarmActive=false getgenv().GagakFarmActive=false getgenv().GagakOwlMode=false getgenv().DupaFarmActive=false getgenv().KemenyanFarmActive=false getgenv().MelatiFarmActive=false getgenv().JamurFarmActive=false getgenv().PohonFarmActive=false getgenv().BatuFarmActive=false getgenv().AutoRepairActive=false getgenv().PH_Repairing=false getgenv().PH_RepairCount=(7448-7448)getgenv().PH_RepairUI=nil getgenv().BatuBesiMode=false getgenv().BatuIronBase=nil getgenv().BatuIronLabel=nil getgenv().AutoTanamActive=false getgenv().AutoSiramActive=true getgenv().AutoPanenActive=true getgenv().AntiAfkActive=true getgenv().AutoKelolaLapakActive=false getgenv().AutoAyamActive=false getgenv().AutoSapiActive=false getgenv().AutoBabiActive=false getgenv().AutoGosokBabiActive=false getgenv().AutoKlaimNgepetActive=false getgenv().BabiPakanPilihan=getgenv().BabiPakanPilihan or "auto"getgenv().AutoTuyulLiarActive=false getgenv().AutoLatihPetActive=false getgenv().AutoMasakActive=false getgenv().AutoOlahActive=false getgenv().AutoPanggangActive=false getgenv().PanggangBabiKg=getgenv().PanggangBabiKg or "auto"getgenv().AntiPetirActive=false getgenv().AutoTarikSisaFase=true if _L.state then if _L.state.lapak then getgenv().AutoKelolaLapakActive=true end if type(_L.state.siang)=="table"and#_L.state.siang>(1023-1023)then getgenv().LapakPilihSiang=_L.state.siang end if type(_L.state.malam)=="table"and#_L.state.malam>(5079-5079)then getgenv().LapakPilihMalam=_L.state.malam end print("[Pasar Hutan] Resume setelah ganti server. Lapak:",getgenv().AutoKelolaLapakActive)end local _M=nil local _N=(1096-1096)local _O=nil local _P="bertahap"local _Q={Semua=(5674-5674),Kepiting=(-5208+5208),Dupa=(5679-5679),Kemenyan=(-8610+8610),Melati=(2873-2873),Jamur=(-8776+8776),Pohon=(-1439+1439),Batu=(-7578+7578),Ternak=(3389-3389),Ayam=(-5305+5305),Sapi=(-9321+9321),Babi=(9255-9255),Ngepet=(5582-5582),Lapak=(-567+567),Tuyul=(3022-3022),Dapur=(-8789+8789),Olah=(-2097+2097),Panggang=(-1314+1314),}local _R=(5417-5417)local _S,_T,_U,_V,_W local _X,_Y,_Z,_ba,_bb,_bc local _bd={}local function _be()pcall(function()local _bf=_e:WaitForChild("RemoteRegistry",(-7974+7977))if _bf then local _bg=require(_bf)if type(_bg)=="table"then for _bh,_bi in pairs(_bg)do if typeof(_bi)=="Instance"then _bd[string.lower(tostring(_bh))]=_bi end end end local _bj=_bg.get or _bg.cari if _bj then pcall(function()_U=_bj("RakAksi")_V=_bj("LapakAksi")_S=_bj("Tanam")_T=_bj("Panen")_W=_bj("PetCmd")_X=_bj("CookStove")_Y=_bj("CookQueuePoll")_Z=_bj("OlahMulai")_ba=_bj("OlahPoll")_bb=_bj("Petir")_bc=_bj("SaleFx")end)end if _bj and getupvalues then for _bk,_bl in ipairs(getupvalues(_bj))do if type(_bl)=="table"then for _bm,_bn in pairs(_bl)do if typeof(_bn)=="Instance"then _bd[string.lower(tostring(_bm))]=_bn elseif type(_bn)=="string"and typeof(_bm)=="Instance"then _bd[string.lower(tostring(_bn))]=_bm end end end end end end end)for _bo,_bp in ipairs(_e:GetDescendants())do if _bp:IsA("RemoteEvent")or _bp:IsA("RemoteFunction")then _bd[string.lower(_bp.Name)]=_bp end end end _be()local function _bq(_br)for _bs,_bt in ipairs(_br)do local _bu=string.lower(_bt)if _bd[_bu]then return _bd[_bu]end end for _bv,_bw in pairs(_bd)do for _bx,_by in ipairs(_br)do if string.find(_bv,string.lower(_by))then return _bw end end end return nil end _U=_U or _bq({"r60fc0f14c95948a1b8f424b0c87c9ae4","rakaksi","rak"})_V=_V or _bq({"rf1cca891fcc741358fad82b58785b3b9","lapakaksi","lapak"})_S=_S or _bq({"r253d6aea043740e6a58d3993f00a778a","tanam"})_T=_T or _bq({"re21f8e95de624bfaae4b4c6918f08a57","panen"})_W=_W or _bq({"r7af0f7737fc845cc97af22d6032eeca5","petcmd"})_X=_X or _bq({"r8d5a4dd477db4290a641760b60794296","cookstove"})_Y=_Y or _bq({"r48d79ce5b49e413e9e43439fb4e52236","cookqueuepoll"})_Z=_Z or _bq({"rfa2c229485a548c0a0122bd19f578e40","olahmulai"})_ba=_ba or _bq({"rafad8eca2ca6493ab24ac83fe78b2993","olahpoll"})_bb=_bb or _bq({"rdbc34f083ba248a198c5af3d8ece430f","petir"})_bc=_bc or _bq({"re1c6efd0e0244e8d8996c1e0552e3c45","salefx"})print("[Pasar Hutan] Remote Rak Kios:",_U and _U:GetFullName()or "TIDAK DITEMUKAN!")local _bz=nil pcall(function()_bz=require(_e:WaitForChild("GameConfig",(1045-1042)))end)getgenv().LapakPilihSiang=getgenv().LapakPilihSiang or{}getgenv().LapakPilihMalam=getgenv().LapakPilihMalam or{}local function _bA(_bB)local _bC=tostring(_bB or"")_bC=_bC:gsub("%s*[xX]%s*%d+","")_bC=_bC:gsub("%s*%(%d+%)","")_bC=_bC:gsub("%s*%[%d+%]","")_bC=_bC:gsub("^%s+","")_bC=_bC:gsub("%s+$","")return _bC end local _bD={pilih={Siang=getgenv().LapakPilihSiang,Malam=getgenv().LapakPilihMalam},viewPhase=(workspace:GetAttribute("Phase")=="Malam"or _h:GetAttribute("Phase")=="Malam")and "Malam"or "Siang",names={},ui={},btnConns={},}table.insert(_o,{Disconnect=function()_q(_bD.btnConns)end})do local _bE,_bF={},nil local function _bG()local _bH=(_bz and _bz.Ghost)or{}local _bI={}for _bJ,_bK in pairs(_bH.Types or{})do if(_bK.fase or "malam")=="malam"and _bK.favorite then _bI[_bK.favorite]=true end end for _bL,_bM in ipairs(_bH.DuaFase or{})do _bI[_bM]=true end local _bN={}for _bO,_bP in pairs(_bH.Types or{})do if _bP.fase=="siang"and type(_bP.only)=="table"then for _bQ,_bR in ipairs(_bP.only)do if not _bI[_bR]then _bN[_bR]=true end end end end return _bN end local function _bS(_bT)local _bU=_bE[_bT]if _bU then return _bU end _bF=_bF or _bG()local _bV,_bW=false,false for _bX,_bY in pairs(((_bz and _bz.Ghost)or{}).Types or{})do local _bZ=_bY.fase or "malam"local _ca if type(_bY.only)=="table"and#_bY.only>(3498-3498)then _ca=table.find(_bY.only,_bT)~=nil elseif _bZ=="malam"then _ca=(not _bF[_bT])or(type(_bY.boleh)=="table"and table.find(_bY.boleh,_bT)~=nil)else _ca=true end if _ca then if _bZ=="siang"then _bV=true else _bW=true end end end _bU={Siang=_bV,Malam=_bW}_bE[_bT]=_bU return _bU end function _bD.cocok(_cb,_cc)if _cc=="Malam"and _J[_cb]then return true end if _cc=="Siang"and _K[_cb]then return true end if not(_bz and _bz.Ghost)then return true end local _cd,_ce=pcall(function()return _bS(_cb)[_cc]==true end)return(_cd and _ce)or false end end function _bD.namaItem(_cf)return _bD.names[_cf]or _bA(_cf)end function _bD.bisaDitaruh(_cg)local _ch=_bz and _bz.Items if not _ch then return true end local _ci=_ch[_cg]return _ci~=nil and _ci.jual==true end function _bD.jenis(_cj)local _ck=_bz and _bz.Items local _cl=_ck and _ck[_cj]return _cl and _cl.jenis or "rak"end function _bD.scanInventory()local _cm={}local _cn=(_bz and _bz.Items)or{}local function _co(_cp)if not _cp then return end for _cq,_cr in ipairs(_cp:GetChildren())do if _cr:IsA("Tool")then local _cs=_bA(_cr.Name)local _ct=_cr:GetAttribute("ItemId")or _cr:GetAttribute("Id")or _cr:GetAttribute("Item")or _cs local _cu=_cr:GetAttribute("IsSeed")or _cr:GetAttribute("PlantType")or _cr:GetAttribute("AlatTambang")or _cs:lower():find("bibit")or _cs:lower():find("kapak")or _cs:lower():find("beliung")or _cs:lower():find("penyiram")or _cs:lower():find("payung")or _cs:lower():find("cangkul")or _cs:lower():find("pengosok")or _cs:lower():find("lantern")or _cs:lower():find("gerobak")if not _cu then local _cv=_cn[_ct]or _cn[_cs]if _cv and _cv.jual==true then local _cw=(_cn[_ct]and _ct)or(_cn[_cs]and _cs)or _ct local _cx=tonumber(_cr:GetAttribute("Count"))or tonumber(_cr.Name:match("[xX]%s*(%d+)"))or tonumber(_cr.Name:match("%((%d+)%)"))or(-8232+8233)local _cy=(_cv and _cv.harga)or _cr:GetAttribute("Harga")or(7238-7228)_cm[_cw]=_cm[_cw]or{id=_cw,count=(-4045+4045),harga=_cy}_cm[_cw].count+=_cx _bD.names[_cw]=(_cv and _cv.display)or _cs end end end end end _co(_i:FindFirstChildOfClass("Backpack"))_co(_i.Character)return _cm end function _bD.toggle(_cz,_cA)local _cB=_bD.pilih[_cz]local _cC=table.find(_cB,_cA)if _cC then table.remove(_cB,_cC)else table.insert(_cB,_cA)end end function _bD.baris(_cD)local _cE=_bD.pilih[_cD]or{}local _cF=_bD.scanInventory()local _cG=(_bz and _bz.Items)or{}local _cH,_cI={},{}for _cJ=#_cE,(-8492+8493),-(-5210+5211)do if not _bD.bisaDitaruh(_cE[_cJ])then table.remove(_cE,_cJ)end end for _cK,_cL in ipairs(_cE)do _cI[_cL]=true local _cM=_cG[_cL]table.insert(_cH,{id=_cL,sel=_cK,count=_cF[_cL]and _cF[_cL].count or(1909-1909),harga=(_cM and _cM.harga)or(_cF[_cL]and _cF[_cL].harga)or(-8420+8420),})end local _cN={}for _cO,_cP in pairs(_cF)do if not _cI[_cO]and _bD.cocok(_cO,_cD)then table.insert(_cN,_cP)end end table.sort(_cN,function(_cQ,_cR)local _cS=_bD.cocok(_cQ.id,_cD)and(-4516+4517)or(5190-5190)local _cT=_bD.cocok(_cR.id,_cD)and(890-889)or(8214-8214)if _cS~=_cT then return _cS>_cT end if _cQ.harga~=_cR.harga then return(_cQ.harga or(-9651+9651))>(_cR.harga or(5273-5273))end return _cQ.id<_cR.id end)for _cU,_cV in ipairs(_cN)do table.insert(_cH,{id=_cV.id,sel=nil,count=_cV.count,harga=_cV.harga})end return _cH end table.insert(_o,_i.Idled:Connect(function()if not getgenv().AntiAfkActive then return end _f:CaptureController()_f:ClickButton2(Vector2.new())end))local function _cW()local _cX=_i.Character if not _cX then return nil,nil end local _cY=_cX:FindFirstChild("HumanoidRootPart")local _cZ=_cX:FindFirstChildOfClass("Humanoid")return _cY,_cZ end local function _da()local _db,_dc=_cW()if _db and _dc and _dc.Health>(-1610+1610)then return _db,_dc end return nil,nil end local function _dd(_de)local _df=_i:FindFirstChildOfClass("Backpack")return(_df and _df:FindFirstChild(_de))or(_i.Character and _i.Character:FindFirstChild(_de))end local function _dg(_dh)if _dh:GetAttribute("Rusak")==true then return false end local _di=_dh:GetAttribute("Dur")if type(_di)=="number"and _di<=(-2513+2513)then return false end return true end local function _dj(_dk)local _dl,_dm=_dk:GetAttribute("Dur"),_dk:GetAttribute("DurMaks")local _dn=(type(_dl)=="number"and type(_dm)=="number"and _dm>(-7016+7016))and(_dl/_dm)or(9679-9679)return(tonumber(_dk:GetAttribute("Tier"))or(-4820+4820))*1e6+(tonumber(_dk:GetAttribute("Damage"))or(-6814+6814))*1e3+(tonumber(_dk:GetAttribute("Mutu"))or(9002-9002))*(-7467+7477)+(tonumber(_dk:GetAttribute("Tingkat"))or(7558-7558))+_dn*0.5 end local function _do(_dp)local _dq=_i:FindFirstChildOfClass("Backpack")local _dr=_i.Character local _ds={}local function _dt(_du)if not _du then return end for _dv,_dw in ipairs(_du:GetChildren())do if _dw:IsA("Tool")and _dw:GetAttribute("AlatTambang")and _dw:GetAttribute("Jenis")==_dp then table.insert(_ds,_dw)end end end _dt(_dr)_dt(_dq)if#_ds>(212-212)then local _dx,_dy=nil,-math.huge local _dz,_dA=nil,-math.huge for _dB,_dC in ipairs(_ds)do local _dD=_dj(_dC)if _dg(_dC)then if _dD>_dy then _dx,_dy=_dC,_dD end elseif _dD>_dA then _dz,_dA=_dC,_dD end end return _dx or _dz end local _dE=(_dp=="Pohon")and "kapak"or "beliung"local function _dF(_dG)if not _dG then return nil end for _dH,_dI in ipairs(_dG:GetChildren())do if _dI:IsA("Tool")and _dI.Name:lower():find(_dE)then return _dI end end return nil end return _dF(_dr)or _dF(_dq)end local function _dJ(_dK)local _dL,_dM=_da()if not _dM then return false end local _dN=_do(_dK)if not _dN then return false end if _dN.Parent~=_i.Character then _dM:EquipTool(_dN)task.wait(0.2)end return _dN.Parent==_i.Character end local function _dO()local _dP=_cW()if _dP then local _dQ=_dP:FindFirstChild("FlyLockPos")if _dQ then _dQ:Destroy()end local _dR=_dP:FindFirstChild("FlyLockGyro")if _dR then _dR:Destroy()end end local _dS,_dT=_da()if _dT and _dT.PlatformStand then _dT.PlatformStand=false end end local function _dU(_dV)local _dW,_dX=_da()if not _dW then return end local _dY=_dW:FindFirstChild("FlyLockPos")if not _dY then _dY=Instance.new("BodyPosition")_dY.Name="FlyLockPos"_dY.MaxForce=Vector3.new(9e9,9e9,9e9)_dY.P=1e5 _dY.D=1e4 _dY.Parent=_dW end _dY.Position=_dV local _dZ=_dW:FindFirstChild("FlyLockGyro")if not _dZ then _dZ=Instance.new("BodyGyro")_dZ.Name="FlyLockGyro"_dZ.MaxTorque=Vector3.new(9e9,9e9,9e9)_dZ.P=1e5 _dZ.Parent=_dW end _dZ.CFrame=_dW.CFrame _dW.AssemblyLinearVelocity=Vector3.zero _dW.AssemblyAngularVelocity=Vector3.zero if _dX then _dX.PlatformStand=true end end getgenv().PH_WalkCtx=function()return getgenv().JamurFarmActive==true or getgenv().MelatiFarmActive==true or getgenv().PH_JamurReturning==true end local function _ea(_eb)if getgenv().PH_WalkCtx()then _eb=false end _dO()local _ec=_cW()if not _ec then return end local _ed=_ec:FindFirstChild("FlyFloat")if _eb then if not _ed then _ed=Instance.new("BodyVelocity")_ed.Name="FlyFloat"_ed.MaxForce=Vector3.new(9e8,9e8,9e8)_ed.Parent=_ec end _ed.Velocity=Vector3.zero _ec.AssemblyLinearVelocity=Vector3.zero else if _ed then _ed:Destroy()end end end local function _ee()return getgenv().AutoSemuaFarmActive or getgenv().KepitingFarmActive or getgenv().DupaFarmActive or getgenv().KemenyanFarmActive or getgenv().MelatiFarmActive or getgenv().JamurFarmActive or getgenv().PohonFarmActive or getgenv().BatuFarmActive or getgenv().AutoAyamActive or getgenv().AutoSapiActive or getgenv().AutoBabiActive or getgenv().AutoGosokBabiActive or getgenv().AutoKlaimNgepetActive or getgenv().AutoTuyulLiarActive end local _ef=false table.insert(_o,_c.Stepped:Connect(function()if not _p()or getgenv().PH_WalkCtx()or not(_ee()or _ef)then return end local _eg=_i.Character if not _eg then return end for _eh,_ei in ipairs(_eg:GetDescendants())do if _ei:IsA("BasePart")and _ei.CanCollide then _ei.CanCollide=false end end end))if getgenv().PH_WalkSpeed==nil then getgenv().PH_WalkSpeed=(6825-6803)end getgenv().PH_WalkToRaw=function(_ej,_ek,_el)_el=_el or 3.5 local _em,_en=_da()if not _em or not _en then return false end local _eo=RaycastParams.new()_eo.FilterType=Enum.RaycastFilterType.Exclude _eo.FilterDescendantsInstances={_i.Character}local _ep=workspace:Raycast(_ej+Vector3.new((383-383),(9930-9926),(3791-3791)),Vector3.new((1210-1210),-(-8419+8479),(-1362+1362)),_eo)local _eq=_ep and(_ep.Position+Vector3.new((7780-7780),0.5,(2549-2549)))or _ej local function _er()local _es=_da()if not _es then return math.huge end local _et=_es.Position-_eq return Vector3.new(_et.X,(9353-9353),_et.Z).Magnitude end local function _eu()return not _p()or(_ek and _ek())or false end local _ev=math.max(_en.WalkSpeed,(2581-2573))local _ew=tick()+math.clamp((_em.Position-_eq).Magnitude/_ev*(5150-5148)+(-2371+2379),(8321-8311),(493-373))local _ex=game:GetService("PathfindingService")local _ey=(9536-9536)while _er()>_el and tick()<_ew and _ey<(6196-6190)do if _eu()then return false end _ey+=(-1287+1288)local _ez=_da()if not _ez then return false end local _eA=_ex:CreatePath({AgentRadius=(7538-7536),AgentHeight=(-7820+7825),AgentCanJump=true})local _eB=pcall(function()_eA:ComputeAsync(_ez.Position,_eq)end)local _eC if _eB and _eA.Status==Enum.PathStatus.Success then _eC=_eA:GetWaypoints()else _eC={{Position=_eq,Action=Enum.PathWaypointAction.Walk}}end local _eD=false for _eE,_eF in ipairs(_eC)do if _eE==(-4601+4602)and#_eC>(-666+667)then continue end if _eu()then return false end if _er()<=_el then break end local _eG,_eH=_da()if not _eG then return false end if _eF.Action==Enum.PathWaypointAction.Jump then _eH.Jump=true end _eH:MoveTo(_eF.Position)local _eI,_eJ,_eK=tick(),_eG.Position,tick()while(tick()-_eI)<(-4445+4449)and tick()<_ew do task.wait(0.1)if _eu()then return false end local _eL=_da()if not _eL then return false end local _eM=_eL.Position-_eF.Position if Vector3.new(_eM.X,(3569-3569),_eM.Z).Magnitude<(698-695)then break end if _er()<=_el then break end if(_eL.Position-_eJ).Magnitude>0.6 then _eJ,_eK=_eL.Position,tick()elseif(tick()-_eK)>1.2 then _eH.Jump=true _eD=true break end end if _eD then break end end end local _eN=_er()<=(_el+1.5)local _eO,_eP=_da()if _eO and _eP then _eP:MoveTo(_eO.Position)end return _eN end getgenv().PH_WalkTo=function(_eQ,_eR,_eS)local _eT,_eU=_da()local _eV=_eU and _eU.WalkSpeed local _eW=getgenv().PH_WalkSpeed if _eU and _eV and type(_eW)=="number"and _eW>_eV then _eU.WalkSpeed=_eW end local _eX,_eY=pcall(getgenv().PH_WalkToRaw,_eQ,_eR,_eS)if _eU and _eV then pcall(function()if _eU.Parent then _eU.WalkSpeed=_eV end end)end if not _eX then warn("[PH_WalkTo] "..tostring(_eY))return false end return _eY end getgenv().PH_MoveNear=function(_eZ,_fa,_fb)if _fb then return getgenv().PH_WalkTo(_eZ,_fa,3.5)end local _fc=_da()if not _fc then return false end _fc.CFrame=CFrame.new(_eZ)task.wait(0.15)return true end local function _fd(_fe,_ff,_fg)if _fg then return getgenv().PH_WalkTo(_fe,_ff)end local _fh=_da()if not _fh then return false end local _fi=_fh.Position local _fj=(_fi-_fe).Magnitude if _fj<=_z then _fh.CFrame=CFrame.new(_fe)return true end local _fk=math.ceil(_fj/_z)for _fl=(-2164+2165),_fk do if _ff and _ff()then return false end _fh=_da()if not _fh then return false end _fh.CFrame=CFrame.new(_fi:Lerp(_fe,_fl/_fk))task.wait(_A)end _fh=_da()if _fh then _fh.CFrame=CFrame.new(_fe)end return true end local function _fm(_fn,_fo)if not(_fn and _fn.Parent and _fn.Enabled)then return end local _fp=_fo or _fn.HoldDuration or _w if _u=="fire"and fireproximityprompt then pcall(fireproximityprompt,_fn,_fp+0.1)task.wait(0.2)elseif _u=="vim"then pcall(function()_g:SendKeyEvent(true,Enum.KeyCode.E,false,game)end)task.wait(_fp+0.05)pcall(function()_g:SendKeyEvent(false,Enum.KeyCode.E,false,game)end)else pcall(function()_fn:InputHoldBegin()task.wait(_fp+0.05)_fn:InputHoldEnd()end)end end local function _fq()local _fr=workspace:FindFirstChild("Plot")or workspace:FindFirstChild("Plots")if not _fr then return nil,nil end local _fs=_i.UserId for _ft,_fu in ipairs(_fr:GetChildren())do local _fv=_fu:FindFirstChild("Lahan1")or _fu:FindFirstChild("Lahan")if(_fv and(_fv:GetAttribute("Owner")==_fs or _fv:GetAttribute("OwnerId")==_fs))or _fu:GetAttribute("Owner")==_fs or _fu:GetAttribute("OwnerUserId")==_fs or _fu.Name:find(tostring(_fs))then return _fu,_fv end end return nil,nil end local function _fw(_fx)local _fy=_fx:GetAttribute("PlantType")if _fy then return tostring(_fy)end return _bA(_fx.Name)end local function _fz(_fA)return _fA:IsA("Tool")and(_fA:GetAttribute("IsSeed")or _fA:GetAttribute("PlantType")or _fA.Name:lower():find("bibit"))end local function _fB()local _fC={}local _fD={}local function _fE(_fF)for _fG,_fH in ipairs(_fF:GetChildren())do if _fz(_fH)then local _fI=_fw(_fH)local _fJ=_fH:GetAttribute("Count")or tonumber(_fH.Name:match("%d+"))or(4198-4197)local _fK=_fC[_fI]if not _fK then local _fL=_fH:GetAttribute("PlantType")and tostring(_fH:GetAttribute("PlantType"))or _fI _fL=_fL:gsub("^[Bb]ibit%s*","")_fK={key=_fI,cleanName=_fL,count=(-2932+2932)}_fC[_fI]=_fK table.insert(_fD,_fK)end _fK.count+=_fJ end end end local _fM=_i:FindFirstChildOfClass("Backpack")if _fM then _fE(_fM)end if _i.Character then _fE(_i.Character)end table.sort(_fD,function(_fN,_fO)return _fN.cleanName:lower()<_fO.cleanName:lower()end)return _fD end local function _fP(_fQ)local _fR=_i.Character if _fR then for _fS,_fT in ipairs(_fR:GetChildren())do if _fz(_fT)and _fw(_fT)==_fQ then return _fT end end end local _fU=_i:FindFirstChildOfClass("Backpack")if _fU then for _fV,_fW in ipairs(_fU:GetChildren())do if _fz(_fW)and _fw(_fW)==_fQ then return _fW end end end return nil end local function _fX(_fY)local _fZ,_ga=_da()if not _ga then return nil end local _gb=_fP(_fY)if not _gb then return nil end if _gb.Parent~=_i.Character then _ga:UnequipTools()task.wait(0.1)_gb=_fP(_fY)if not _gb then return nil end _ga:EquipTool(_gb)task.wait(0.25)end local _gc=_i.Character and _i.Character:FindFirstChildOfClass("Tool")if _gc and _fz(_gc)and _fw(_gc)==_fY then return _gc end return nil end local _gd=(3523-3499)local _ge=nil pcall(function()_ge=require(_e:WaitForChild("PlantCatalog",(9766-9763)))end)local _gf={Apel=true,Jeruk=true,Kopi=true,Pisang=true}local function _gg(_gh)local _gi=_ge and _ge.Plants and _ge.Plants[_gh]if _gi and _gi.potType then return _gi.potType=="PotBesar"end return _gf[_gh]==true end local function _gj(_gk)local _gl,_gm=(-3899+3899),(5036-5036)for _gn,_go in ipairs(_gk.Tanaman:GetChildren())do if _go:GetAttribute("Besar")==true then _gm+=(1585-1584)else _gl+=(-369+370)end end return _gl,_gm end local function _gp(_gq)local _gr=_gq.Size.Y/(6823-6821)local _gs={-(7291-7282),-5.4,-1.8,1.8,5.4,(-9515+9524)}local _gt={-(8494-8485),-(-1733+1736),(-9216+9219),(-246+255)}local _gu={}for _gv,_gw in ipairs(_gt)do for _gx,_gy in ipairs(_gs)do table.insert(_gu,_gq.CFrame:PointToWorldSpace(Vector3.new(_gy,_gr,_gw)))end end return _gu end local function _gz(_gA)local _gB=_gA and _gA:FindFirstChild("LahanBesar")local _gC={}if not _gB then return _gC end for _gD,_gE in ipairs(_gB:GetChildren())do local _gF=tonumber(_gE.Name:match("%d+"))local _gG=_gE:FindFirstChildWhichIsA("MeshPart",true)if _gF and _gG then table.insert(_gC,{n=_gF,key="b".._gF,spot=Vector3.new(_gG.Position.X,_gG.Position.Y+_gG.Size.Y/(4849-4847),_gG.Position.Z),})end end table.sort(_gC,function(_gH,_gI)return _gH.n<_gI.n end)return _gC end local function _gJ(_gK,_gL)for _gM,_gN in ipairs(_gK.Tanaman:GetChildren())do if _gN:GetAttribute("Besar")==true then local _gO=_gN:GetPivot().Position-_gL if Vector3.new(_gO.X,(4362-4362),_gO.Z).Magnitude<(-6637+6642)then return true end end end return false end local _gP do local _gQ=setmetatable({},{__mode="k"})_gP=function(_gR)if not _T then return end if not(_gR and _gR.Parent)or _gR:GetAttribute("Ready")~=true then return end local _gS=tick()if _gQ[_gR]and(_gS-_gQ[_gR])<0.6 then return end _gQ[_gR]=_gS _T:FireServer(_gR)task.delay(0.3,function()if not _gR.Parent or _gR:GetAttribute("Ready")~=true then _N+=(7777-7776)end end)end end local function _gT(_gU)return _gU and _gU.item and _gU.item.Parent~=nil and _gU.prompt and _gU.prompt.Parent~=nil and _gU.prompt.Enabled end local function _gV(_gW,_gX)local _gY=workspace:FindFirstChild("SpawnBahan")local _gZ=_cW()if not _gY or not _gZ then return{}end local _ha={}local _hb=tick()for _hc,_hd in ipairs(_gY:GetChildren())do if _hd:IsA("BasePart")and string.find(string.lower(_hd.Name),_gW,(7611-7610),true)then local _he=_hd:FindFirstChild("BahanVisual")local _hf=_he and _he:FindFirstChild("AmbilPrompt",true)if _hf and _hf.Enabled and(not _gX[_hd]or _hb>_gX[_hd])then table.insert(_ha,{item=_hd,prompt=_hf,pos=_hd.Position,dist=(_gZ.Position-_hd.Position).Magnitude,})end end end table.sort(_ha,function(_hg,_hh)return _hg.dist<_hh.dist end)return _ha end local function _hi(_hj,_hk,_hl)local _hm=workspace:FindFirstChild("BahanCraft")local _hn=_cW()if not _hm or not _hn then return{}end local _ho={}local _hp=tick()for _hq,_hr in ipairs(_hm:GetChildren())do local _hs=_hr:GetAttribute("Jenis")if not _hs then _hs=_hr.Name:lower():find("batu")and "Batu"or "Pohon"end local _ht=_hr.Name:lower()local _hu=true if _hk=="besar"then _hu=_ht:find("besar")~=nil elseif _hk=="kecil"then _hu=_ht:find("kecil")~=nil elseif _hk=="sedang"then _hu=_ht:find("sedang")~=nil end if _hs==_hj and _hu and not _hr:GetAttribute("Tumbang")then local _hv=_hr:FindFirstChildWhichIsA("ProximityPrompt",true)local _hw=(_hv and _hv.Parent:IsA("BasePart")and _hv.Parent)or(_hv and _hv.Parent:IsA("Attachment")and _hv.Parent.Parent:IsA("BasePart")and _hv.Parent.Parent)or _hr:FindFirstChildWhichIsA("BasePart",true)if _hv and _hv.Enabled and _hw and(not _hl[_hr]or _hp>_hl[_hr])then local _hx=_hv.Parent:IsA("Attachment")and _hv.Parent.WorldPosition or _hw.Position local _hy if _hs=="Batu"then local _hz=_hw.Position local _hA=_hw.Size local _hB=math.max(_hA.X,_hA.Z)*0.5+3.0 local _hC=(_hn.Position-_hz)_hC=Vector3.new(_hC.X,(7700-7700),_hC.Z)_hC=(_hC.Magnitude<0.1)and Vector3.new((-3921+3921),(-2699+2699),(-9671+9672))or _hC.Unit local _hD=_hz+(_hC*_hB)local _hE=RaycastParams.new()_hE.FilterType=Enum.RaycastFilterType.Exclude _hE.FilterDescendantsInstances={workspace.BahanCraft,_i.Character}local _hF=workspace:Raycast(_hD+Vector3.new((-9404+9404),(-5950+5965),(5780-5780)),Vector3.new((1425-1425),-(-1379+1439),(1125-1125)),_hE)local _hG=_hF and(_hF.Position.Y+3.0)or(_hw.Position.Y-(_hw.Size.Y*0.5)+3.0)_hy=Vector3.new(_hD.X,_hG,_hD.Z)else _hy=_hx end table.insert(_ho,{item=_hr,prompt=_hv,part=_hw,pos=_hy,dist=(_hn.Position-_hx).Magnitude,})end end end table.sort(_ho,function(_hH,_hI)return _hH.dist<_hI.dist end)return _ho end local _hJ={bg=Color3.fromRGB((-3139+3145),(8379-8369),(561-541)),side=Color3.fromRGB((-2527+2537),(-2793+2807),(3383-3359)),panel=Color3.fromRGB((2754-2740),(709-689),(-5369+5403)),card=Color3.fromRGB((2709-2695),(-7938+7958),(4766-4732)),panel2=Color3.fromRGB((-8481+8505),(-4486+4522),(4847-4789)),track=Color3.fromRGB((6479-6471),(-5594+5606),(-5162+5184)),border=Color3.fromRGB((-7837+7877),(-4296+4358),(3030-2925)),accent=Color3.fromRGB((4991-4935),(6704-6572),(-3059+3314)),on=Color3.fromRGB((-9742+9798),(-5293+5425),(9441-9186)),off=Color3.fromRGB((6340-6316),(-1801+1837),(-8745+8803)),danger=Color3.fromRGB((-4071+4285),(6806-6734),(2456-2384)),text=Color3.fromRGB((5952-5707),(-2348+2596),(-4786+5041)),sub=Color3.fromRGB((1814-1618),(8176-7966),(6767-6532)),dim=Color3.fromRGB((9940-9800),(5965-5807),(-7154+7339)),info=Color3.fromRGB((3596-3476),(1913-1733),(-8364+8619)),good=Color3.fromRGB((155+90),(-7449+7697),(5530-5275)),select=Color3.fromRGB((5047-5001),(8655-8551),(-7123+7313)),dark=Color3.fromRGB((1898-1890),(-6962+6974),(4388-4366)),}local _hK=_i:WaitForChild("PlayerGui")if _hK:FindFirstChild("PasarHutanUI")then _hK.PasarHutanUI:Destroy()end local _hL=Instance.new("ScreenGui")_hL.Name="PasarHutanUI"_hL.ResetOnSpawn=false _hL.DisplayOrder=(990793+9206)_hL.ZIndexBehavior=Enum.ZIndexBehavior.Sibling _hL.IgnoreGuiInset=true _hL.Parent=_hK local function _hM(_hN,_hO)local _hP=Instance.new("UICorner")_hP.CornerRadius=UDim.new((1957-1957),_hO)_hP.Parent=_hN return _hP end local function _hQ(_hR,_hS,_hT,_hU)local _hV=Instance.new("UIStroke")_hV.Color=_hS _hV.Thickness=_hT or(-14+15)_hV.Transparency=_hU or(9385-9385)_hV.ApplyStrokeMode=Enum.ApplyStrokeMode.Border _hV.Parent=_hR return _hV end local function _hW()end local function _hX(_hY,_hZ,_ia,_ib)local _ic=Instance.new("ImageLabel")_ic.Name="Shadow"_ic.BackgroundTransparency=(437-436)_ic.Image="rbxassetid://6014261993"_ic.ImageColor3=Color3.new((4051-4051),(-780+780),(-9508+9508))_ic.ImageTransparency=_ia or 0.45 _ic.ScaleType=Enum.ScaleType.Slice _ic.SliceCenter=Rect.new((2769-2720),(-5197+5246),(-8781+9231),(-6613+7063))_ic.AnchorPoint=Vector2.new(0.5,0.5)_ic.Position=UDim2.new(0.5,(1963-1963),0.5,_ib or(-4944+4949))_ic.Size=UDim2.new((-6115+6116),_hZ,(9236-9235),_hZ)_ic.ZIndex=(3769-3769)_ic.Parent=_hY return _ic end local function _id(_ie,_if,_ig)local _ih=Instance.new("Frame")_ih.Size=_if _ih.Position=_ig or UDim2.new((-8837+8837),(9260-9260),(8254-8254),(-7910+7910))_ih.BackgroundColor3=_hJ.panel _ih.BackgroundTransparency=0.30 _ih.BorderSizePixel=(-2829+2829)_ih.Parent=_ie _hM(_ih,(19-15))_hQ(_ih,_hJ.border,(-549+550),0.5)return _ih end local function _ii(_ij,_ik,_il)local _im=Instance.new("Frame")_im.Position=_ik _im.Size=_il _im.BackgroundColor3=_hJ.border _im.BackgroundTransparency=0.35 _im.BorderSizePixel=(-1821+1821)_im.Parent=_ij return _im end local function _in(_io,_ip,_iq,_ir,_is,_it,_iu,_iv)local _iw=Instance.new("TextLabel")_iw.Size=_iq _iw.Position=_ir _iw.BackgroundTransparency=(909-908)_iw.Text=_ip _iw.TextColor3=_is or _hJ.text _iw.Font=_it or Enum.Font.Gotham _iw.TextSize=_iu or(8819-8807)_iw.TextXAlignment=_iv or Enum.TextXAlignment.Left _iw.TextTruncate=Enum.TextTruncate.AtEnd _iw.Parent=_io return _iw end local function _ix(_iy,_iz,_iA,_iB,_iC,_iD,_iE)local _iF=Instance.new("TextButton")_iF.Size=_iz _iF.Position=_iA or UDim2.new((-1471+1471),(-2937+2937),(-4469+4469),(2944-2944))_iF.BackgroundColor3=_iC _iF.BackgroundTransparency=0.1 _iF.Text=_iB _iF.TextColor3=_iE or _hJ.text _iF.Font=Enum.Font.GothamBold _iF.TextSize=_iD or(7850-7839)_iF.AutoButtonColor=false _iF.BorderSizePixel=(4686-4686)_iF.Parent=_iy _hM(_iF,(5551-5546))local _iG=TweenInfo.new(0.12,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)_iF.MouseEnter:Connect(function()_b:Create(_iF,_iG,{BackgroundTransparency=(8554-8554)}):Play()end)_iF.MouseLeave:Connect(function()_b:Create(_iF,_iG,{BackgroundTransparency=0.1}):Play()end)return _iF end local function _iH(_iI,_iJ,_iK)local _iL,_iM=false,false local _iN,_iO,_iP table.insert(_o,_iI.InputBegan:Connect(function(_iQ)if _iQ.UserInputType==Enum.UserInputType.MouseButton1 or _iQ.UserInputType==Enum.UserInputType.Touch then _iL,_iM=true,false _iN=_iQ.Position _iO=_iJ.Position _iP=_iQ end end))table.insert(_o,_d.InputChanged:Connect(function(_iR)if not _iL then return end if _iR.UserInputType==Enum.UserInputType.MouseMovement or _iR.UserInputType==Enum.UserInputType.Touch then local _iS=_iR.Position-_iN if not _iM and _iS.Magnitude>(5737-5731)then _iM=true end if _iM then _iJ.Position=UDim2.new(_iO.X.Scale,_iO.X.Offset+_iS.X,_iO.Y.Scale,_iO.Y.Offset+_iS.Y)end end end))table.insert(_o,_d.InputEnded:Connect(function(_iT)if not _iL then return end if _iT==_iP or _iT.UserInputType==_iP.UserInputType then _iL=false if not _iM and _iK then _iK()end end end))end local function _iU(_iV,_iW,_iX,_iY,_iZ,_ja,_jb)local _jc=Instance.new("Frame")_jc.Size=_iX _jc.Position=_iW _jc.BackgroundColor3=_hJ.track _jc.BackgroundTransparency=0.35 _jc.BorderSizePixel=(6377-6377)_jc.Parent=_iV _hM(_jc,(3397-3392))_hQ(_jc,_hJ.border,(-2939+2940),0.5)local _jd=#_iY local _je={}for _jf,_jg in ipairs(_iY)do local _jh=Instance.new("TextButton")_jh.Size=UDim2.new((-4487+4488)/_jd,-(-5168+5172),(6769-6768),-(9799-9795))_jh.Position=UDim2.new((_jf-(102-101))/_jd,(732-730),(-1047+1047),(-1991+1993))_jh.Text=_jg.text _jh.Font=Enum.Font.GothamBold _jh.TextSize=_jb or(-450+461)_jh.AutoButtonColor=false _jh.BorderSizePixel=(-7489+7489)_jh.BackgroundColor3=_hJ.accent _jh.Parent=_jc _hM(_jh,(670-666))_je[_jg.key]=_jh end local function _ji()local _jj=_iZ()for _jk,_jl in pairs(_je)do local _jm=(_jk==_jj)_jl.BackgroundTransparency=_jm and(3517-3517)or(-8125+8126)_jl.TextColor3=_jm and _hJ.dark or _hJ.sub end end for _jn,_jo in ipairs(_iY)do table.insert(_o,_je[_jo.key].MouseButton1Click:Connect(function()_ja(_jo.key)_ji()end))end _ji()return _ji end local function _jp(_jq,_jr,_js,_jt)local _ju=Instance.new("TextButton")_ju.Size=UDim2.new((5578-5577),(3999-3999),(-211+211),(1553-1525))_ju.Position=UDim2.new((558-558),(4702-4702),(146-146),_jr)_ju.BackgroundTransparency=(9443-9442)_ju.Text=""_ju.AutoButtonColor=false _ju.Parent=_jq _in(_ju,_js,UDim2.new((9779-9778),-(-4672+4732),(8632-8631),(-310+310)),UDim2.new((-9741+9741),(4031-4019),(6910-6910),(-7431+7431)),_hJ.text,Enum.Font.GothamBold,(-3146+3156))local _jv=Instance.new("Frame")_jv.Size=UDim2.new((1469-1469),(4355-4321),(-2292+2292),(5272-5254))_jv.Position=UDim2.new((4793-4792),-(-1351+1397),0.5,-(2429-2420))_jv.BackgroundColor3=_hJ.off _jv.BorderSizePixel=(7212-7212)_jv.Parent=_ju _hM(_jv,(-8204+8222))local _jw=Instance.new("Frame")_jw.Size=UDim2.new((2621-2621),(-4088+4102),(9496-9496),(8406-8392))_jw.Position=UDim2.new((5524-5524),(4598-4596),0.5,-(4405-4398))_jw.BackgroundColor3=_hJ.sub _jw.BorderSizePixel=(3424-3424)_jw.Parent=_jv _hM(_jw,(-5153+5167))if not _jt then _ii(_ju,UDim2.new((-5484+5484),(5108-5096),(-7994+7995),-(6729-6728)),UDim2.new((-4831+4832),-(-1227+1251),(4091-4091),(1682-1681))).BackgroundTransparency=0.75 end local _jx=TweenInfo.new(0.15,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)local function _jy(_jz)_b:Create(_jv,_jx,{BackgroundColor3=_jz and _hJ.on or _hJ.off}):Play()_b:Create(_jw,_jx,{Position=_jz and UDim2.new((-3264+3264),(6561-6543),0.5,-(-7445+7452))or UDim2.new((-7971+7971),(9137-9135),0.5,-(-378+385)),BackgroundColor3=_jz and _hJ.text or _hJ.sub,}):Play()end return _ju,_jy end local function _jA(_jB,_jC,_jD,_jE)local _jF=Instance.new("TextButton")_jF.Size=UDim2.new((-1237+1237),_jE or(9515-9395),(4115-4115),(9970-9944))_jF.Position=_jC _jF.BackgroundTransparency=(6197-6196)_jF.TextTransparency=(116-115)_jF.Text=_jD _jF.Font=Enum.Font.GothamBold _jF.TextSize=(2984-2973)_jF.AutoButtonColor=false _jF.BorderSizePixel=(-1155+1155)_jF.Parent=_jB local _jG=Instance.new("Frame")_jG.Size=UDim2.new((-9909+9909),(-7066+7100),(-5791+5791),(5996-5978))_jG.Position=UDim2.new((-6197+6198),-(9826-9792),0.5,-(157-148))_jG.BackgroundColor3=_hJ.off _jG.BorderSizePixel=(508-508)_jG.Parent=_jF _hM(_jG,(7351-7333))local _jH=Instance.new("Frame")_jH.Size=UDim2.new((-5732+5732),(-9619+9633),(2676-2676),(6817-6803))_jH.Position=UDim2.new((7659-7659),(-3796+3798),0.5,-(7049-7042))_jH.BackgroundColor3=_hJ.sub _jH.BorderSizePixel=(-6722+6722)_jH.Parent=_jG _hM(_jH,(-841+855))local _jI=TweenInfo.new(0.15,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)local function _jJ()local _jK=(_jF.Text:sub((-6520+6521),(2695-2691))=="STOP")_b:Create(_jG,_jI,{BackgroundColor3=_jK and _hJ.on or _hJ.off}):Play()_b:Create(_jH,_jI,{Position=_jK and UDim2.new((-2473+2473),(6121-6103),0.5,-(8627-8620))or UDim2.new((4865-4865),(-9882+9884),0.5,-(-3763+3770)),BackgroundColor3=_jK and _hJ.text or _hJ.sub,}):Play()end _jF:GetPropertyChangedSignal("Text"):Connect(_jJ)_jJ()return _jF end local _jL=Instance.new("Frame")_jL.Name="Main"_jL.Size=UDim2.new((2868-2868),(-2135+2695),(-6148+6148),(-5929+6289))_jL.AnchorPoint=Vector2.new(0.5,0.5)_jL.Position=UDim2.new(0.5,(-3116+3116),0.5,(-4690+4690))_jL.BackgroundTransparency=(8926-8925)_jL.BorderSizePixel=(5318-5318)_jL.Parent=_hL local _jM=Instance.new("UIScale")_jM.Parent=_jL local function _jN()local _jO=workspace.CurrentCamera if not _jO then return(1986-1985)end local _jP=_jO.ViewportSize return math.clamp(math.min((_jP.X-(-9921+9945))/(1873-1313),(_jP.Y-(-2844+2904))/(9331-8971)),0.6,(8829-8828))end local _jQ=_jN()_jM.Scale=_jQ local _jR=Instance.new("Frame")_jR.Name="Body"_jR.Size=UDim2.new((-9676+9677),(-9328+9328),(-7182+7183),(-8464+8464))_jR.BackgroundColor3=_hJ.bg _jR.BackgroundTransparency=0.1 _jR.BorderSizePixel=(-8784+8784)_jR.Parent=_jL _hM(_jR,(-28+35))local _jS,_jT do _jS=Instance.new("Frame")_jS.Name="Topbar"_jS.Size=UDim2.new((5864-5863),(9388-9388),(2473-2473),(10031-9997))_jS.BackgroundTransparency=(1067-1066)_jS.BorderSizePixel=(9497-9497)_jS.Active=true _jS.Parent=_jR _ii(_jS,UDim2.new((755-755),(-7518+7528),(-6598+6599),-(5030-5029)),UDim2.new((-4802+4803),-(4027-4007),(4468-4468),(-1895+1896))).BackgroundTransparency=0.62 _in(_jS,"Pasar Hutan",UDim2.new((1758-1758),(3018-2914),(7848-7847),(-2138+2138)),UDim2.new((-7728+7728),(-9436+9448),(4877-4877),(5901-5901)),_hJ.accent,Enum.Font.GothamBold,(-6918+6933))local _jU=Instance.new("Frame")_jU.Size=UDim2.new((-6213+6213),(-7674+7675),(5095-5095),(949-933))_jU.Position=UDim2.new((-7641+7641),(857-737),0.5,-(2346-2338))_jU.BackgroundColor3=_hJ.border _jU.BackgroundTransparency=0.2 _jU.BorderSizePixel=(-3120+3120)_jU.Parent=_jS _in(_jS,"by PemudaTampan  |  v6.5.16  |  RightShift",UDim2.new((-496+497),-(5568-5378),(-2999+3000),(6072-6072)),UDim2.new((-4363+4363),(-8374+8508),(912-912),(1102-1102)),_hJ.sub,Enum.Font.GothamBold,(3300-3290))_jT=_ix(_jS,UDim2.new((4394-4394),(397-375),(5306-5306),(7203-7181)),UDim2.new((5158-5157),-(-9747+9775),0.5,-(-4566+4577)),"",_hJ.panel,(7315-7304),_hJ.accent)_jT.BackgroundTransparency=0.3 _hQ(_jT,_hJ.border,(7123-7122),0.4)local _jV=Instance.new("Frame")_jV.AnchorPoint=Vector2.new(0.5,0.5)_jV.Position=UDim2.new(0.5,(9067-9067),0.5,(9791-9791))_jV.Size=UDim2.new((-694+694),(-2225+2235),(3433-3433),(-7843+7845))_jV.BackgroundColor3=_hJ.accent _jV.BorderSizePixel=(4150-4150)_jV.Active=false _jV.Parent=_jT _hM(_jV,(-1844+1845))end local _jW=Instance.new("Frame")_jW.Name="Sidebar"_jW.Size=UDim2.new((7727-7727),(-4765+4885),(3549-3548),-(3155-3121))_jW.Position=UDim2.new((-8594+8594),(-9441+9441),(2177-2177),(-9246+9280))_jW.BackgroundTransparency=(1586-1585)_jW.BorderSizePixel=(-9072+9072)_jW.Parent=_jR _ii(_jW,UDim2.new((1622-1621),(-89+89),(8416-8416),(614-614)),UDim2.new((-6234+6234),(4820-4819),(6675-6674),(-607+607))).BackgroundTransparency=0.42 local _jX do local _jY=Instance.new("Frame")_jY.Name="SearchBar"_jY.Size=UDim2.new((-4949+4949),(-3150+3258),(1980-1980),(-4607+4629))_jY.Position=UDim2.new((2732-2732),(-164+170),(-6369+6369),(-5036+5042))_jY.BackgroundColor3=_hJ.panel _jY.BackgroundTransparency=0.3 _jY.BorderSizePixel=(-9466+9466)_jY.Parent=_jW _hM(_jY,(-8161+8166))_hQ(_jY,_hJ.border,(-1909+1910),0.4)local _jZ=Instance.new("ImageLabel")_jZ.Size=UDim2.new((-9288+9288),(-9033+9047),(-4528+4528),(9238-9224))_jZ.Position=UDim2.new((9392-9392),(5570-5564),0.5,-(8724-8717))_jZ.BackgroundTransparency=(-7188+7189)_jZ.Image="rbxassetid://109869955247116"_jZ.ImageColor3=_hJ.dim _jZ.Parent=_jY local _ka=Instance.new("TextBox")_ka.Size=UDim2.new((449-448),-(-8232+8278),(-4343+4344),(6640-6640))_ka.Position=UDim2.new((-2062+2062),(-9269+9295),(3354-3354),(-1467+1467))_ka.BackgroundTransparency=(4887-4886)_ka.Font=Enum.Font.GothamBold _ka.TextSize=(8971-8961)_ka.TextColor3=_hJ.text _ka.PlaceholderText="Search"_ka.PlaceholderColor3=_hJ.dim _ka.TextXAlignment=Enum.TextXAlignment.Left _ka.ClearTextOnFocus=false _ka.Text=""_ka.Parent=_jY local _kb=Instance.new("TextButton")_kb.Size=UDim2.new((-4615+4615),(7211-7195),(-2967+2967),(-6251+6267))_kb.Position=UDim2.new((-5138+5139),-(-7888+7908),0.5,-(9983-9975))_kb.BackgroundTransparency=(-8215+8216)_kb.Text="x"_kb.Font=Enum.Font.GothamBold _kb.TextSize=(-2719+2731)_kb.TextColor3=_hJ.dim _kb.Visible=false _kb.Parent=_jY local _kc=Instance.new("ScrollingFrame")_kc.Name="TabScroll"_kc.Size=UDim2.new((6583-6582),-(-5197+5207),(-16+17),-(-5095+5185))_kc.Position=UDim2.new((-3182+3182),(3142-3142),(-7010+7010),(9220-9186))_kc.BackgroundTransparency=(-1801+1802)_kc.BorderSizePixel=(-3054+3054)_kc.ScrollBarThickness=(8748-8746)_kc.ScrollBarImageColor3=_hJ.border _kc.CanvasSize=UDim2.new((-9897+9897),(-6228+6228),(7130-7130),(3488-3488))_kc.AutomaticCanvasSize=Enum.AutomaticSize.Y _kc.Parent=_jW local _kd=Instance.new("UIListLayout")_kd.Padding=UDim.new((-2904+2904),(-4689+4693))_kd.SortOrder=Enum.SortOrder.LayoutOrder _kd.Parent=_kc local _ke={kebun="12662718374",farm="86450224791749",ternak="107005941750079",lapak="128874923961846",tuyul="108483430622128",teleport="78381660144034",petir="122775063389583",}local function _kf(_kg)local function _kh(_ki,_kj,_kk,_kl,_km,_kn)local _ko=Instance.new("Frame")_ko.Position=UDim2.new((-7490+7490),_ki,(-4469+4469),_kj)_ko.Size=UDim2.new((-400+400),_kk,(-9437+9437),_kl)_ko.BackgroundColor3=_hJ.sub _ko.BorderSizePixel=(-2342+2342)_ko:SetAttribute("Tint",true)_ko.Parent=_kn or _kg if _km then local _kp=Instance.new("UICorner")_kp.CornerRadius=_km _kp.Parent=_ko end return _ko end _kh((4059-4056),(1550-1550),1.5,(7789-7785),UDim.new((6539-6539),(8253-8252)))_kh(6.75,(7983-7982),1.5,(3479-3475),UDim.new((-3617+3617),(-4040+4041)))_kh(10.5,(516-516),1.5,(-1955+1959),UDim.new((5295-5295),(-8723+8724)))_kh((-2740+2740),6.5,(-2075+2090),(9603-9601),UDim.new((-404+404),(6727-6726)))local _kq=Instance.new("Frame")_kq.Position=UDim2.new((2616-2616),1.5,(6226-6226),(-9182+9191))_kq.Size=UDim2.new((-675+675),(1008-996),(9763-9763),5.5)_kq.BackgroundTransparency=(-5994+5995)_kq.BorderSizePixel=(5884-5884)_kq.ClipsDescendants=true _kq.Parent=_kg _kh((-6074+6074),-6.5,(181-169),(7364-7352),UDim.new(0.5,(-2309+2309)),_kq)end local function _kr(_ks,_kt,_ku,_kv)local _kw=Instance.new("TextButton")_kw.Name=_ks _kw.Size=UDim2.new((2559-2558),(-5034+5034),(-4963+4963),(2780-2752))_kw.LayoutOrder=_kt _kw.BackgroundColor3=_hJ.panel _kw.BackgroundTransparency=(-711+712)_kw.Text=""_kw.AutoButtonColor=false _kw.BorderSizePixel=(4652-4652)_kw.Parent=_kc _hM(_kw,(-2563+2568))local _kx if _kv then _kx=Instance.new("Frame")_kx.Name="Icon"_kx.Size=UDim2.new((8934-8934),(-2612+2627),(-269+269),(-4459+4474))_kx.Position=UDim2.new((-6038+6038),(7258-7250),0.5,-7.5)_kx.BackgroundTransparency=(-4075+4076)_kx.BorderSizePixel=(3377-3377)_kx.Parent=_kw _kv(_kx)else _kx=Instance.new("ImageLabel")_kx.Name="Icon"_kx.Size=UDim2.new((-4662+4662),(7191-7176),(-9299+9299),(8246-8231))_kx.Position=UDim2.new((-5871+5871),(5867-5859),0.5,-7.5)_kx.BackgroundTransparency=(-2016+2017)_kx.Image=_ku and("rbxassetid://".._ku)or""_kx.ImageColor3=_hJ.sub _kx.Parent=_kw end _in(_kw,_ks,UDim2.new((-66+67),-(-8844+8879),(-9790+9791),(-2966+2966)),UDim2.new((6675-6675),(960-932),(4459-4459),(3347-3347)),_hJ.sub,Enum.Font.GothamBold,(-6911+6922))local _ky=Instance.new("Frame")_ky.Name="Indicator"_ky.Size=UDim2.new((-3072+3072),(2453-2450),(1944-1944),(5708-5692))_ky.Position=UDim2.new((-2449+2449),(6841-6841),0.5,-(-4549+4557))_ky.BackgroundColor3=_hJ.accent _ky.BorderSizePixel=(2001-2001)_ky.Visible=false _ky.Parent=_kw _hM(_ky,(-9482+9484))return _kw end _jX={kebun=_kr("Kebun",(-9473+9474),_ke.kebun),farm=_kr("Auto Farm",(3757-3755),_ke.farm),ternak=_kr("Peternakan",(-2227+2230),_ke.ternak),lapak=_kr("Lapak",(3647-3643),_ke.lapak),masak=_kr("Masak",(-4933+4938),nil,_kf),tuyul=_kr("Tuyul & Pet",(-625+631),_ke.tuyul),teleport=_kr("Teleport",(-3349+3356),_ke.teleport),petir=_kr("Anti Petir",(6069-6061),_ke.petir),}table.insert(_o,_ka:GetPropertyChangedSignal("Text"):Connect(function()local _kz=_ka.Text:lower()_kb.Visible=(_kz~="")for _kA,_kB in pairs(_jX)do _kB.Visible=(_kz=="")or(_kB.Name:lower():find(_kz,(2010-2009),true)~=nil)end end))table.insert(_o,_kb.MouseButton1Click:Connect(function()_ka.Text=""end))end local _kC,_kD do local _kE=_id(_jW,UDim2.new((678-677),-(-1506+1518),(-166+166),(-1768+1812)),UDim2.new((7562-7562),(3975-3969),(6377-6376),-(1748-1698)))_in(_kE,"Anti AFK",UDim2.new((-1984+1985),-(-5720+5734),(6592-6592),(-5894+5908)),UDim2.new((879-879),(-4843+4851),(8589-8589),(-901+905)),_hJ.text,Enum.Font.GothamBold,(1124-1114))local _kF=Instance.new("Frame")_kF.Size=UDim2.new((1761-1761),(-3885+3919),(4523-4523),(-9489+9507))_kF.Position=UDim2.new((7674-7674),(-1273+1281),(-4738+4738),(1020-998))_kF.BackgroundColor3=_hJ.off _kF.BorderSizePixel=(780-780)_kF.Parent=_kE _hM(_kF,(5968-5950))local _kG=Instance.new("Frame")_kG.Size=UDim2.new((-6431+6431),(-7745+7759),(-5197+5197),(-5372+5386))_kG.Position=UDim2.new((-2801+2801),(7490-7488),0.5,-(1073-1066))_kG.BackgroundColor3=_hJ.sub _kG.BorderSizePixel=(-7067+7067)_kG.Parent=_kF _hM(_kG,(-1474+1488))local _kH=_in(_kE,"OFF",UDim2.new((-8399+8399),(4386-4356),(9948-9948),(-3747+3765)),UDim2.new((-6008+6008),(-1823+1871),(8887-8887),(8774-8752)),_hJ.sub,Enum.Font.GothamBold,(12-2))_kC=Instance.new("TextButton")_kC.Size=UDim2.new((-8047+8048),(-6578+6578),(3435-3434),(-2973+2973))_kC.BackgroundTransparency=(-5637+5638)_kC.Text=""_kC.AutoButtonColor=false _kC.ZIndex=(3121-3116)_kC.Parent=_kE _kD=function(_kI)local _kJ=TweenInfo.new(0.15,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)_b:Create(_kF,_kJ,{BackgroundColor3=_kI and _hJ.on or _hJ.off}):Play()_b:Create(_kG,_kJ,{Position=_kI and UDim2.new((5876-5876),(-4781+4799),0.5,-(-3990+3997))or UDim2.new((-7615+7615),(870-868),0.5,-(405-398)),BackgroundColor3=_kI and _hJ.text or _hJ.sub,}):Play()_kH.Text=_kI and "ON"or "OFF"_kH.TextColor3=_kI and _hJ.good or _hJ.sub end end local _kK do local _kL=Instance.new("Frame")_kL.Name="PageHeader"_kL.Size=UDim2.new((3045-3044),-(7988-7858),(5992-5992),(-9105+9133))_kL.Position=UDim2.new((2161-2161),(3207-3084),(-7272+7272),(-4807+4844))_kL.BackgroundTransparency=(-3532+3533)_kL.Parent=_jR local _kM=Instance.new("Frame")_kM.Size=UDim2.new((2972-2972),(4047-4044),(-4013+4013),(3499-3483))_kM.Position=UDim2.new((-315+315),(-967+967),0.5,-(3814-3806))_kM.BackgroundColor3=_hJ.accent _kM.BorderSizePixel=(-5338+5338)_kM.Parent=_kL _hM(_kM,(1843-1841))local _kN=Instance.new("UIGradient")_kN.Color=ColorSequence.new(_hJ.info,_hJ.accent)_kN.Rotation=(4639-4549)_kN.Parent=_kM local _kO=_in(_kL,"Auto Farm",UDim2.new((6262-6261),-(-7344+7360),(-5391+5392),(5385-5385)),UDim2.new((4030-4030),(-4549+4559),(-8151+8151),(7639-7639)),_hJ.text,Enum.Font.GothamBold,(-3658+3670))_kO.Name="Title"_ii(_kL,UDim2.new((5572-5572),(-6776+6781),(-7287+7288),-(-3918+3919)),UDim2.new((1359-1358),-(8400-8390),(-3078+3078),(-8007+8008))).BackgroundTransparency=0.7 local function _kP(_kQ,_kR)local _kS=Instance.new("Frame")_kS.Name=_kQ _kS.Size=UDim2.new((-9259+9260),-(9144-9018),(-645+646),-(1065-992))_kS.Position=UDim2.new((7688-7688),(-2290+2413),(9069-9069),(-6669+6738))_kS.BackgroundTransparency=(1513-1512)_kS.Visible=_kR _kS.Parent=_jR return _kS end _kK={kebun=_kP("KebunFrame",false),farm=_kP("FarmFrame",true),ternak=_kP("TernakFrame",false),lapak=_kP("LapakFrame",false),masak=_kP("MasakFrame",false),tuyul=_kP("TuyulFrame",false),teleport=_kP("TeleportFrame",false),petir=_kP("PetirFrame",false),}end local _kT,_kU local _kV,_kW local _kX,_kY local _kZ,_la local _lb,_lc,_ld do local _le=_kK.kebun _kT=_in(_le,"Bibit Dipilih: (Memuat...)",UDim2.new((-2127+2128),(8419-8419),(5475-5475),(-9497+9513)),UDim2.new((-2261+2261),(3161-3161),(5139-5139),(-8949+8949)),_hJ.accent,Enum.Font.GothamBold,(-5338+5349))_kU=Instance.new("ScrollingFrame")_kU.Size=UDim2.new((4300-4299),(2115-2115),(9620-9620),(-5591+5657))_kU.Position=UDim2.new((-5389+5389),(6864-6864),(-9165+9165),(879-859))_kU.BackgroundColor3=_hJ.panel _kU.BackgroundTransparency=0.35 _kU.BorderSizePixel=(229-229)_kU.ScrollBarThickness=(-3078+3081)_kU.ScrollBarImageColor3=_hJ.accent _kU.CanvasSize=UDim2.new((6277-6277),(9387-9387),(-9849+9849),(-1571+1571))_kU.Parent=_le _hM(_kU,(-2428+2432))_hQ(_kU,_hJ.border,(3009-3008),0.5)local _lf=Instance.new("UIListLayout")_lf.Padding=UDim.new((-6822+6822),(-6857+6861))_lf.HorizontalAlignment=Enum.HorizontalAlignment.Center _lf.Parent=_kU local _lg=Instance.new("UIPadding")_lg.PaddingTop=UDim.new((-3200+3200),(9212-9208))_lg.Parent=_kU local _lh=_id(_le,UDim2.new((-6909+6910),(-610+610),(3632-3632),(2162-2078)),UDim2.new((7144-7144),(5901-5901),(-4552+4552),(-9620+9712)))_kV,_kW=_jp(_lh,(-4160+4160),"Auto Tanam",false)_kX,_kY=_jp(_lh,(9672-9644),"Auto Siram",false)_kZ,_la=_jp(_lh,(5885-5829),"Auto Panen",true)_lb=_in(_le,"Durasi Siram: 2.0s",UDim2.new((-3151+3152),(9782-9782),(-7465+7465),(-5386+5402)),UDim2.new((-4648+4648),(-6032+6032),(-4527+4527),(1613-1431)),_hJ.info,Enum.Font.GothamMedium,(6760-6749))local _li={}for _lj,_lk in ipairs(_E)do table.insert(_li,{key=_lk,text=string.format("%.1fs",_lk)})end local _ll _ll=_iU(_le,UDim2.new((7199-7199),(-5362+5362),(-4026+4026),(1714-1514)),UDim2.new((7401-7400),(-5601+5601),(-5478+5478),(-3352+3374)),_li,function()return getgenv().WaterDuration end,function(_lm)getgenv().WaterDuration=_lm _lb.Text=string.format("Durasi Siram: %.1fs",_lm)end,(-8647+8658))_lc=_ix(_le,UDim2.new((-7244+7245),(598-598),(2288-2288),(-3719+3747)),UDim2.new((-9767+9767),(-3252+3252),(-2735+2735),(8846-8616)),"PANEN SEMUA SEKARANG",_hJ.accent,(-3790+3801),_hJ.dark)_ld=_in(_le,"Tanaman Aktif: 0 | Siap Panen: 0\
-Dipanen: 0 Hasil",UDim2.new((3316-3315),(-221+221),(-4887+4887),(8174-8144)),UDim2.new((9168-9168),(-7815+7815),(3383-3383),(9515-9251)),_hJ.sub,Enum.Font.Gotham,(5347-5336))_ld.TextTruncate=Enum.TextTruncate.None _ld.TextYAlignment=Enum.TextYAlignment.Top end local _ln,_lo,_lp local _lq,_lr,_ls local _lt,_lu,_lv local _lw,_lx,_ly local _lz,_lA,_lB local _lC,_lD,_lE local _lF,_lG,_lH={},{},{}do local _lI=Instance.new("ScrollingFrame")_lI.Size=UDim2.new((-6738+6739),(6048-6048),(-920+921),(-3830+3830))_lI.Position=UDim2.new((-1610+1610),(-7444+7444),(1890-1890),(-5852+5852))_lI.BackgroundTransparency=(5343-5342)_lI.BorderSizePixel=(4151-4151)_lI.ScrollBarThickness=(738-735)_lI.ScrollBarImageColor3=_hJ.accent _lI.CanvasSize=UDim2.new((-9236+9236),(-4928+4928),(-8019+8019),(9410-8646))_lI.Parent=_kK.farm local _lJ={{key="semua",text="SEMUA"},{key="besar",text="BESAR"},{key="kecil",text="KECIL"},}local function _lK(_lL,_lM,_lN,_lO,_lP,_lQ,_lR,_lS)local _lT=(_lR and(3300-3222)or(-3028+3092))+(_lS or(406-406))local _lU=_id(_lL,UDim2.new((-1539+1540),-(-6405+6413),(454-454),_lT),UDim2.new((8401-8401),(-3609+3609),(9103-9103),_lM))if _lR then _hQ(_lU,_hJ.accent,1.2,0.25)end local _lV=_hJ.accent _in(_lU,_lN,UDim2.new((7624-7623),-(9846-9696),(1655-1655),(8874-8858)),UDim2.new((-370+370),(-8927+8939),(2839-2839),(-7527+7535)),_lV,Enum.Font.GothamBold,(-2101+2113))local _lW=_in(_lU,"Status: Siap (OFF)",UDim2.new((3785-3784),-(-8640+8790),(-698+698),(2559-2545)),UDim2.new((-3176+3176),(1551-1539),(-3019+3019),(-9322+9348)),_hJ.sub,Enum.Font.Gotham,(3259-3248))if _lR then _in(_lU,"Kep > Dupa > Kem > Melati > Jamur",UDim2.new((-6200+6201),-(-468+618),(939-939),(-5896+5910)),UDim2.new((1938-1938),(2952-2940),(-4485+4485),(-5570+5612)),_hJ.info,Enum.Font.GothamMedium,(-7129+7139))end local _lX=_in(_lU,_lR and "Total Terkumpul: 0 Item"or("Terkumpul: 0 ".._lO),UDim2.new((-317+318),-(-6940+7090),(-4828+4828),(7366-7352)),UDim2.new((-4984+4984),(-7490+7502),(4709-4709),_lR and(-7963+8021)or(-5672+5714)),_hJ.good,Enum.Font.GothamMedium,(-4005+4016))local _lY=(_lP~=nil)local _lZ=_lR and "START SEMUA"or "START FARM"local _ma=_lR and _hJ.accent or _hJ.on local _mb=_lR and _hJ.dark or _hJ.text local _mc=_jA(_lU,UDim2.new((1510-1509),-(-782+910),(879-879),_lY and(-5034+5040)or(_lR and(9009-8983)or(3165-3146))),_lZ)if _lY then _iU(_lU,UDim2.new((-154+155),-(3593-3465),(-6665+6665),(2758-2722)),UDim2.new((-3630+3630),(2762-2642),(3796-3796),(-8031+8055)),_lJ,_lP,_lQ,(5398-5389))end return _lW,_lX,_mc,_lU end _ln,_lo,_lp=_lK(_lI,(-1415+1415),"AUTO FARM SEMUA","Item Total",nil,nil,true)_lq,_lr,_ls=_lK(_lI,(-6457+6541),"Auto Farm Kepiting","Kepiting")_lt,_lu,_lv=_lK(_lI,(-5987+6141),"Auto Farm Dupa","Dupa")_lw,_lx,_ly=_lK(_lI,(7624-7400),"Auto Farm Kemenyan","Kemenyan")_lz,_lA,_lB=_lK(_lI,(-1575+1869),"Auto Farm Pohon","Kayu",function()return _C end,function(_md)_C=_md end)local _me _lC,_lD,_lE,_me=_lK(_lI,(4441-4077),"Auto Farm Batu","Batu",function()return _D end,function(_mf)_D=_mf end,false,(7585-7565))_in(_me,"MODE BIJI BESI",UDim2.new((747-747),(-326+426),(5299-5299),(2716-2690)),UDim2.new((-9421+9421),(6462-6450),(8045-8045),(-1808+1866)),_hJ.sub,Enum.Font.GothamBold,(-4224+4234))local _mg=_jA(_me,UDim2.new((-7512+7512),(9232-9116),(4113-4113),(-8718+8776)),"MODE BIJI BESI",(8521-8481))getgenv().BatuIronLabel=_in(_me,"Biji Besi: +0",UDim2.new((8291-8290),-(-4842+5022),(-8464+8464),(2153-2135)),UDim2.new((-3295+3295),(10039-9871),(-6113+6113),(-4254+4318)),_hJ.info,Enum.Font.GothamMedium,(-6499+6509))table.insert(_o,_mg.MouseButton1Click:Connect(function()getgenv().BatuBesiMode=not getgenv().BatuBesiMode _mg.Text=getgenv().BatuBesiMode and "STOP BESI"or "MODE BIJI BESI"end))_lF.status,_lF.counter,_lF.toggle=_lK(_lI,(-5366+5820),"Auto Farm Melati","Melati")_lG.status,_lG.counter,_lG.toggle=_lK(_lI,(2566-2042),"Auto Farm Jamur Kuburan","Jamur Kuburan")local _mh _lH.status,_lH.counter,_lH.toggle,_mh=_lK(_lI,(-7022+7616),"Auto Farm Gagak (jalan kaki)","Gagak",nil,nil,false,(-970+990))_in(_mh,"PAKAI OWL STAFF",UDim2.new((-3642+3642),(-3284+3384),(-9470+9470),(3247-3221)),UDim2.new((6157-6157),(-1634+1646),(-4382+4382),(9956-9898)),_hJ.sub,Enum.Font.GothamBold,(455-445))_lH.owlBtn=_jA(_mh,UDim2.new((8170-8170),(9340-9224),(3719-3719),(-9363+9421)),"PAKAI OWL",(6750-6710))_in(_mh,"Terbang +-30 stud/dtk (staff harus ada di tas)",UDim2.new((-4345+4346),-(2130-1950),(-4570+4570),(-2889+2907)),UDim2.new((1219-1219),(-433+601),(-9843+9843),(-6456+6518)),_hJ.info,Enum.Font.GothamMedium,(-3618+3628))table.insert(_o,_lH.owlBtn.MouseButton1Click:Connect(function()getgenv().GagakOwlMode=not getgenv().GagakOwlMode _lH.owlBtn.Text=getgenv().GagakOwlMode and "STOP OWL"or "PAKAI OWL"end))local _mi,_mj,_mk=_lK(_lI,(6489-5805),"Auto Perbaiki Kapak & Beliung (Dur < 100)","Perbaikan")_mj.Text="Diperbaiki: 0 kali"_mk.Text="START REPAIR"getgenv().PH_RepairUI={status=_mi,counter=_mj}table.insert(_o,_mk.MouseButton1Click:Connect(function()getgenv().AutoRepairActive=not getgenv().AutoRepairActive if getgenv().AutoRepairActive then _mk.BackgroundColor3=_hJ.danger _mk.TextColor3=Color3.new((7580-7579),(-348+349),(6572-6571))_mk.Text="STOP REPAIR"_mi.Text="Status: Aktif (jalan saat farm kayu/batu)"else _mk.BackgroundColor3=_hJ.on _mk.TextColor3=_hJ.text _mk.Text="START REPAIR"_mi.Text="Status: Berhenti"end end))end local _ml={Kepiting=_lr,Gagak=_lH.counter,Dupa=_lu,Kemenyan=_lx,Melati=_lF.counter,Jamur=_lG.counter,Pohon=_lA,Batu=_lD,}local _mm={Kepiting="Kepiting",Gagak="Gagak",Dupa="Dupa",Kemenyan="Kemenyan",Melati="Melati",Jamur="Jamur Kuburan",Pohon="Kayu",Batu="Batu",}local _mn={ayam={},sapi={},babi={},gosok={},klaim={}}do local _mo=Instance.new("ScrollingFrame")_mo.Size=UDim2.new((4562-4561),(1270-1270),(-257+258),(-7367+7367))_mo.Position=UDim2.new((-4368+4368),(-4138+4138),(277-277),(3033-3033))_mo.BackgroundTransparency=(-8125+8126)_mo.BorderSizePixel=(-2828+2828)_mo.ScrollBarThickness=(3540-3537)_mo.ScrollBarImageColor3=_hJ.accent _mo.CanvasSize=UDim2.new((-5844+5844),(-1069+1069),(-7971+7971),(8405-8013))_mo.Parent=_kK.ternak local function _mp(_mq,_mr,_ms,_mt,_mu,_mv)local _mw=_id(_mo,UDim2.new((4025-4024),-(3108-3100),(2313-2313),_ms),UDim2.new((-3825+3825),(4633-4633),(8533-8533),_mr))_hQ(_mw,_hJ.accent,1.2,0.25)_in(_mw,_mt,UDim2.new((-7797+7798),-(9330-9190),(-5540+5540),(-7735+7751)),UDim2.new((2397-2397),(7441-7429),(3619-3619),(-9428+9436)),_hJ.accent,Enum.Font.GothamBold,(-8121+8133))_mq.status=_in(_mw,"Status: Siap (OFF)",UDim2.new((7248-7247),-(-8438+8578),(-9991+9991),(-91+105)),UDim2.new((1761-1761),(-1127+1139),(-515+515),(6853-6827)),_hJ.sub,Enum.Font.Gotham,(113-102))_mq.info=_in(_mw,"Kandang: Memindai...",UDim2.new((2838-2837),-(829-689),(6043-6043),(2893-2879)),UDim2.new((6002-6002),(644-632),(-5212+5212),(-892+936)),_hJ.info,Enum.Font.GothamMedium,(-4079+4090))_mq.counter=_in(_mw,_mu,UDim2.new((7954-7953),-(218-78),(3591-3591),(-2857+2871)),UDim2.new((-1581+1581),(9853-9841),(-3978+3978),(-4412+4474)),_hJ.good,Enum.Font.GothamMedium,(-4013+4024))_mq.toggle=_jA(_mw,UDim2.new((-5222+5223),-(-5210+5338),(-233+233),(1374-1346)),_mv)return _mw end _mp(_mn.ayam,(-6944+6944),(3304-3220),"KANDANG AYAM  |  Isi Pakan + Telur","Hasil Ayam: 0 Kali","START AYAM")_mp(_mn.sapi,(2711-2619),(7919-7835),"KANDANG SAPI  |  Isi Pakan + Susu","Hasil Sapi: 0 Kali","START SAPI")local _mx=_mp(_mn.babi,(-8402+8586),(5912-5714),"KANDANG BABI  |  Palung 10/10 + Gosok + Klaim","Hasil Babi: 0 Kali","START BABI")local function _my(_mz,_mA)_in(_mx,_mz,UDim2.new((2277-2277),(-1740+1822),(4562-4562),(1762-1736)),UDim2.new((4970-4969),-(-3140+3268),(-2068+2068),_mA),_hJ.sub,Enum.Font.GothamBold,(3002-2993),Enum.TextXAlignment.Right)end _my("PAKAN BABI",(9932-9904))_mn.gosok.toggle=_jA(_mx,UDim2.new((7087-7086),-(-5158+5286),(-1607+1607),(3803-3745)),"GOSOK INDUK")_mn.gosok.status=_mn.babi.status _my("GOSOK INDUK",(-378+436))_mn.klaim.toggle=_jA(_mx,UDim2.new((-3925+3926),-(-5754+5882),(-7458+7458),(3409-3321)),"KLAIM NGEPET")_mn.klaim.status=_mn.babi.status _mn.klaim.counter=_in(_mx,"Klaim Ngepet: 0 Ekor",UDim2.new((3640-3639),-(2238-2098),(-2363+2363),(5970-5956)),UDim2.new((-7269+7269),(-8010+8022),(8151-8151),(-5950+6030)),_hJ.good,Enum.Font.GothamMedium,(4658-4647))_my("KLAIM NGEPET",(-9067+9155))_in(_mx,"Pakan di tas (tap untuk pilih):",UDim2.new((-7577+7578),-(-6515+6665),(2984-2984),(-1285+1299)),UDim2.new((1312-1312),(6656-6644),(4309-4309),(-3509+3611)),_hJ.sub,Enum.Font.GothamMedium,(5700-5689))local _mB={{key="auto",short="AUTO (TERBAIK)"},{key="SateKepiting",short="KEPITING"},{key="TumisKamboja",short="KAMBOJA"},{key="PisangRajaRebus",short="PISANG"},{key="SateGagak",short="GAGAK"},{key="JamurRebus",short="JAMUR"},}local _mC=Instance.new("Frame")_mC.Size=UDim2.new((6119-6118),-(3161-3137),(1438-1438),(-1271+1343))_mC.Position=UDim2.new((-6897+6897),(8995-8983),(9770-9770),(-2957+3077))_mC.BackgroundTransparency=(8896-8895)_mC.Parent=_mx _mn.babi.btns,_mn.babi.short,_mn.babi.stock={},{},{}local function _mD()local _mE=getgenv().BabiPakanPilihan or "auto"for _mF,_mG in pairs(_mn.babi.btns)do local _mH=(_mF==_mE)_mG.BackgroundColor3=_mH and _hJ.accent or _hJ.panel2 _mG.TextColor3=_mH and _hJ.dark or _hJ.text end end _mn.babi.refreshSel=_mD for _mI,_mJ in ipairs(_mB)do local _mK,_mL=(_mI-(-4404+4405))%(967-964),math.floor((_mI-(4247-4246))/(-6213+6216))local _mM=Instance.new("TextButton")_mM.Size=UDim2.new((2394-2393)/(-5578+5581),-(-6627+6631),(3976-3976),(-5441+5475))_mM.Position=UDim2.new(_mK/(3516-3513),(-5834+5836),(-4304+4304),_mL*(-996+1034))_mM.Text=_mJ.short _mM.Font=Enum.Font.GothamBold _mM.TextSize=(-9703+9713)_mM.TextWrapped=true _mM.AutoButtonColor=true _mM.BorderSizePixel=(-8291+8291)_mM.BackgroundColor3=_hJ.panel2 _mM.TextColor3=_hJ.text _mM.Parent=_mC _hM(_mM,(-5378+5384))_mn.babi.btns[_mJ.key]=_mM _mn.babi.short[_mJ.key]=_mJ.short table.insert(_o,_mM.MouseButton1Click:Connect(function()if _mJ.key~="auto"and(_mn.babi.stock[_mJ.key]or(-8847+8847))<=(2830-2830)then _mn.babi.status.Text="Pakan ".._mJ.short.." tidak tersedia di tas"return end getgenv().BabiPakanPilihan=_mJ.key _mD()_mn.babi.status.Text="Pakan dipilih: ".._mJ.short end))end _mD()end local _mN,_mO,_mP,_mQ local _mR,_mS,_mT local _mU,_mV,_mW do local _mX=Instance.new("ScrollingFrame")_mX.Size=UDim2.new((-948+949),(-6336+6336),(6155-6154),(-2826+2826))_mX.Position=UDim2.new((-7348+7348),(-3276+3276),(7501-7501),(9289-9289))_mX.BackgroundTransparency=(-7368+7369)_mX.BorderSizePixel=(-41+41)_mX.ScrollBarThickness=(-6936+6939)_mX.ScrollBarImageColor3=_hJ.accent _mX.CanvasSize=UDim2.new((9062-9062),(-5528+5528),(-586+586),(-2523+2841))_mX.Parent=_kK.lapak local _mY=_id(_mX,UDim2.new((-3969+3970),-(-7237+7245),(-8418+8418),(-3343+3439)),UDim2.new((-3348+3348),(3625-3625),(7618-7618),(5274-5274)))_in(_mY,"AUTO KELOLA LAPAK / KIOS",UDim2.new((-5603+5604),-(-6896+7036),(5428-5428),(-8978+8994)),UDim2.new((-7023+7023),(-1004+1016),(9675-9675),(1256-1248)),_hJ.accent,Enum.Font.GothamBold,(-3116+3128))_mN=_in(_mY,"Status: Siap (OFF)",UDim2.new((-6385+6386),-(6729-6589),(5678-5678),(246-232)),UDim2.new((12-12),(-3492+3504),(2822-2822),(-2996+3022)),_hJ.sub,Enum.Font.Gotham,(-547+558))_mO=_in(_mY,"Etalase: 0/12 Slot | Terjual: 0 Barang",UDim2.new((-2719+2720),-(-5644+5784),(4673-4673),(-8690+8704)),UDim2.new((-9443+9443),(7814-7802),(-5375+5375),(-8413+8457)),_hJ.info,Enum.Font.GothamMedium,(-2740+2751))_mP=_in(_mY,"Pendapatan Sesi: 0 Koin",UDim2.new((-5092+5093),-(6492-6352),(-4841+4841),(-1558+1572)),UDim2.new((5995-5995),(7154-7142),(-3649+3649),(2909-2847)),_hJ.good,Enum.Font.GothamMedium,(-3698+3709))_mQ=_jA(_mY,UDim2.new((-399+400),-(-396+524),(-5178+5178),(6794-6764)),"START LAPAK")do local _mZ=_id(_mX,UDim2.new((-3696+3697),-(-2147+2155),(739-739),(-6300+6506)),UDim2.new((-3519+3519),(7886-7886),(6900-6900),(-7474+7578)))_in(_mZ,"ITEM AUTO RESTOK",UDim2.new((6329-6328),-(922-772),(-5470+5470),(868-852)),UDim2.new((-263+263),(-1983+1995),(-5422+5422),(6671-6663)),_hJ.accent,Enum.Font.GothamBold,(1601-1589))_bD.ui.refreshSeg=_iU(_mZ,UDim2.new((-3183+3184),-(4002-3860),(3411-3411),(-7982+7988)),UDim2.new((4855-4855),(-9155+9285),(-526+526),(1818-1796)),{{key="Siang",text="SIANG"},{key="Malam",text="MALAM"},},function()return _bD.viewPhase end,function(_na)_bD.viewPhase=_na _bD.refreshList()end,(5894-5884))_bD.ui.info=_in(_mZ,"",UDim2.new((-220+221),-(5990-5966),(-7636+7636),(-6792+6806)),UDim2.new((8979-8979),(-3036+3048),(9715-9715),(-4017+4047)),_hJ.info,Enum.Font.GothamMedium,(7531-7521))local _nb=Instance.new("ScrollingFrame")_nb.Size=UDim2.new((3232-3231),-(-987+1007),(-7918+7918),(-2480+2600))_nb.Position=UDim2.new((-3631+3631),(4479-4469),(-7293+7293),(5372-5324))_nb.BackgroundColor3=_hJ.track _nb.BackgroundTransparency=0.35 _nb.BorderSizePixel=(-8435+8435)_nb.ScrollBarThickness=(937-934)_nb.ScrollBarImageColor3=_hJ.accent _nb.CanvasSize=UDim2.new((4973-4973),(573-573),(-4584+4584),(-7000+7000))_nb.Parent=_mZ _hM(_nb,(7822-7818))_hQ(_nb,_hJ.border,(-9330+9331),0.5)_bD.ui.list=_nb local _nc=Instance.new("UIListLayout")_nc.Padding=UDim.new((9681-9681),(8650-8647))_nc.HorizontalAlignment=Enum.HorizontalAlignment.Center _nc.Parent=_nb local _nd=Instance.new("UIPadding")_nd.PaddingTop=UDim.new((-6254+6254),(-8656+8659))_nd.Parent=_nb local _ne=Instance.new("Frame")_ne.Size=UDim2.new((-5276+5277),-(9388-9368),(-4276+4276),(50-24))_ne.Position=UDim2.new((2325-2325),(-7085+7095),(-5360+5360),(3720-3546))_ne.BackgroundTransparency=(7959-7958)_ne.Parent=_mZ local function _nf(_ng,_nh,_ni,_nj,_nk)local _nl=_ix(_ne,UDim2.new((7735-7734)/(-6158+6161),-(-3844+3848),(-3110+3111),(-3704+3704)),UDim2.new((_ng-(-7185+7186))/(-8085+8088),(6242-6240),(-6195+6195),(4305-4305)),_nh,_ni,(6715-6705),_nj)table.insert(_o,_nl.MouseButton1Click:Connect(_nk))return _nl end _nf((1386-1385),"PILIH SEMUA",_hJ.on,_hJ.text,function()local _nm=_bD.viewPhase for _nn,_no in ipairs(_bD.baris(_nm))do if not _no.sel and _no.count>(3513-3513)then table.insert(_bD.pilih[_nm],_no.id)end end _bD.refreshList()end)_nf((2602-2600),"KOSONGKAN",_hJ.danger,Color3.new((1526-1525),(3573-3572),(-2792+2793)),function()table.clear(_bD.pilih[_bD.viewPhase])_bD.refreshList()end)_nf((5194-5191),"REFRESH",_hJ.panel2,_hJ.text,function()_bD.refreshList()end)_bD.refreshList=function()local _np=_bD.ui.list if not(_np and _np.Parent)then return end _q(_bD.btnConns)local _nq=_np.CanvasPosition.Y for _nr,_ns in ipairs(_np:GetChildren())do if _ns:IsA("TextButton")then _ns:Destroy()end end local _nt=_bD.viewPhase local _nu=_bD.baris(_nt)local _nv=#(_bD.pilih[_nt]or{})_bD.ui.info.Text=string.format("%s: %d item dipilih | nomor = urutan restok",_nt:upper(),_nv)if#_nu==(-3312+3312)then _bD.ui.info.Text="Tidak ada item jual di tas untuk fase ".._nt:lower()end for _nw,_nx in ipairs(_nu)do local _ny=(_nx.sel~=nil)local _nz=Instance.new("TextButton")_nz.Size=UDim2.new((686-685),-(-3175+3183),(8735-8735),(1437-1413))_nz.BackgroundColor3=_ny and _hJ.select or _hJ.panel2 _nz.Text=string.format("%s%s (%s)  x%d  |  %d koin",_ny and("[".._nx.sel.."] ")or"",_bD.namaItem(_nx.id),tostring(_bD.jenis(_nx.id)or "?"),_nx.count,_nx.harga)_nz.TextColor3=_ny and Color3.new((-9068+9069),(6793-6792),(4483-4482))or((_nx.count>(-7167+7167))and _hJ.text or _hJ.sub)_nz.Font=Enum.Font.GothamMedium _nz.TextSize=(-4834+4845)_nz.TextXAlignment=Enum.TextXAlignment.Left _nz.TextTruncate=Enum.TextTruncate.AtEnd _nz.BorderSizePixel=(-3578+3578)_nz.AutoButtonColor=true _nz.Parent=_np _hM(_nz,(572-567))local _nA=Instance.new("UIPadding")_nA.PaddingLeft=UDim.new((-61+61),(-7384+7392))_nA.Parent=_nz if _ny then _hQ(_nz,_hJ.accent,(-8733+8734),0.35)end table.insert(_bD.btnConns,_nz.MouseButton1Click:Connect(function()_bD.toggle(_nt,_nx.id)_bD.refreshList()end))end _np.CanvasSize=UDim2.new((5371-5371),(6673-6673),(-1383+1383),#_nu*(-1969+1996)+(7948-7942))_np.CanvasPosition=Vector2.new((-2444+2444),_nq)end end end do local _nB=_kK.masak local _nC={DagingGagak="Daging Gagak",JamurKuburan="Jamur Kuburan",Kamboja="Kamboja",KepitingSungai="Kepiting Sungai",Dupa="Dupa",Pisang="Pisang",BubukKopi="Bubuk Kopi",Kemenyan="Kemenyan",Telur="Telur",Cabai="Cabai",Susu="Susu",Kubis="Kubis",Apel="Apel",Jeruk="Jeruk",AyamPotong="Ayam Potong",}local _nD={{key="SateKepiting",label="Sate Kepiting",method="Membakar",time=(-2226+2316),desc="Kepiting sungai dibakar berbalut asap dupa. Wangi menyengat yang digilai Tuyul.",ing={{"KepitingSungai",(3589-3586)},{"Dupa",(2938-2937)}}},{key="KopiKemenyan",label="Kopi Kemenyan",method="Menyeduh",time=(6548-6458),desc="Bubuk kopi diseduh berasap kemenyan.",ing={{"BubukKopi",(-3528+3529)},{"Kemenyan",(9347-9346)}}},{key="TumisKamboja",label="Tumis Kamboja",method="Menumis",time=(-3406+3496),desc="Tumisan bunga kamboja yang harum dengan sentuhan gurih.",ing={{"Kamboja",(-6855+6856)}}},{key="PisangRebus",label="Pisang Raja Rebus",method="Merebus",time=(-4909+4999),desc="Pisang raja direbus empuk, manis alami dan mengenyangkan.",ing={{"Pisang",(9555-9554)}}},{key="Rebus",label="Jamur Rebus Kuburan",method="Merebus",time=(5680-5620),desc="Sup jamur dari kuburan buruh. Hangat dan bergizi.",ing={{"JamurKuburan",(-4953+4954)}}},{key="Bakar",label="Sate Gagak",method="Membakar",time=(-8443+8503),desc="Sate lezat dari daging gagak pilihan.",ing={{"DagingGagak",(2334-2333)}}},{key="MartabakGagak",label="Martabak Telur Gagak",method="Menggoreng",time=(5592-5502),desc="Martabak tebal isi telur dan daging gagak, pedas cabai.",ing={{"Telur",(-5742+5744)},{"DagingGagak",(4725-4724)},{"Cabai",(-2358+2360)}}},{key="SotoKuburan",label="Soto Jamur Kuburan",method="Merebus",time=(-3752+3872),desc="Soto berkuah susu dengan jamur kuburan dan kubis.",ing={{"Susu",(449-447)},{"JamurKuburan",(-9545+9547)},{"Kubis",(7840-7839)}}},{key="EsTelerArwah",label="Es Teler Arwah",method="Meracik",time=(-7826+7976),desc="Es buah apel dan jeruk bersiram susu dingin.",ing={{"Apel",(-7104+7105)},{"Jeruk",(-583+585)},{"Susu",(-3746+3747)}}},{key="IngkungSesajen",label="Ingkung Ayam Sesajen",method="Mengungkep",time=(1638-1458),desc="Ayam utuh dimasak santan, disajikan dengan sepasang pisang raja.",ing={{"AyamPotong",(-3956+3957)},{"Susu",(-2162+2163)},{"Pisang",(6740-6738)}}},}local function _nE(_nF)local _nG=(5372-5372)local function _nH(_nI)if not _nI then return end for _nJ,_nK in ipairs(_nI:GetChildren())do if _nK:IsA("Tool")and _nK:GetAttribute("ItemId")==_nF then _nG+=tonumber(_nK:GetAttribute("Count"))or(7299-7298)end end end _nH(_i:FindFirstChildOfClass("Backpack"))_nH(_i.Character)return _nG end local _nL=Instance.new("ScrollingFrame")_nL.Size=UDim2.new((-8425+8426),(5416-5416),(-3296+3297),(-3630+3630))_nL.BackgroundTransparency=(-129+130)_nL.BorderSizePixel=(1719-1719)_nL.ScrollBarThickness=(500-497)_nL.ScrollBarImageColor3=_hJ.accent _nL.CanvasSize=UDim2.new((-9883+9883),(-7157+7157),(-755+755),(8003-8003))_nL.AutomaticCanvasSize=Enum.AutomaticSize.Y _nL.Parent=_nB local _nM=Instance.new("UIListLayout")_nM.Padding=UDim.new((-4343+4343),(6092-6084))_nM.SortOrder=Enum.SortOrder.LayoutOrder _nM.Parent=_nL local _nN=_id(_nL,UDim2.new((7427-7426),-(1214-1206),(-992+992),(-5679+5783)))_nN.LayoutOrder=(-2509+2512)_in(_nN,"AUTO MASAK (KOMPOR)",UDim2.new((-5824+5825),-(-6409+6549),(549-549),(-28+44)),UDim2.new((8566-8566),(-5315+5327),(-7990+7990),(-7660+7668)),_hJ.accent,Enum.Font.GothamBold,(3493-3481))_mR=_in(_nN,"Status: Siap (OFF)",UDim2.new((-1202+1203),-(-456+596),(-1469+1469),(6086-6072)),UDim2.new((-9154+9154),(5298-5286),(9012-9012),(3910-3884)),_hJ.sub,Enum.Font.Gotham,(9406-9395))_mS=_in(_nN,"Makanan Dimasak: 0 Porsi",UDim2.new((-1409+1410),-(5430-5290),(-806+806),(-9810+9824)),UDim2.new((-8482+8482),(1590-1578),(3698-3698),(-9491+9535)),_hJ.good,Enum.Font.GothamMedium,(-4152+4163))local _nO=_in(_nN,"Menu dipilih: -",UDim2.new((877-876),-(6498-6474),(-9450+9450),(-6981+6995)),UDim2.new((-7126+7126),(-2885+2897),(1943-1943),(-2863+2925)),_hJ.info,Enum.Font.GothamMedium,(3552-3541))_in(_nN,"Berdiri dekat kompor dulu, server menolak jika terlalu jauh.",UDim2.new((-6888+6889),-(-9452+9476),(-9659+9659),(-230+244)),UDim2.new((-8329+8329),(-679+691),(9899-9899),(8672-8590)),_hJ.dim,Enum.Font.Gotham,(-6464+6474))_mT=_jA(_nN,UDim2.new((-564+565),-(782-654),(3022-3022),(3947-3909)),"START MASAK")local _nP={{key="PotongGagak",text="GAGAK"},{key="PotongAyamKampung",text="AYAM"},{key="GilingKopi",text="KOPI"},}local _nQ=_id(_nL,UDim2.new((-14+15),-(-594+602),(1974-1974),(4273-4161)))_nQ.LayoutOrder=(-9031+9032)_in(_nQ,"AUTO OLAH (MEJA POTONG)",UDim2.new((8488-8487),-(6868-6728),(-7892+7892),(-1061+1077)),UDim2.new((2062-2062),(-6305+6317),(-6573+6573),(-5838+5846)),_hJ.accent,Enum.Font.GothamBold,(-9406+9418))_mU=_in(_nQ,"Status: Siap (OFF)",UDim2.new((3380-3379),-(-8174+8314),(2315-2315),(-7281+7295)),UDim2.new((6928-6928),(-6988+7000),(-7082+7082),(2223-2197)),_hJ.sub,Enum.Font.Gotham,(-5004+5015))_mV=_in(_nQ,"Bahan Diolah: 0 Kali",UDim2.new((2418-2417),-(-6451+6591),(-2130+2130),(-1045+1059)),UDim2.new((9218-9218),(7059-7047),(-4632+4632),(6519-6475)),_hJ.good,Enum.Font.GothamMedium,(-9829+9840))_iU(_nQ,UDim2.new((-4663+4663),(6807-6795),(221-221),(-7366+7434)),UDim2.new((-8691+8692),-(-1028+1178),(9419-9419),(3025-3001)),_nP,function()return _I end,function(_nR)_I=_nR end,(2057-2048))_mW=_jA(_nQ,UDim2.new((2255-2254),-(8562-8434),(-3349+3349),(4966-4928)),"START OLAH");(function()local _nS={minKg=(-7311+7341),bad={},porsi=(-9023+9023)}_bD.pg=_nS pcall(function()local _nT=require(_e:WaitForChild("GameConfig",(-6632+6637))).Panggang if _nT and tonumber(_nT.BeratMin)then _nS.minKg=tonumber(_nT.BeratMin)end end)local function _nU(_nV)return _nV:IsA("Tool")and _nV:GetAttribute("babiBerat")~=nil and(_nV:GetAttribute("LokSumber")=="Babi Ngepet"or string.find(_nV.Name,"Babi Ngepet",(5736-5735),true)~=nil)end _nS.scan=function()local _nW={}local function _nX(_nY)if not _nY then return end for _nZ,_oa in ipairs(_nY:GetChildren())do if _nU(_oa)then _nW[#_nW+(-5754+5755)]={tool=_oa,kg=tonumber(_oa:GetAttribute("babiBerat"))or(3761-3761),locked=_oa:GetAttribute("babiKunci")==true,id=_oa:GetAttribute("idBabi")or _oa.Name,}end end end _nX(_i:FindFirstChildOfClass("Backpack"))_nX(_i.Character)table.sort(_nW,function(_ob,_oc)return _ob.kg<_oc.kg end)return _nW end _nS.usable=function(_od)local _oe=_nS.bad[_od.id]if _oe and tick()<_oe then return false end return _od.kg>=_nS.minKg and not _od.locked end _nS.pick=function()local _of=getgenv().PanggangBabiKg local _og=_nS.scan()for _oh,_oi in ipairs(_og)do if _nS.usable(_oi)and(_of=="auto"or _oi.kg==_of)then return _oi,_og end end return nil,_og end local _oj=_id(_nL,UDim2.new((1272-1271),-(7129-7121),(3286-3286),(-5866+6006)))_oj.LayoutOrder=(-5683+5685)_in(_oj,"AUTO PANGGANG BABI (PEMANGANG)",UDim2.new((840-839),-(2294-2154),(-5741+5741),(8970-8954)),UDim2.new((7694-7694),(-6239+6251),(7164-7164),(-9374+9382)),_hJ.accent,Enum.Font.GothamBold,(9355-9343))_nS.status=_in(_oj,"Status: Siap (OFF)",UDim2.new((-154+155),-(5888-5748),(-8899+8899),(-9790+9804)),UDim2.new((8219-8219),(9954-9942),(-9686+9686),(-3895+3921)),_hJ.sub,Enum.Font.Gotham,(-4945+4956))_nS.counter=_in(_oj,"Dipanggang: 0 Babi | 0 Porsi",UDim2.new((381-380),-(-7721+7861),(-8639+8639),(426-412)),UDim2.new((-2173+2173),(5260-5248),(-8775+8775),(-9682+9726)),_hJ.good,Enum.Font.GothamMedium,(-8710+8721))_nS.selLabel=_in(_oj,"Babi dipilih: AUTO",UDim2.new((-8700+8701),-(1722-1698),(-3741+3741),(4028-4014)),UDim2.new((4928-4928),(4347-4335),(3456-3456),(5889-5825)),_hJ.info,Enum.Font.GothamMedium,(-2729+2740))_in(_oj,"Hanya babi dewasa & tidak terkunci. Berdiri dekat pemangang.",UDim2.new((-5927+5928),-(-9387+9411),(6440-6440),(5830-5816)),UDim2.new((-6061+6061),(-5916+5928),(6727-6727),(8460-8340)),_hJ.dim,Enum.Font.Gotham,(-6661+6671))_nS.toggle=_jA(_oj,UDim2.new((-3969+3970),-(-2335+2463),(5171-5171),(-3083+3121)),"START PANGGANG")local _ok=Instance.new("ScrollingFrame")_ok.Size=UDim2.new((-390+391),-(-6721+6745),(7197-7197),(7465-7435))_ok.Position=UDim2.new((6658-6658),(9214-9202),(8252-8252),(6539-6455))_ok.BackgroundTransparency=(-5229+5230)_ok.BorderSizePixel=(5604-5604)_ok.ScrollBarThickness=(-6191+6193)_ok.ScrollBarImageColor3=_hJ.accent _ok.ScrollingDirection=Enum.ScrollingDirection.X _ok.CanvasSize=UDim2.new((-3247+3247),(-8256+8256),(-4498+4498),(-5131+5131))_ok.AutomaticCanvasSize=Enum.AutomaticSize.X _ok.Parent=_oj local _ol=Instance.new("UIListLayout")_ol.FillDirection=Enum.FillDirection.Horizontal _ol.VerticalAlignment=Enum.VerticalAlignment.Center _ol.Padding=UDim.new((8714-8714),(-5002+5008))_ol.SortOrder=Enum.SortOrder.LayoutOrder _ol.Parent=_ok local _om=""local function _on(_oo,_op,_oq,_or,_os,_ot)local _ou=Instance.new("TextButton")_ou.Size=UDim2.new((-1767+1767),_oq,(-5140+5140),(3561-3537))_ou.LayoutOrder=_oo _ou.Text=_op _ou.Font=Enum.Font.GothamBold _ou.TextSize=(7627-7617)_ou.AutoButtonColor=false _ou.BorderSizePixel=(-9249+9249)_ou.BackgroundColor3=_or and _hJ.accent or _hJ.panel2 _ou.TextColor3=_or and _hJ.dark or(_os and _hJ.dim or _hJ.text)_ou.Parent=_ok _hM(_ou,(8332-8327))table.insert(_o,_ou.MouseButton1Click:Connect(_ot))end _nS.refresh=function()local _ov=_nS.scan()local _ow=getgenv().PanggangBabiKg local _ox,_oy={},{}for _oz,_oA in ipairs(_ov)do local _oB=_oA.kg..(_oA.locked and "L"or"")if not _ox[_oB]then _ox[_oB]={kg=_oA.kg,locked=_oA.locked,n=(-8119+8119)}_oy[#_oy+(-6115+6116)]=_oB end _ox[_oB].n+=(-4529+4530)end local _oC=tostring(_ow).."|"for _oD,_oE in ipairs(_oy)do _oC..=_oE.."x".._ox[_oE].n..","end if _oC~=_om then _om=_oC for _oF,_oG in ipairs(_ok:GetChildren())do if _oG:IsA("TextButton")then _oG:Destroy()end end _on((-7163+7163),"AUTO",(335-283),_ow=="auto",false,function()getgenv().PanggangBabiKg="auto"_om=""_nS.refresh()end)for _oH,_oI in ipairs(_oy)do local _oJ=_ox[_oI]local _oK=_oJ.kg.." kg"..(_oJ.n>(-9147+9148)and(" x".._oJ.n)or"")..(_oJ.locked and " (kunci)"or"")local _oL=_oJ.locked or _oJ.kg<_nS.minKg _on(_oH,_oK,(-513+553)+#_oK*(3048-3044),_ow==_oJ.kg and not _oJ.locked,_oL,function()if _oJ.locked then _nS.status.Text="Babi ".._oJ.kg.." kg terkunci, buka kunci di tas dulu"return elseif _oJ.kg<_nS.minKg then _nS.status.Text="Babi ".._oJ.kg.." kg belum dewasa (min ".._nS.minKg.." kg)"return end getgenv().PanggangBabiKg=_oJ.kg _om=""_nS.refresh()end)end end if _ow=="auto"then _nS.selLabel.Text="Babi dipilih: AUTO (dewasa terringan, min ".._nS.minKg.." kg)"_nS.selLabel.TextColor3=_hJ.info else local _oM=(-2225+2225)for _oN,_oO in ipairs(_ov)do if _oO.kg==_ow and _nS.usable(_oO)then _oM+=(5719-5718)end end _nS.selLabel.Text=string.format("Babi dipilih: %d kg (%s)",_ow,_oM>(-9905+9905)and("di tas: ".._oM.." ekor")or "tidak ada di tas")_nS.selLabel.TextColor3=_oM>(9097-9097)and _hJ.info or _hJ.danger end end table.insert(_o,_nS.toggle.MouseButton1Click:Connect(function()getgenv().AutoPanggangActive=not getgenv().AutoPanggangActive if getgenv().AutoPanggangActive then _nS.bad={}_nS.toggle.BackgroundColor3=_hJ.danger _nS.toggle.TextColor3=Color3.new((2441-2440),(-8657+8658),(-1700+1701))_nS.toggle.Text="STOP PANGGANG"_nS.status.Text="Status: Menuju pemangang..."else _nS.toggle.BackgroundColor3=_hJ.on _nS.toggle.TextColor3=_hJ.text _nS.toggle.Text="START PANGGANG"_nS.status.Text="Status: Berhenti"end end))end)()local _oP={}for _oQ,_oR in ipairs(_nD)do local _oS=#_oR.ing local _oT=_id(_nL,UDim2.new((-2644+2645),-(-3078+3086),(-5618+5618),(-893+937)+(1208-1194)*_oS+(5133-5129)+(5880-5854)+(396-388)))_oT.LayoutOrder=_oQ+(-4045+4048)local _oU=_oT:FindFirstChildOfClass("UIStroke")local _oV=_in(_oT,_oR.label,UDim2.new((-7907+7908),-(-9407+9517),(4299-4299),(-8063+8079)),UDim2.new((-9287+9287),(-8501+8513),(-3707+3707),(8406-8398)),_hJ.text,Enum.Font.GothamBold,(6902-6890))local _oW=_in(_oT,"",UDim2.new((9923-9922),-(-1577+1687),(4975-4975),(-3808+3822)),UDim2.new((5297-5297),(-2073+2085),(5741-5741),(3164-3138)),_hJ.info,Enum.Font.GothamMedium,(5793-5782))local _oX={}for _oY=(-6521+6522),_oS do local _oZ=_in(_oT,"",UDim2.new((2673-2672),-(171-147),(7057-7057),(4364-4350)),UDim2.new((7630-7630),(-3792+3804),(8062-8062),(-8767+8811)+(_oY-(3126-3125))*(-148+162)),_hJ.sub,Enum.Font.Gotham,(-4719+4730))_oZ.RichText=true _oX[_oY]=_oZ end local _pa=_in(_oT,_oR.desc,UDim2.new((646-645),-(-6263+6287),(3743-3743),(-4566+4592)),UDim2.new((1208-1208),(-2339+2351),(-8864+8864),(-2085+2129)+(5581-5567)*_oS+(9461-9457)),_hJ.dim,Enum.Font.Gotham,(-7997+8007))_pa.TextWrapped=true _pa.TextYAlignment=Enum.TextYAlignment.Top local _pb=_ix(_oT,UDim2.new((-8041+8041),(-3744+3828),(8877-8877),(-83+107)),UDim2.new((-3472+3473),-(476-380),(-1297+1297),(-3960+3966)),"PILIH",_hJ.panel2,(-4646+4656),_hJ.text)local function _pc()local _pd=math.huge for _pe,_pf in ipairs(_oR.ing)do local _pg=_pf[(-8203+8205)]local _ph=_nE(_pf[(6814-6813)])_pd=math.min(_pd,math.floor(_ph/_pg))local _pi=(_ph>=_pg)and _hJ.good or _hJ.danger _oX[_pe].Text=string.format("- %dx %s  <font color=\"#%s\">(punya %d)</font>",_pg,_nC[_pf[(1295-1294)]]or _pf[(9132-9131)],_pi:ToHex(),_ph)end if _pd==math.huge then _pd=(4163-4163)end _oW.Text=string.format("%s | %d detik | %s",_oR.method,_oR.time,_pd>(-841+841)and("Bisa masak: ".._pd.." porsi")or "Bahan belum cukup")local _pj=(_H==_oR.key)_pb.Text=_pj and "DIPILIH"or "PILIH"_pb.BackgroundColor3=_pj and _hJ.accent or _hJ.panel2 _pb.TextColor3=_pj and _hJ.dark or _hJ.text _oV.TextColor3=_pj and _hJ.accent or _hJ.text if _oU then _oU.Color=_pj and _hJ.accent or _hJ.border _oU.Transparency=_pj and 0.1 or 0.5 end if _pj then _nO.Text="Menu dipilih: ".._oR.label end end _oP[#_oP+(-4355+4356)]=_pc table.insert(_o,_pb.MouseButton1Click:Connect(function()_H=_oR.key _bD.masakRefresh()end))end _bD.masakRefresh=function()for _pk,_pl in ipairs(_oP)do _pl()end if _bD.pg and _bD.pg.refresh then pcall(_bD.pg.refresh)end end _bD.masakRefresh()end local _pm,_pn,_po local _pp,_pq,_pr,_ps do local _pt=_kK.tuyul local _pu=_id(_pt,UDim2.new((-6835+6836),(-483+483),(8776-8776),(5035-4939)),UDim2.new((-2970+2970),(-4005+4005),(3229-3229),(5765-5765)))_hQ(_pu,_hJ.accent,1.2,0.25)_in(_pu,"AUTO SUAP TUYUL LIAR",UDim2.new((-2124+2125),-(-6622+6762),(-4172+4172),(113-97)),UDim2.new((-2041+2041),(-733+745),(-5889+5889),(-37+45)),_hJ.accent,Enum.Font.GothamBold,(1369-1357))_pm=_in(_pu,"Status: Siap (OFF)",UDim2.new((1496-1495),-(-6080+6220),(5824-5824),(-8234+8248)),UDim2.new((-4167+4167),(2466-2454),(1436-1436),(-805+831)),_hJ.sub,Enum.Font.Gotham,(-5703+5714))_in(_pu,"Otomatis dekati Tuyul Liar & beri Sate Kepiting",UDim2.new((1160-1159),-(-7975+8115),(-3467+3467),(-291+305)),UDim2.new((2169-2169),(7996-7984),(9391-9391),(-1241+1285)),_hJ.info,Enum.Font.GothamMedium,(-9001+9012))_pn=_in(_pu,"Suap Berhasil: 0 Kali",UDim2.new((-4276+4277),-(-5754+5894),(8960-8960),(6040-6026)),UDim2.new((-5179+5179),(5551-5539),(-2059+2059),(4532-4470)),_hJ.good,Enum.Font.GothamMedium,(5213-5202))_po=_jA(_pu,UDim2.new((-5028+5029),-(8864-8736),(-3861+3861),(9623-9593)),"START TUYUL")local _pv=_id(_pt,UDim2.new((8684-8683),(9801-9801),(2784-2784),(8863-8723)),UDim2.new((107-107),(2778-2778),(4988-4988),(-93+197)))_in(_pv,"SISTEM PET TUYUL",UDim2.new((-2429+2430),-(73-53),(4089-4089),(4602-4586)),UDim2.new((3249-3249),(-912+924),(1175-1175),(8631-8623)),_hJ.accent,Enum.Font.GothamBold,(-4346+4358))_pp=_in(_pv,"Status Pet: Memeriksa...",UDim2.new((6671-6670),-(-295+315),(5723-5723),(-4805+4819)),UDim2.new((-1025+1025),(-4766+4778),(-1594+1594),(3964-3936)),_hJ.sub,Enum.Font.Gotham,(5618-5607))_in(_pv,"- Auto Panggil: Memanggil pet tuyul saat masuk game",UDim2.new((-6588+6589),-(8552-8532),(-6679+6679),(-5396+5410)),UDim2.new((9092-9092),(-912+924),(-7617+7617),(-5762+5810)),_hJ.sub,Enum.Font.Gotham,(9375-9364))_in(_pv,"- Auto Latih: Melatih pet tiap 240 detik untuk EXP",UDim2.new((627-626),-(-4459+4479),(-2686+2686),(-1129+1143)),UDim2.new((-3118+3118),(-263+275),(4917-4917),(4337-4271)),_hJ.sub,Enum.Font.Gotham,(-901+912))_in(_pv,"- Jaga Ternak: Aktifkan mode proteksi peternakan",UDim2.new((-2836+2837),-(529-509),(-3138+3138),(-1827+1841)),UDim2.new((1329-1329),(5189-5177),(672-672),(5953-5869)),_hJ.good,Enum.Font.GothamMedium,(5718-5707))_pq=_ix(_pv,UDim2.new((1651-1651),(-3536+3631),(8501-8501),(8724-8698)),UDim2.new((-7226+7226),(4723-4711),(-2702+2702),(8051-7947)),"PANGGIL",_hJ.panel2,(-659+669),_hJ.text)_in(_pv,"AUTO LATIH",UDim2.new((2255-2255),(-3256+3316),(-7133+7133),(401-375)),UDim2.new((4623-4623),(7740-7626),(1702-1702),(-1650+1754)),_hJ.sub,Enum.Font.GothamBold,(5184-5175))_pr=_jA(_pv,UDim2.new((3082-3082),(-5333+5447),(-2971+2971),(8774-8670)),"AUTO LATIH",(6755-6660))_ps=_ix(_pv,UDim2.new((-4762+4762),(9746-9651),(8768-8768),(2034-2008)),UDim2.new((2226-2226),(-8484+8700),(2543-2543),(1009-905)),"JAGA TERNAK",_hJ.accent,(-4235+4245),_hJ.dark)end local _pw,_px local _py,_pz,_pA do local _pB={{key="bertahap",text="BERTAHAP"},{key="instan",text="INSTAN"},}local _pC=_kK.teleport local _pD=_id(_pC,UDim2.new((-6008+6009),(6216-6216),(-9280+9280),(-9815+9877)),UDim2.new((6553-6553),(5291-5291),(-5687+5687),(1148-1148)))_in(_pD,"NPC Pria Misterius",UDim2.new((5666-5665),-(8898-8773),(-3214+3214),(-4433+4449)),UDim2.new((9767-9767),(4301-4289),(-7217+7217),(3311-3303)),_hJ.accent,Enum.Font.GothamBold,(6035-6023))_pw=_in(_pD,"Lokasi: Pasar Hutan (1880, 114, 187)",UDim2.new((8172-8171),-(-5180+5305),(-6066+6066),(7716-7702)),UDim2.new((-3126+3126),(3566-3554),(43-43),(-1913+1938)),_hJ.sub,Enum.Font.Gotham,(-3811+3822))_in(_pD,"Dekat lampu gantung pasar",UDim2.new((-9590+9591),-(-658+783),(2019-2019),(-8238+8252)),UDim2.new((-6532+6532),(-3108+3120),(-6726+6726),(-3372+3413)),_hJ.good,Enum.Font.GothamMedium,(-2121+2132))_px=_ix(_pD,UDim2.new((-7028+7028),(-7948+8053),(8023-8023),(8961-8933)),UDim2.new((4671-4670),-(2929-2812),0.5,-(8014-8000)),"TELEPORT",_hJ.accent,(3061-3050),_hJ.dark)local _pE=_id(_pC,UDim2.new((-8304+8305),(6987-6987),(9820-9820),(-5692+5896)),UDim2.new((-5131+5131),(5830-5830),(412-412),(7789-7721)))_in(_pE,"Teleport ke Pemain",UDim2.new((1183-1183),(-2152+2292),(4128-4128),(8118-8102)),UDim2.new((4167-4167),(-4702+4714),(7097-7097),(9353-9346)),_hJ.accent,Enum.Font.GothamBold,(8415-8403))_iU(_pE,UDim2.new((3664-3663),-(-4402+4544),(-6886+6886),(-8074+8080)),UDim2.new((3271-3271),(-1202+1332),(4926-4926),(2580-2560)),_pB,function()return _P end,function(_pF)_P=_pF end,(-35+45))_py=_in(_pE,"Pilih pemain di bawah:",UDim2.new((-2899+2900),-(-9325+9349),(-9547+9547),(3504-3490)),UDim2.new((-2459+2459),(650-638),(-9048+9048),(-6901+6929)),_hJ.info,Enum.Font.GothamMedium,(-6494+6505))_pz=Instance.new("ScrollingFrame")_pz.Size=UDim2.new((-7213+7214),-(8466-8446),(9866-9866),(-3703+3819))_pz.Position=UDim2.new((-858+858),(2740-2730),(9551-9551),(-1535+1581))_pz.BackgroundColor3=_hJ.track _pz.BackgroundTransparency=0.35 _pz.BorderSizePixel=(6337-6337)_pz.ScrollBarThickness=(1584-1581)_pz.ScrollBarImageColor3=_hJ.accent _pz.CanvasSize=UDim2.new((9721-9721),(-9839+9839),(-3393+3393),(-1733+1733))_pz.Parent=_pE _hM(_pz,(215-211))_hQ(_pz,_hJ.border,(8614-8613),0.5)local _pG=Instance.new("UIListLayout")_pG.Padding=UDim.new((3695-3695),(-6373+6376))_pG.HorizontalAlignment=Enum.HorizontalAlignment.Center _pG.Parent=_pz local _pH=Instance.new("UIPadding")_pH.PaddingTop=UDim.new((-8694+8694),(-8156+8159))_pH.Parent=_pz _pA=_ix(_pE,UDim2.new((7472-7471),-(8593-8573),(1912-1912),(-6889+6917)),UDim2.new((-4301+4301),(-4224+4234),(9443-9442),-(8327-8293)),"TELEPORT KE PEMAIN",_hJ.on,(4668-4657),Color3.new((9691-9690),(-882+883),(4662-4661)))end do local _pI=_id(_kK.petir,UDim2.new((-5932+5933),(7631-7631),(5750-5750),(4863-4745)),UDim2.new((2006-2006),(551-551),(3022-3022),(-2260+2260)))local _pJ,_pK=_jp(_pI,(-7845+7849),"Anti Petir (hindari otomatis)",true)local _pL=_in(_pI,"Saat hujan siang, karakter otomatis menjauh dari titik sambaran (peringatan 1,35 dtk). Memegang Payung membuat kebal; kalau punya Payung dan tangan kosong, otomatis dipegang.",UDim2.new((-7720+7721),-(6104-6080),(6101-6101),(3386-3342)),UDim2.new((6001-6001),(4925-4913),(6484-6484),(-8162+8200)),_hJ.sub,Enum.Font.Gotham,(-3066+3076))_pL.TextWrapped=true _pL.TextYAlignment=Enum.TextYAlignment.Top _pL.TextTruncate=Enum.TextTruncate.None local _pM=_in(_pI,"Menghindar: 0 kali",UDim2.new((6229-6228),-(4297-4273),(9697-9697),(1799-1785)),UDim2.new((-6309+6309),(-3185+3197),(-1689+1689),(-2913+3003)),_hJ.good,Enum.Font.GothamMedium,(-7670+7681))_pK(false)local _pN=(-4638+4647)pcall(function()_pN=require(_e:WaitForChild("SiangConfig",(2463-2461))).Hujan.BlastRadius or(6937-6928)end)local _pO=_pN+(2765-2759)local _pP={}local _pQ=(8943-8943)local function _pR()local _pS=_i.Character local _pT=_pS and _pS:FindFirstChildOfClass("Tool")return _pT~=nil and _pT.Name:lower():find("payung")~=nil end if _bb then table.insert(_o,_bb.OnClientEvent:Connect(function(_pU)if not _p()or not getgenv().AntiPetirActive then return end if type(_pU)~="table"or not _pU.w or typeof(_pU.p)~="Vector3"then return end table.insert(_pP,{pos=_pU.p,untilT=tick()+(tonumber(_pU.t)or 1.35)+0.5})_pM.Text="Petir terdeteksi! Menghindar..."end))else _pM.Text="Remote Petir tidak aktif / tidak ada"_pM.TextColor3=_hJ.sub end table.insert(_o,_c.Heartbeat:Connect(function()if not _p()then return end if#_pP==(478-478)then getgenv().PH_PetirDanger=false return end if not getgenv().AntiPetirActive then table.clear(_pP)getgenv().PH_PetirDanger=false return end getgenv().PH_PetirDanger=true local _pV=_da()if not _pV then return end local _pW=tick()for _pX=#_pP,(3851-3850),-(4943-4942)do local _pY=_pP[_pX]if _pW>_pY.untilT then table.remove(_pP,_pX)elseif not _pR()then local _pZ=_pV.Position-_pY.pos if _pZ.Magnitude<_pO then local _qa=Vector3.new(_pZ.X,(-5042+5042),_pZ.Z)local _qb=(_qa.Magnitude<0.5)and Vector3.new((-5450+5451),(-5462+5462),(4997-4997))or _qa.Unit _pV.CFrame=CFrame.new(Vector3.new(_pY.pos.X,_pV.Position.Y,_pY.pos.Z)+_qb*(_pO+(5667-5665)))_pV.AssemblyLinearVelocity=Vector3.zero local _qc=_pV:FindFirstChild("FlyLockPos")if _qc then _qc.Position=_pV.Position end local _qd=_pV:FindFirstChild("FlyLockGyro")if _qd then _qd.CFrame=_pV.CFrame end _pQ+=(353-352)_pM.Text="Menghindar: ".._pQ.." kali"end end end end))task.spawn(function()while _p()do task.wait((4296-4295))if getgenv().AntiPetirActive and workspace:GetAttribute("Cuaca")=="Hujan"and workspace:GetAttribute("Phase")=="Siang"then local _qe=_i.Character local _qf=_qe and _qe:FindFirstChildOfClass("Humanoid")if _qf and _qf.Health>(-1111+1111)and not _qe:FindFirstChildOfClass("Tool")then local _qg=_i:FindFirstChildOfClass("Backpack")if _qg then for _qh,_qi in ipairs(_qg:GetChildren())do if _qi:IsA("Tool")and _qi.Name:lower():find("payung")then _qf:EquipTool(_qi)break end end end end end end end)table.insert(_o,_pJ.MouseButton1Click:Connect(function()getgenv().AntiPetirActive=not getgenv().AntiPetirActive _pK(getgenv().AntiPetirActive)if not getgenv().AntiPetirActive then _pM.Text="Menghindar: ".._pQ.." kali"end end))end local _qj=true local function _qk(_ql)_qj=_ql _jQ=_jN()if _ql then _jL.Visible=true _jM.Scale=_jQ*0.85 _b:Create(_jM,TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=_jQ}):Play()else local _qm=_b:Create(_jM,TweenInfo.new(0.15,Enum.EasingStyle.Quad,Enum.EasingDirection.In),{Scale=_jQ*0.85})_qm.Completed:Connect(function()if not _qj then _jL.Visible=false end end)_qm:Play()end end local _qn do local _qo=Instance.new("Frame")_qo.Name="FloatingBall"_qo.Size=UDim2.new((-4513+4513),(-4325+4377),(6619-6619),(2709-2657))_qo.Position=UDim2.new((5870-5870),(-6993+7017),0.5,-(2041-2015))_qo.BackgroundTransparency=(-330+331)_qo.Parent=_hL _hX(_qo,(8889-8867),0.45,(-823+826))local _qp=Instance.new("ImageButton")_qp.Size=UDim2.new((-2669+2669),(-5337+5381),(7653-7653),(5524-5480))_qp.Position=UDim2.new(0.5,-(-2769+2791),0.5,-(-7587+7609))_qp.BackgroundColor3=_hJ.panel _qp.BackgroundTransparency=0.10 _qp.Image="rbxassetid://126288919846878"_qp.ScaleType=Enum.ScaleType.Crop _qp.AutoButtonColor=false _qp.BorderSizePixel=(-2426+2426)_qp.Parent=_qo _hM(_qp,(9492-9470))_hQ(_qp,_hJ.accent,1.5,0.15)_qn=Instance.new("Frame")_qn.Size=UDim2.new((-7824+7824),(-2997+3008),(6443-6443),(-32+43))_qn.Position=UDim2.new((-3069+3070),-(-8224+8235),(-6198+6198),(8738-8738))_qn.BackgroundColor3=_hJ.off _qn.BorderSizePixel=(-7175+7175)_qn.Parent=_qp _hM(_qn,(-3648+3654))_hQ(_qn,_hJ.bg,(-4420+4422),(2887-2887))_iH(_jS,_jL,nil)_iH(_qp,_qo,function()_qk(not _qj)end)end table.insert(_o,_jT.MouseButton1Click:Connect(function()_qk(false)end))table.insert(_o,_d.InputBegan:Connect(function(_qq,_qr)if _qr then return end if _qq.KeyCode==Enum.KeyCode.RightShift then _qk(not _qj)end end))task.spawn(function()while _p()do local _qs=_ee()or getgenv().AutoTanamActive or getgenv().AutoSiramActive or getgenv().AutoPanenActive or getgenv().AutoKelolaLapakActive or getgenv().AutoMasakActive or getgenv().AutoOlahActive or getgenv().AutoPanggangActive or getgenv().AutoRepairActive _qn.BackgroundColor3=_qs and _hJ.on or _hJ.off task.wait(0.5)end end)local function _qt(_qu)for _qv,_qw in pairs(_kK)do _qw.Visible=(_qv==_qu)end local _qx=TweenInfo.new(0.12,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)for _qy,_qz in pairs(_jX)do local _qA=(_qy==_qu)_b:Create(_qz,_qx,{BackgroundTransparency=_qA and 0.3 or(7491-7490)}):Play()local _qB=_qz:FindFirstChildOfClass("TextLabel")if _qB then _b:Create(_qB,_qx,{TextColor3=_qA and _hJ.text or _hJ.sub}):Play()end local _qC=_qz:FindFirstChild("Icon")if _qC then if _qC:IsA("ImageLabel")then _b:Create(_qC,_qx,{ImageColor3=_qA and _hJ.accent or _hJ.sub}):Play()else for _qD,_qE in ipairs(_qC:GetDescendants())do if _qE:GetAttribute("Tint")then _b:Create(_qE,_qx,{BackgroundColor3=_qA and _hJ.accent or _hJ.sub}):Play()end end end end local _qF=_qz:FindFirstChild("Indicator")if _qF then _qF.Visible=_qA end if _qA then local _qG=_jR:FindFirstChild("PageHeader")local _qH=_qG and _qG:FindFirstChild("Title")if _qH then _qH.Text=_qz.Name end end end if _qu=="lapak"and _bD.refreshList then _bD.refreshList()end if _qu=="masak"and _bD.masakRefresh then pcall(_bD.masakRefresh)end end for _qI,_qJ in pairs(_jX)do table.insert(_o,_qJ.MouseButton1Click:Connect(function()_qt(_qI)end))end local _qK={}table.insert(_o,{Disconnect=function()_q(_qK)end})local function _qL()_q(_qK)for _qM,_qN in ipairs(_kU:GetChildren())do if _qN:IsA("TextButton")then _qN:Destroy()end end local _qO=_fB()if#_qO==(-9220+9220)then _kT.Text="Bibit: Tidak ada bibit di tas!"_kU.CanvasSize=UDim2.new((6665-6665),(8599-8599),(9481-9481),(7224-7224))return end if not _M and#_qO==(8525-8524)then _M=_qO[(-2250+2251)].key end local _qP for _qQ,_qR in ipairs(_qO)do if _qR.key==_M then _qP=_qR end end if not _M then _kT.Text="Pilih bibit yang mau ditanam:"elseif _qP then _kT.Text="Ditanam: ".._qP.cleanName else _kT.Text="Bibit pilihan habis, pilih bibit lain"end for _qS,_qT in ipairs(_qO)do local _qU=(_qT.key==_M)local _qV=Instance.new("TextButton")_qV.Size=UDim2.new((-210+211),-(6810-6798),(1022-1022),(-5808+5832))_qV.BackgroundColor3=_qU and _hJ.select or _hJ.panel2 _qV.Text=_qT.cleanName..(_gg(_qT.key)and " [lahan besar]"or"").." (x".._qT.count..")"_qV.TextColor3=_qU and Color3.new((9219-9218),(-4127+4128),(4414-4413))or _hJ.text _qV.Font=Enum.Font.GothamMedium _qV.TextSize=(-6407+6418)_qV.BorderSizePixel=(-8335+8335)_qV.AutoButtonColor=true _qV.Parent=_kU _hM(_qV,(4036-4031))if _qU then _hQ(_qV,_hJ.accent,(9188-9187),0.35)end table.insert(_qK,_qV.MouseButton1Click:Connect(function()_M=_qT.key _qL()end))end _kU.CanvasSize=UDim2.new((-2306+2306),(-9113+9113),(4629-4629),#_qO*(-3624+3652)+(2651-2647))end local _qW=false table.insert(_o,_px.MouseButton1Click:Connect(function()if _qW then return end local _qX=_da()if not _qX then _pw.Text="Karakter belum siap / respawn!"_pw.TextColor3=_hJ.danger return end local _qY=Vector3.new(1880.5,114.5,187.2)local _qZ=workspace:FindFirstChild("NPC")and workspace.NPC:FindFirstChild("NpcMisterius")if _qZ and _qZ:IsA("BasePart")then _qY=_qZ.Position+Vector3.new((-6916+6916),(9186-9184),(1968-1968))end _qW=true _pw.Text="Teleport ke Pria Misterius..."_pw.TextColor3=_hJ.accent if _P=="instan"then _qX.CFrame=CFrame.new(_qY)_pw.Text="Sampai di Pria Misterius!"_pw.TextColor3=_hJ.good else _ea(true)_fd(_qY)_ea(false)_pw.Text="Sampai di Pria Misterius!"_pw.TextColor3=_hJ.good end task.delay((2735-2732),function()if _p()and _pw then _pw.Text="Lokasi: Pasar Hutan (1880, 114, 187)"_pw.TextColor3=_hJ.sub end _qW=false end)end))local _ra={}table.insert(_o,{Disconnect=function()_q(_ra)end})local function _rb()_q(_ra)for _rc,_rd in ipairs(_pz:GetChildren())do if _rd:IsA("TextButton")then _rd:Destroy()end end local _re=_a:GetPlayers()local _rf={}for _rg,_rh in ipairs(_re)do if _rh~=_i then table.insert(_rf,_rh)end end table.sort(_rf,function(_ri,_rj)return _ri.DisplayName:lower()<_rj.DisplayName:lower()end)if#_rf==(-6632+6632)then _py.Text="Tidak ada pemain lain di map"_py.TextColor3=_hJ.sub _pz.CanvasSize=UDim2.new((-28+28),(6591-6591),(4908-4908),(8084-8084))return end if _O and not _O.Parent then _O=nil end if not _O then _py.Text="Pilih pemain dari daftar di bawah:"_py.TextColor3=_hJ.info else _py.Text="Target: ".._O.DisplayName.." (@".._O.Name..")"_py.TextColor3=_hJ.good end for _rk,_rl in ipairs(_rf)do local _rm=(_rl==_O)local _rn=Instance.new("TextButton")_rn.Size=UDim2.new((9556-9555),-(680-672),(3720-3720),(8122-8098))_rn.BackgroundColor3=_rm and _hJ.select or _hJ.panel2 _rn.Text="  ".._rl.DisplayName.." (@".._rl.Name..")"_rn.TextColor3=_rm and Color3.new((7915-7914),(4448-4447),(7073-7072))or _hJ.text _rn.Font=Enum.Font.GothamMedium _rn.TextSize=(1455-1444)_rn.TextXAlignment=Enum.TextXAlignment.Left _rn.BorderSizePixel=(9143-9143)_rn.AutoButtonColor=true _rn.Parent=_pz _hM(_rn,(913-908))if _rm then _hQ(_rn,_hJ.accent,(-8957+8958),0.35)end table.insert(_ra,_rn.MouseButton1Click:Connect(function()_O=_rl _rb()end))end _pz.CanvasSize=UDim2.new((7179-7179),(-6658+6658),(8258-8258),#_rf*(-4294+4321)+(1025-1019))end local _ro=false table.insert(_o,_pA.MouseButton1Click:Connect(function()if _ro then return end if not _O or not _O.Parent then _py.Text="Pilih pemain terlebih dahulu!"_py.TextColor3=_hJ.danger return end local _rp=_O.Character local _rq=_rp and _rp:FindFirstChild("HumanoidRootPart")if not _rq then _py.Text=_O.DisplayName.." tidak memiliki karakter / mati!"_py.TextColor3=_hJ.danger return end local _rr=_da()if not _rr then _py.Text="Karaktermu belum siap / mati!"_py.TextColor3=_hJ.danger return end _ro=true local _rs=_rq.Position+Vector3.new((5046-5046),2.5,(-5848+5848))_py.Text="Teleport ke ".._O.DisplayName.."..."_py.TextColor3=_hJ.accent if _P=="instan"then _rr.CFrame=CFrame.new(_rs)_py.Text="Sampai di ".._O.DisplayName.."!"_py.TextColor3=_hJ.good else _ea(true)_fd(_rs)_ea(false)_py.Text="Sampai di ".._O.DisplayName.."!"_py.TextColor3=_hJ.good end task.delay(2.5,function()if _p()and _O then _py.Text="Target: ".._O.DisplayName.." (@".._O.Name..")"_py.TextColor3=_hJ.good end _ro=false end)end))table.insert(_o,_a.PlayerAdded:Connect(function()task.wait(0.5)if _p()then _rb()end end))table.insert(_o,_a.PlayerRemoving:Connect(function(_rt)if _O==_rt then _O=nil end task.wait(0.2)if _p()then _rb()end end))local _ru={}table.insert(_o,{Disconnect=function()_q(_ru)end})local function _rv()_q(_ru)local _rw=_i:FindFirstChildOfClass("Backpack")or _i:WaitForChild("Backpack",(3259-3249))if not _rw then return end table.insert(_ru,_rw.ChildAdded:Connect(function()task.wait(0.2)if _p()then _qL()if _qj and _kK.lapak.Visible and _bD.refreshList then _bD.refreshList()end end end))table.insert(_ru,_rw.ChildRemoved:Connect(function()task.wait(0.2)if _p()then _qL()if _qj and _kK.lapak.Visible and _bD.refreshList then _bD.refreshList()end end end))end table.insert(_o,_i.CharacterAdded:Connect(function()task.wait((-5158+5159))if not _p()then return end _rv()_qL()_rb()end))local function _rx()_kW(getgenv().AutoTanamActive)_kY(getgenv().AutoSiramActive)_la(getgenv().AutoPanenActive)_lb.Text=string.format("Durasi Siram: %.1fs",getgenv().WaterDuration)end table.insert(_o,_kV.MouseButton1Click:Connect(function()getgenv().AutoTanamActive=not getgenv().AutoTanamActive _rx()end))table.insert(_o,_kX.MouseButton1Click:Connect(function()getgenv().AutoSiramActive=not getgenv().AutoSiramActive _rx()end))table.insert(_o,_kZ.MouseButton1Click:Connect(function()getgenv().AutoPanenActive=not getgenv().AutoPanenActive _rx()end))table.insert(_o,_kC.MouseButton1Click:Connect(function()getgenv().AntiAfkActive=not getgenv().AntiAfkActive _kD(getgenv().AntiAfkActive)end))local _ry=false local function _rz()if _ry then return end local _rA,_rB=_fq()if not _rB or not _rB:FindFirstChild("Tanaman")then return end _ry=true for _rC,_rD in ipairs(_rB.Tanaman:GetChildren())do _gP(_rD)task.wait(0.1)end _ry=false end table.insert(_o,_lc.MouseButton1Click:Connect(_rz))local function _rE(_rF,_rG,_rH,_rI)local _rJ=(_rF=="AutoSemuaFarmActive")if getgenv()[_rF]then _rG.BackgroundColor3=_hJ.danger _rG.TextColor3=Color3.new((7099-7098),(-7226+7227),(818-817))_rG.Text=_rJ and "STOP SEMUA"or "STOP FARM"else _rG.BackgroundColor3=_rJ and _hJ.accent or _hJ.on _rG.TextColor3=_rJ and _hJ.dark or _hJ.text _rG.Text=_rJ and "START SEMUA"or "START FARM"_rH.Text="Status: Berhenti"if not _ee()and not _ef then _ea(false)end end end _mn.flags={AutoAyamActive={ui=_mn.ayam,onText="STOP AYAM",offText="START AYAM",offColor=_hJ.accent,offTextColor=_hJ.dark},AutoSapiActive={ui=_mn.sapi,onText="STOP SAPI",offText="START SAPI",offColor=_hJ.accent,offTextColor=_hJ.dark},AutoBabiActive={ui=_mn.babi,onText="STOP BABI",offText="START BABI",offColor=_hJ.accent,offTextColor=_hJ.dark},AutoGosokBabiActive={ui=_mn.gosok,onText="STOP GOSOK",offText="GOSOK INDUK",offColor=_hJ.on,offTextColor=_hJ.text},AutoKlaimNgepetActive={ui=_mn.klaim,onText="STOP KLAIM",offText="KLAIM NGEPET",offColor=_hJ.on,offTextColor=_hJ.text},}_mn.apply=function(_rK)local _rL=_mn.flags[_rK]if not _rL then return end local _rM=_rL.ui.toggle if getgenv()[_rK]then _rM.BackgroundColor3=_hJ.danger _rM.TextColor3=Color3.new((917-916),(-8001+8002),(8749-8748))_rM.Text=_rL.onText _rL.ui.status.Text="Status: Memantau kandang..."else _rM.BackgroundColor3=_rL.offColor _rM.TextColor3=_rL.offTextColor _rM.Text=_rL.offText local _rN=(_rK=="AutoBabiActive"or _rK=="AutoGosokBabiActive"or _rK=="AutoKlaimNgepetActive")local _rO=getgenv().AutoBabiActive or getgenv().AutoGosokBabiActive or getgenv().AutoKlaimNgepetActive if not(_rN and _rO)then _rL.ui.status.Text="Status: Berhenti"end end end local function _rP(_rQ)local _rR={AutoSemuaFarmActive={btn=_lp,lbl=_ln,name="Semua"},KepitingFarmActive={btn=_ls,lbl=_lq,name="Kepiting"},GagakFarmActive={btn=_lH.toggle,lbl=_lH.status,name="Gagak"},DupaFarmActive={btn=_lv,lbl=_lt,name="Dupa"},KemenyanFarmActive={btn=_ly,lbl=_lw,name="Kemenyan"},MelatiFarmActive={btn=_lF.toggle,lbl=_lF.status,name="Melati"},JamurFarmActive={btn=_lG.toggle,lbl=_lG.status,name="Jamur"},PohonFarmActive={btn=_lB,lbl=_lz,name="Pohon"},BatuFarmActive={btn=_lE,lbl=_lC,name="Batu"},AutoTuyulLiarActive={btn=_po,lbl=_pm,name="Tuyul"},}for _rS,_rT in pairs(_rR)do if _rS~=_rQ and getgenv()[_rS]then getgenv()[_rS]=false if _rS=="AutoTuyulLiarActive"then _rT.btn.BackgroundColor3=_hJ.accent _rT.btn.TextColor3=_hJ.dark _rT.btn.Text="START TUYUL"_rT.lbl.Text="Status: Berhenti"else _rE(_rS,_rT.btn,_rT.lbl,_rT.name)end end end if not _mn.flags[_rQ]then for _rU in pairs(_mn.flags)do if getgenv()[_rU]then getgenv()[_rU]=false _mn.apply(_rU)end end end end table.insert(_o,_lp.MouseButton1Click:Connect(function()getgenv().AutoSemuaFarmActive=not getgenv().AutoSemuaFarmActive if getgenv().AutoSemuaFarmActive then _rP("AutoSemuaFarmActive")end _rE("AutoSemuaFarmActive",_lp,_ln,"Semua")end))table.insert(_o,_ls.MouseButton1Click:Connect(function()getgenv().KepitingFarmActive=not getgenv().KepitingFarmActive if getgenv().KepitingFarmActive then _rP("KepitingFarmActive")end _rE("KepitingFarmActive",_ls,_lq,"Kepiting")end))table.insert(_o,_lH.toggle.MouseButton1Click:Connect(function()getgenv().GagakFarmActive=not getgenv().GagakFarmActive if getgenv().GagakFarmActive then _rP("GagakFarmActive")end _rE("GagakFarmActive",_lH.toggle,_lH.status,"Gagak")end))table.insert(_o,_lv.MouseButton1Click:Connect(function()getgenv().DupaFarmActive=not getgenv().DupaFarmActive if getgenv().DupaFarmActive then _rP("DupaFarmActive")end _rE("DupaFarmActive",_lv,_lt,"Dupa")end))table.insert(_o,_ly.MouseButton1Click:Connect(function()getgenv().KemenyanFarmActive=not getgenv().KemenyanFarmActive if getgenv().KemenyanFarmActive then _rP("KemenyanFarmActive")end _rE("KemenyanFarmActive",_ly,_lw,"Kemenyan")end))table.insert(_o,_lF.toggle.MouseButton1Click:Connect(function()getgenv().MelatiFarmActive=not getgenv().MelatiFarmActive if getgenv().MelatiFarmActive then _rP("MelatiFarmActive")end _rE("MelatiFarmActive",_lF.toggle,_lF.status,"Melati")end))table.insert(_o,_lG.toggle.MouseButton1Click:Connect(function()getgenv().JamurFarmActive=not getgenv().JamurFarmActive if getgenv().JamurFarmActive then _rP("JamurFarmActive")end _rE("JamurFarmActive",_lG.toggle,_lG.status,"Jamur")end))table.insert(_o,_lB.MouseButton1Click:Connect(function()getgenv().PohonFarmActive=not getgenv().PohonFarmActive if getgenv().PohonFarmActive then _rP("PohonFarmActive")end _rE("PohonFarmActive",_lB,_lz,"Pohon")end))table.insert(_o,_lE.MouseButton1Click:Connect(function()getgenv().BatuFarmActive=not getgenv().BatuFarmActive if getgenv().BatuFarmActive then _rP("BatuFarmActive")end _rE("BatuFarmActive",_lE,_lC,"Batu")end))for _rV,_rW in pairs(_mn.flags)do table.insert(_o,_rW.ui.toggle.MouseButton1Click:Connect(function()getgenv()[_rV]=not getgenv()[_rV]if getgenv()[_rV]then _rP(_rV)end _mn.apply(_rV)if not getgenv()[_rV]and not _ee()then _ea(false)end end))end table.insert(_o,_mQ.MouseButton1Click:Connect(function()getgenv().AutoKelolaLapakActive=not getgenv().AutoKelolaLapakActive if getgenv().AutoKelolaLapakActive then _mQ.BackgroundColor3=_hJ.danger _mQ.TextColor3=Color3.new((9320-9319),(-8877+8878),(-5028+5029))_mQ.Text="STOP LAPAK"_mN.Text="Status: Memulai kelola lapak..."else _mQ.BackgroundColor3=_hJ.on _mQ.TextColor3=_hJ.text _mQ.Text="START LAPAK"_mN.Text="Status: Berhenti"end end))table.insert(_o,_mT.MouseButton1Click:Connect(function()getgenv().AutoMasakActive=not getgenv().AutoMasakActive if getgenv().AutoMasakActive then _mT.BackgroundColor3=_hJ.danger _mT.TextColor3=Color3.new((-3467+3468),(-2945+2946),(-5911+5912))_mT.Text="STOP MASAK"_mR.Text="Status: Menuju kompor..."else _mT.BackgroundColor3=_hJ.on _mT.TextColor3=_hJ.text _mT.Text="START MASAK"_mR.Text="Status: Berhenti"end end))table.insert(_o,_mW.MouseButton1Click:Connect(function()getgenv().AutoOlahActive=not getgenv().AutoOlahActive if getgenv().AutoOlahActive then _mW.BackgroundColor3=_hJ.danger _mW.TextColor3=Color3.new((-518+519),(5607-5606),(-670+671))_mW.Text="STOP OLAH"_mU.Text="Status: Mengolah bahan..."else _mW.BackgroundColor3=_hJ.on _mW.TextColor3=_hJ.text _mW.Text="START OLAH"_mU.Text="Status: Berhenti"end end))table.insert(_o,_po.MouseButton1Click:Connect(function()getgenv().AutoTuyulLiarActive=not getgenv().AutoTuyulLiarActive if getgenv().AutoTuyulLiarActive then _rP("AutoTuyulLiarActive")_po.BackgroundColor3=_hJ.danger _po.TextColor3=Color3.new((-1201+1202),(-8773+8774),(1004-1003))_po.Text="STOP TUYUL"_pm.Text="Status: Menunggu Tuyul Liar muncul..."else _po.BackgroundColor3=_hJ.accent _po.TextColor3=_hJ.dark _po.Text="START TUYUL"_pm.Text="Status: Berhenti"if not _ee()then _ea(false)end end end))table.insert(_o,_pq.MouseButton1Click:Connect(function()if _W then _W:FireServer("panggil")_pp.Text="Perintah: Memanggil pet tuyul..."_pp.TextColor3=_hJ.accent task.delay((-7512+7514),function()if _p()then _pp.Text="Pet Tuyul: Siap"end end)end end))table.insert(_o,_pr.MouseButton1Click:Connect(function()getgenv().AutoLatihPetActive=not getgenv().AutoLatihPetActive _pr.Text=getgenv().AutoLatihPetActive and "STOP LATIH"or "AUTO LATIH"if getgenv().AutoLatihPetActive and _W then _W:FireServer("latih")end end))table.insert(_o,_ps.MouseButton1Click:Connect(function()if _W then _W:FireServer("ternak")_pp.Text="Pet Tuyul ditugaskan: Jaga Peternakan!"_pp.TextColor3=_hJ.good end end))getgenv().KebunSync={panen=false,tanam=false}task.spawn(function()local _rX=getgenv().KebunSync local function _rY(_rZ)local _sa=tick()while _rX.tanam and(tick()-_sa)<(-7371+7373)and _p()do task.wait(0.05)end _rX.panen=true local _sb=_da()local _sc=_sb and _sb.CFrame local _sg,_sh=pcall(function()for _sd,_se in ipairs(_rZ)do if not _p()or not getgenv().AutoPanenActive or _ee()or _ef then break end if _se.Parent and _se:GetAttribute("Ready")==true then local _sf=_da()if not _sf then break end if getgenv().PH_MoveNear(_se:GetPivot().Position+Vector3.new((3210-3210),(5775-5772),(6947-6947)),function()return not getgenv().AutoPanenActive or _ee()or _ef end,true)then task.wait(0.1)_gP(_se)task.wait(0.15)end end end if _sc and not getgenv().AutoSiramActive and not getgenv().AutoTanamActive then getgenv().PH_WalkTo(_sc.Position,function()return not getgenv().AutoPanenActive or getgenv().AutoSiramActive or getgenv().AutoTanamActive end,(-7902+7905))end end)_rX.panen=false if not _sg then warn("[AutoPanen Besar] "..tostring(_sh))end end local _si=nil while _p()do task.wait(0.2)if not getgenv().AutoPanenActive or _ee()or _ef or _ry then continue end if not(_si and _si.Parent)then local _sj,_sk=_fq()_si=_sk end local _sl=_si and _si:FindFirstChild("Tanaman")if not _sl then continue end local _sm={}for _sn,_so in ipairs(_sl:GetChildren())do if not _p()or not getgenv().AutoPanenActive or _ee()or _ef then break end if _so:GetAttribute("Ready")==true then if _so:GetAttribute("Besar")==true then table.insert(_sm,_so)else _gP(_so)task.wait(0.05)end end end if#_sm>(-2942+2942)and _p()and getgenv().AutoPanenActive and not _ee()and not _ef then _rY(_sm)end end end)task.spawn(function()local _sp=getgenv().KebunSync local _sq=setmetatable({},{__mode="k"})local _sr={}local _ss=nil while _p()do task.wait(1.2)if _ee()or _ef then continue end local _st,_su=_fq()if not _su or not _su:FindFirstChild("Tanaman")then _ld.Text="Plot / Lahan milikmu tidak ditemukan"continue end local _sv=_su.Tanaman:GetChildren()local _sw=(-191+191)for _sx,_sy in ipairs(_sv)do if _sy:GetAttribute("Ready")==true then _sw+=(3238-3237)end end local _sz,_sA=_gj(_su)_ld.Text=string.format("Kecil: %d/%d | Besar: %d/12 | Siap Panen: %d\
-Dipanen: %d Hasil",_sz,_gd,_sA,_sw,_N)if getgenv().AutoSiramActive then local _sB=_dd("PenyiramTanaman")if _sB then for _sC,_sD in ipairs(_su.Tanaman:GetChildren())do if not _p()or _ee()or _ef or not getgenv().AutoSiramActive then break end while _sp.panen and _p()do task.wait(0.05)end local _sE=_sD:GetAttribute("AirSisa")local _sF=_sD.Parent and _sD:GetAttribute("Ready")~=true and _sE~=nil and _sE<=_F and(not _sq[_sD]or tick()>_sq[_sD])if _sF then local _sG,_sH=_da()if not _sG then break end _sH:EquipTool(_sB)task.wait(0.2)_sG,_sH=_da()if not _sG then break end if not getgenv().PH_MoveNear(_sD:GetPivot().Position+Vector3.new((-7081+7081),(-3775+3777),(5345-5345)),function()return not getgenv().AutoSiramActive or _sp.panen end)then continue end _sB:Activate()local _sI=tick()local _sJ=false while(tick()-_sI)<getgenv().WaterDuration do if _sp.panen then _sJ=true;break end if not _p()or not getgenv().AutoSiramActive or _ee()or _ef or not _da()then break end task.wait(0.1)end _sB:Deactivate()if not _sJ then _sq[_sD]=tick()+_G end task.wait(0.2)end end end end if getgenv().AutoTanamActive and _M and not _ee()and not _ef and _S then local _sK=false local _sL=_M if _fP(_sL)then local _sM={}local _sN=_gg(_sL)if _sN then for _sO,_sP in ipairs(_gz(_st))do if not _gJ(_su,_sP.spot)then table.insert(_sM,{key=_sP.key,spot=_sP.spot,big=true})end end elseif not(_ss and tick()<_ss)then local _sQ=_gj(_su)local _sR=_gp(_su)for _sS=(9933-9932),math.max(_gd-_sQ,(4510-4510))do table.insert(_sM,{key="k".._sS,spot=_sR[(_sQ+_sS-(-8214+8215))%#_sR+(-3173+3174)],})end end for _sT,_sU in ipairs(_sM)do if not _p()or not getgenv().AutoTanamActive or _ee()or _ef then break end if not _fP(_sL)then break end while _sp.panen and _p()do task.wait(0.05)end local _sV=_sr[_sU.key]and tick()<_sr[_sU.key]if not _sV then _sp.tanam=true if not _fX(_sL)then break end local _sW=_da()if not _sW then break end if not getgenv().PH_MoveNear(_sU.spot+Vector3.new((3514-3514),(-1899+1902),(-2485+2485)),function()return not getgenv().AutoTanamActive or _sp.panen end)then _sp.tanam=false break end if not _fX(_sL)then break end local _sX=#_su.Tanaman:GetChildren()_S:FireServer(_sU.spot)_sK=true task.wait(0.5)if#_su.Tanaman:GetChildren()<=_sX then if _sU.big then _sr[_sU.key]=tick()+(2563-2533)else _ss=tick()+(-1920+1928)break end end end _sp.tanam=false end _sp.tanam=false end if _sK then _qL()end end end end)local function _sY()local _sZ=(7461-7461)local function _ta(_tb)if not _tb then return end for _tc,_td in ipairs(_tb:GetChildren())do if _td:IsA("Tool")and _td:GetAttribute("ItemId")=="BijiBesi"then _sZ+=(_td:GetAttribute("Count")or(7185-7184))end end end _ta(_i:FindFirstChildOfClass("Backpack"))_ta(_i.Character)return _sZ end local _te={}do local _tf=(9009-8995)local function _tg()local _th=getgenv().PH_CamSaved if not _th then return end pcall(function()_i.CameraMinZoomDistance=0.5 _i.CameraMaxZoomDistance=_th.maxZ _i.CameraMinZoomDistance=_th.minZ _i.DevCameraOcclusionMode=_th.occ end)getgenv().PH_CamSaved=nil end _tg()_te.restoreCam=_tg _te.lockCam=function()pcall(function()if not getgenv().PH_CamSaved then getgenv().PH_CamSaved={occ=_i.DevCameraOcclusionMode,minZ=_i.CameraMinZoomDistance,maxZ=_i.CameraMaxZoomDistance,}end _i.DevCameraOcclusionMode=Enum.DevCameraOcclusionMode.Invisicam _i.CameraMinZoomDistance=0.5 _i.CameraMaxZoomDistance=_tf _i.CameraMinZoomDistance=_tf end)end _te.faceRock=function(_ti)local _tj=_da()if not _tj or not _ti or not _ti.Parent then return end local _tk=Vector3.new(_ti.Position.X,_tj.Position.Y,_ti.Position.Z)local _tl=_tk-_tj.Position if _tl.Magnitude<0.5 then return end if _tj.CFrame.LookVector:Dot(_tl.Unit)<0.98 then _tj.CFrame=CFrame.lookAt(_tj.Position,_tk)end end local _tm=game:GetService("ProximityPromptService")local _tn=setmetatable({},{__mode="k"})table.insert(_o,_tm.PromptShown:Connect(function(_to)_tn[_to]=true end))table.insert(_o,_tm.PromptHidden:Connect(function(_tp)_tn[_tp]=nil end))local function _tq(_tr,_ts)local _tt=tick()while tick()-_tt<_ts do if _tn[_tr]then return true end if not _tr.Parent or not _tr.Enabled then return false end task.wait(0.05)end return _tn[_tr]==true end _te.ensurePrompt=function(_tu)if _tq(_tu,1.3)then return true end local _tv=_da()local _tw=_tu.Parent and(_tu.Parent:IsA("Attachment")and _tu.Parent.WorldPosition or(_tu.Parent:IsA("BasePart")and _tu.Parent.Position))if _tv and _tw then local _tx=Vector3.new(_tw.X,_tv.Position.Y,_tw.Z)local _ty=_tv.Position-_tx local _tz=_ty.Magnitude if _tz>4.5 then local _tA=math.max((2316-2312),_tz*0.7)local _tB=_tx+_ty.Unit*_tA _tv.CFrame=CFrame.lookAt(_tB,_tx)_tv.AssemblyLinearVelocity=Vector3.zero end end return _tq(_tu,1.0)end end local function _tC(_tD)task.spawn(function()local _tE=setmetatable({},{__mode="k"})local _tF=nil local _tG=false local function _tH()return _p()and getgenv()[_tD.flag]and not getgenv().PH_Repairing end local function _tI()local _tJ=_da()if not _tJ then return end local _tK=RaycastParams.new()_tK.FilterType=Enum.RaycastFilterType.Exclude _tK.FilterDescendantsInstances={_i.Character}local _tL=workspace:Raycast(_tJ.Position,Vector3.new((547-547),-(-8588+8668),(-8677+8677)),_tK)if _tL and(_tJ.Position.Y-_tL.Position.Y)>(1411-1406)then _tJ.CFrame=CFrame.new(_tL.Position+Vector3.new((-7314+7314),(-638+641),(-5235+5235)))end _tJ.AssemblyLinearVelocity=Vector3.zero end local function _tM(_tN,_tO)local _tP=_da()if not _tP then return end local _tQ=(_tP.Position-_tN).Magnitude _ea(true)local _tR=(_tD.name=="Jamur"or _tD.name=="Melati")_tD.status.Text=(_tO or(_tR and "Berjalan"or "Teleport")).." ("..math.floor(_tQ).." studs)..."return _fd(_tN,function()return not _tH()or not _da()end,_tR)end while _p()do task.wait(0.15)if getgenv().PH_Repairing and getgenv()[_tD.flag]then _tD.status.Text="Menunggu perbaikan alat..."task.wait(0.5)continue end if not getgenv()[_tD.flag]then if _tD.name=="Batu"then _te.restoreCam()end if _tD.flyLock then _dO()end if _tF then local _tS=_tF _tF=nil local _tT=_da()if _tT and not _ee()and(_tT.Position-_tS).Magnitude>(-7299+7303)then _ef=true local _tU=(_tD.name=="Jamur"or _tD.name=="Melati")if _tU then getgenv().PH_JamurReturning=true end _ea(true)_tD.status.Text="Kembali ke titik awal..."_fd(_tS,function()return not _p()or _ee()or not _da()end,_tU)getgenv().PH_JamurReturning=false _ef=false if not _ee()then _ea(false)end _tD.status.Text="Status: Berhenti"end end _tG=false if not _ee()and not _ef then _ea(false)end task.wait(0.5)continue end local _tV,_tW=_da()if not _tV then task.wait((-5924+5925))continue end if not _tF then _tF=_tV.Position end if _tD.flyLock and _tD.toggle and _tW and _tW.Health>(-8806+8806)and _tW.MaxHealth>(-9209+9209)and(_tW.Health/_tW.MaxHealth)<0.4 then getgenv()[_tD.flag]=false _rE(_tD.flag,_tD.toggle,_tD.status,_tD.name)_tD.status.Text="Berhenti otomatis: HP rendah ("..math.floor(_tW.Health)..")"continue end if _tD.toolCategory then local _tX=_dJ(_tD.toolCategory)if not _tX then _tD.status.Text="Alat tidak ditemukan di tas!"task.wait((-7720+7722))continue end end if _tD.name=="Batu"and getgenv().BatuIronBase==nil then getgenv().BatuIronBase=_sY()end _tD.status.Text="Mencari ".._tD.name.."..."local _tY=_tD.fetchNodes(_tE)if#_tY==(1985-1985)then if not _tG and _tF then if(_tV.Position-_tF).Magnitude>(-6244+6248)then _tM(_tF,"Kembali ke titik awal")local _tZ=_da()_tG=(_tZ and(_tZ.Position-_tF).Magnitude<=(9553-9547))or false else _tG=true end end if _tH()then _tD.status.Text="Semua ".._tD.name:lower().." habis! Menunggu respawn..."end if _tD.flyLock then _dO()_tI()end _ea(false)task.wait(2.5)continue end _tG=false local _ua=_tY[(6348-6347)]local _ub=(_tD.toolCategory=="Batu")and _ua.pos or(_ua.pos+Vector3.new((-6831+6831),_v,(9022-9022)))local _uc=_tM(_ub)_tV,_tW=_da()if not _tH()or not _tV then continue end if _uc==false and(_tD.name=="Jamur"or _tD.name=="Melati")then _tD.status.Text="Tidak terjangkau, lewati..."_tE[_ua.item]=tick()+_y*(3589-3586)continue end if _tD.toolCategory=="Batu"then _ea(false)_te.lockCam()_te.faceRock(_ua.part)else _ea(true)if _tD.flyLock then _dU(_ub)end end task.wait(0.2)if not _gT(_ua)or(_ua.item:GetAttribute("Tumbang")==true)then _tE[_ua.item]=tick()+_y continue end if _tD.toolCategory then _dJ(_tD.toolCategory)task.wait(0.1)end local _ud=false local _ue=tick()local _uf=_tD.maxWaitDestroy or(-6325+6350)local _ug=_ua.prompt.HoldDuration or _tD.holdDuration while _tH()and _da()and(tick()-_ue)<_uf do local _uh=false if _tD.flyLock then local _ui=_da()if getgenv().PH_PetirDanger then _tD.status.Text="Petir! Menunggu aman..."_ue+=0.2 task.wait(0.2)_uh=true elseif _ui and(_ui.Position-_ub).Magnitude>(4105-4101)then _tD.status.Text="Kembali ke ".._tD.name.." setelah menghindar..."_tM(_ub)_dU(_ub)task.wait(0.4)_uh=true end end if not _uh then if _ua.item:GetAttribute("Tumbang")==true or not _ua.item.Parent or not _ua.prompt.Parent then _ud=true break end if _tD.toolCategory=="Batu"then _te.faceRock(_ua.part)pcall(function()_ua.prompt.RequiresLineOfSight=false end)task.wait(0.05)end if _ua.prompt.Enabled then _tD.status.Text=(_tD.actionVerb or "Mengambil").." ".._tD.name.."..."local _uj=true if _tD.toolCategory=="Batu"then _uj=_te.ensurePrompt(_ua.prompt)_te.faceRock(_ua.part)end if _uj then _fm(_ua.prompt,_ug)else _tD.status.Text="Prompt batu tertutup, pakai cadangan..."if fireproximityprompt then pcall(fireproximityprompt,_ua.prompt)end task.wait(0.3)end task.wait(0.15)end if _ua.item:GetAttribute("Tumbang")==true or not _ua.item.Parent or not _ua.prompt.Parent then _ud=true break end if _tD.waitForDestroy then _tD.status.Text="Menunggu ".._tD.name:lower().." tumbang/hancur..."local _uk=tick()while not _ua.prompt.Enabled and(tick()-_uk)<2.5 do if _ua.item:GetAttribute("Tumbang")==true then _ud=true break end task.wait(0.1)end else task.wait(0.35)_ud=(not _ua.item.Parent)or(not _ua.prompt.Parent)or(not _ua.prompt.Enabled)break end end end if _ud then task.wait(0.3)_Q[_tD.name]=(_Q[_tD.name]or(-9067+9067))+(3045-3044)_R+=(4857-4856)_tD.counter.Text="Terkumpul: ".._Q[_tD.name].." "..(_mm[_tD.name]or _tD.name)_lo.Text="Total Terkumpul: ".._R.." Item"if _tD.name=="Batu"and getgenv().BatuIronLabel and getgenv().BatuIronBase then local _ul=math.max((-6628+6628),_sY()-getgenv().BatuIronBase)getgenv().BatuIronLabel.Text="Biji Besi: +".._ul end _tE[_ua.item]=tick()+(_tD.successCooldown or _x)else _tD.status.Text="Gagal interaksi, coba lagi..."_tE[_ua.item]=tick()+_y end task.wait(0.2)end end)end _tC({flag="KepitingFarmActive",name="Kepiting",status=_lq,counter=_lr,fetchNodes=function(_um)return _gV("kepiting",_um)end,})task.spawn(function()local _un=game:GetService("PathfindingService")local _uo=setmetatable({},{__mode="k"})local _up=RaycastParams.new()_up.FilterType=Enum.RaycastFilterType.Exclude local _uq={conn=nil,held=false,prevCam=nil,aim=nil,used=false,blockedUntil=(-6765+6765)}local function _ur()return _p()and getgenv().GagakFarmActive end local function _us(_ut)_lH.status.Text=_ut end local function _uu(_uv)_up.FilterDescendantsInstances={_i.Character}local _uw=workspace:Raycast(_uv,Vector3.new((1400-1400),-(4892-4742),(-2292+2292)),_up)return _uw and _uw.Position or Vector3.new(_uv.X,_uv.Y-(-9044+9051),_uv.Z)end local function _ux(_uy)local _uz=_da()if not _uz then return false end local _uA=(_uy.prompt.MaxActivationDistance or(-2178+2184))-1.5 return(_uz.Position-_uy.pos).Magnitude<=math.max((5039-5037),_uA)end local function _uB(_uC,_uD)local _uE,_uF=_da()if not _uE then return false end if _ux(_uD)then return true end local _uG local _uH=_un:CreatePath({AgentRadius=(-4101+4103),AgentHeight=(3140-3135),AgentCanJump=true})local _uI=pcall(function()_uH:ComputeAsync(_uE.Position,_uC)end)if _uI and _uH.Status==Enum.PathStatus.Success then _uG=_uH:GetWaypoints()else _uG={{Position=_uC,Action=Enum.PathWaypointAction.Walk}}end for _uJ,_uK in ipairs(_uG)do if not _ur()then return false end local _uL,_uM=_da()if not _uL then return false end if _uK.Action==Enum.PathWaypointAction.Jump then _uM.Jump=true end _uM:MoveTo(_uK.Position)local _uN,_uO,_uP=tick(),_uL.Position,tick()while _ur()do task.wait(0.1)local _uQ,_uR=_da()if not _uQ then return false end if _ux(_uD)then _uR:MoveTo(_uQ.Position)return true end if getgenv().PH_PetirDanger then _us("Petir! Menunggu aman...")_uN+=0.1 _uP=tick()else local _uS=Vector3.new(_uQ.Position.X-_uK.Position.X,(-3221+3221),_uQ.Position.Z-_uK.Position.Z).Magnitude if _uS<(-6139+6142)then break end if(_uQ.Position-_uO).Magnitude>(1432-1431)then _uO,_uP=_uQ.Position,tick()elseif tick()-_uP>1.5 then _uR.Jump=true _uR:MoveTo(_uK.Position)if tick()-_uP>(-7216+7222)then return false end end if tick()-_uN>(8697-8685)then break end end end end return _ux(_uD)end local function _uT(_uU)if _uq.held==_uU then return end _uq.held=_uU pcall(function()_g:SendKeyEvent(_uU,Enum.KeyCode.W,false,game)end)end local function _uV()local _uW=_i.Character local _uX=_i:FindFirstChildOfClass("Backpack")return(_uW and _uW:FindFirstChild("OwlStaff"))or(_uX and _uX:FindFirstChild("OwlStaff"))end local function _uY()_uT(false)if _uq.conn then _uq.conn:Disconnect()_uq.conn=nil end _uq.aim=nil if _uq.prevCam then local _uZ=workspace.CurrentCamera _uZ.CameraType=(_uq.prevCam==Enum.CameraType.Scriptable)and Enum.CameraType.Custom or _uq.prevCam _uq.prevCam=nil end end local function _va()if _uq.conn then return end local _vb=workspace.CurrentCamera _uq.prevCam=_vb.CameraType _vb.CameraType=Enum.CameraType.Scriptable _uq.conn=_c.RenderStepped:Connect(function()if not _p()then _uY()return end local _vc=_cW()local _vd=_uq.aim if not _vc or not _vd then return end local _ve=_vd-_vc.Position if _ve.Magnitude<0.1 then return end _ve=_ve.Unit if math.abs(_ve.Y)>0.999 then _ve=(_ve+Vector3.new(0.01,(6040-6040),(-2564+2564))).Unit end local _vf=_vc.Position-_ve*(-226+238)_vb.CFrame=CFrame.lookAt(_vf,_vf+_ve)end)end local function _vg()local _vh=_i.Character local _vi,_vj=_da()if not _vj then return false end if _i:GetAttribute("IsOwl")and _vh:FindFirstChild("OwlStaff")then _uq.used=true return true end local _vk=_uV()if not _vk then return false end if _vk.Parent~=_vh then _vj:EquipTool(_vk)task.wait(0.35)end if not _i:GetAttribute("IsOwl")then _vk:Activate()local _vl=tick()while tick()-_vl<(-4834+4837)and not _i:GetAttribute("IsOwl")do task.wait(0.1)end end local _vm=_i:GetAttribute("IsOwl")==true if _vm then _uq.used=true end return _vm end local function _vn()_uY()if _i:GetAttribute("IsOwl")then local _vo,_vp=_da()if _vp then _vp:UnequipTools()end local _vq=tick()while tick()-_vq<(3628-3625)and _i:GetAttribute("IsOwl")do task.wait(0.1)end task.wait(0.3)end _uq.used=false end local function _vr(_vs)if not _vg()then return false end _va()_uq.aim=_vs.pos _uT(true)local _vt=tick()local _vu,_vv=math.huge,tick()local _vw=(760-760)while _ur()and getgenv().GagakOwlMode do task.wait(0.05)local _vx=_da()if not _vx then return false end if not _i:GetAttribute("IsOwl")then _uT(false)if not _vg()then return false end _uq.aim=_vs.pos _uT(true)end if getgenv().PH_PetirDanger then _us("Petir! Menunggu aman...")_uT(false)_vt+=0.05 _vv=tick()else _uT(true)local _vy=(_vx.Position-_vs.pos).Magnitude if _vy<=4.5 then return true end if _vy<_vu-(-9779+9780)then _vu,_vv=_vy,tick()end if tick()-_vv>1.5 then _vw+=(-3693+3694)if _vw>(3055-3052)then return false end _us("Terhalang, naik dulu...")local _vz=Vector3.new(_vs.pos.X-_vx.Position.X,(3254-3254),_vs.pos.Z-_vx.Position.Z)_vz=(_vz.Magnitude>0.1)and(_vz.Unit*(-6923+6938))or Vector3.zero _uq.aim=_vx.Position+Vector3.new((-6529+6529),(6488-6448),(5217-5217))+_vz task.wait(0.9)_uq.aim=_vs.pos _vu,_vv=math.huge,tick()end if tick()-_vt>(372-342)then return false end end end return false end while _p()do task.wait(0.15)if not getgenv().GagakFarmActive then if _uq.used or _uq.conn then _vn()end task.wait(0.5)continue end local _vA,_vB=_da()if not _vA then if _uq.conn then _uY()end task.wait((-5252+5253))continue end if _vB.MaxHealth>(-4936+4936)and(_vB.Health/_vB.MaxHealth)<0.4 then getgenv().GagakFarmActive=false _rE("GagakFarmActive",_lH.toggle,_lH.status,"Gagak")_vn()_us("Berhenti otomatis: HP rendah ("..math.floor(_vB.Health)..")")continue end if getgenv().PH_PetirDanger then _uT(false)_us("Petir! Menunggu aman...")task.wait(0.5)continue end _us("Mencari Gagak...")local _vC=_gV("gagak",_uo)if#_vC==(-5042+5042)then if _uq.used or _uq.conn then _vn()end _us("Semua gagak habis! Menunggu respawn...")task.wait(2.5)continue end local _vD=_vC[(615-614)]local _vE=getgenv().GagakOwlMode and tick()>=_uq.blockedUntil if _vE and not _uV()then _uq.blockedUntil=tick()+(9352-9322)_us("Owl Staff tidak ada di tas, jalan kaki 30 dtk")_vE=false end if _vE and not _vg()then _uq.blockedUntil=tick()+(1091-1061)_us("Owl Staff gagal aktif, jalan kaki 30 dtk")_vE=false end if not _vE and(_uq.used or _uq.conn)then _vn()end local _vF if _vE then _us("Terbang ke Gagak ("..math.floor(_vD.dist).." studs)...")_vF=_vr(_vD)else _us("Jalan ke Gagak ("..math.floor(_vD.dist).." studs)...")local _vG=_uu(_vD.pos)+Vector3.new((-762+762),(-412+415),(-95+95))_vF=_uB(_vG,_vD)end if not _ur()then continue end if not _vF or not _gT(_vD)then if _vE then _uT(false)end _uo[_vD.item]=tick()+_y _us("Gagal menjangkau, coba target lain...")continue end _us("Mengambil Gagak...")_fm(_vD.prompt,_vD.prompt.HoldDuration or 0.5)task.wait(0.35)local _vH=(not _vD.item.Parent)or(not _vD.prompt.Parent)or(not _vD.prompt.Enabled)if _vH then _Q.Gagak=(_Q.Gagak or(-9213+9213))+(-1725+1726)_R+=(-5590+5591)_lH.counter.Text="Terkumpul: ".._Q.Gagak.." Gagak"_lo.Text="Total Terkumpul: ".._R.." Item"_uo[_vD.item]=tick()+_x else _us("Gagal interaksi, coba lagi...")_uo[_vD.item]=tick()+_y end task.wait(0.2)end end)_tC({flag="DupaFarmActive",name="Dupa",status=_lt,counter=_lu,fetchNodes=function(_vI)return _gV("dupa",_vI)end,})_tC({flag="KemenyanFarmActive",name="Kemenyan",status=_lw,counter=_lx,fetchNodes=function(_vJ)return _gV("kemenyan",_vJ)end,})_tC({flag="MelatiFarmActive",name="Melati",status=_lF.status,counter=_lF.counter,fetchNodes=function(_vK)return _gV("melati",_vK)end,})_tC({flag="JamurFarmActive",name="Jamur",status=_lG.status,counter=_lG.counter,fetchNodes=function(_vL)return _gV("jamurkuburan",_vL)end,})_tC({flag="PohonFarmActive",name="Pohon",actionVerb="Menebang",toolCategory="Pohon",status=_lz,counter=_lA,holdDuration=0.35,waitForDestroy=true,maxWaitDestroy=(4755-4730),successCooldown=(-8664+8689),fetchNodes=function(_vM)return _hi("Pohon",_C,_vM)end,})_tC({flag="BatuFarmActive",name="Batu",actionVerb="Menambang",toolCategory="Batu",status=_lC,counter=_lD,holdDuration=0.35,waitForDestroy=true,maxWaitDestroy=(3813-3788),successCooldown=(8776-8751),fetchNodes=function(_vN)if getgenv().BatuBesiMode then local _vO=_hi("Batu","besar",_vN)if#_vO==(-3699+3699)then _vO=_hi("Batu","sedang",_vN)end return _vO end return _hi("Batu",_D,_vN)end,})local _vP={{category="Kepiting",query="kepiting"},{category="Dupa",query="dupa"},{category="Kemenyan",query="kemenyan"},{category="Melati",query="melati"},{category="Jamur",query="jamurkuburan"},}task.spawn(function()local _vQ=setmetatable({},{__mode="k"})local _vR=nil local _vS=false local _vT=(-8308+8309)local _vU=(-8079+8079)local function _vV()return _p()and getgenv().AutoSemuaFarmActive end local function _vW(_vX,_vY)local _vZ=_da()if not _vZ then return end local _wa=(_vZ.Position-_vX).Magnitude _ea(true)_ln.Text=(_vY or "Teleport").." ("..math.floor(_wa).." studs)..."return _fd(_vX,function()return not _vV()or not _da()end)end local function _wb(_wc)if not _p()or _ee()then return end local _wd=_da()if not _wd then return end local _we=(_wd.Position-_wc).Magnitude if _we<=(7770-7766)then return end _ef=true _ea(true)_ln.Text="Kembali ke titik awal ("..math.floor(_we).." studs)..."_fd(_wc,function()return not _p()or _ee()or not _da()end)_ef=false if not _ee()then _ea(false)end _ln.Text="Status: Berhenti"end local function _wf()for _wg=(4164-4164),#_vP-(6954-6953)do local _wh=((_vT-(-334+335)+_wg)%#_vP)+(-7049+7050)local _wi=_vP[_wh]local _wj=_gV(_wi.query,_vQ)if#_wj>(7353-7353)then if _wh~=_vT then _vT=_wh _vU=(4966-4966)end return _wi.category,_wj[(3772-3771)]end end return nil,nil end while _p()do task.wait(0.15)if not getgenv().AutoSemuaFarmActive then if _vR then local _wk=_vR _vR=nil _wb(_wk)end _vS=false _vT=(-1094+1095)_vU=(-9241+9241)task.wait(0.5)continue end local _wl,_wm=_da()if not _wl then task.wait((-4308+4309))continue end if not _vR then _vR=_wl.Position end _ln.Text="Mencari ".._vP[_vT].category.."..."local _wn,_wo=_wf()if not _wo then if not _vS and _vR then if(_wl.Position-_vR).Magnitude>(-4860+4864)then _vW(_vR,"Kembali ke titik awal")local _wp=_da()_vS=(_wp and(_wp.Position-_vR).Magnitude<=(-3454+3460))or false else _vS=true end end if _vV()then _ln.Text="Semua bahan habis! Menunggu respawn..."end _ea(false)task.wait(2.5)continue end _vS=false _vW(_wo.pos+Vector3.new((331-331),_v,(-2416+2416)),"Teleport ke ".._wn)_wl,_wm=_da()if not _vV()or not _wl then continue end _ea(true)task.wait(0.2)if not _gT(_wo)then _vQ[_wo.item]=tick()+_y continue end local _wq=false local _wr=tick()local _ws=_wo.prompt.HoldDuration while _vV()and _da()and(tick()-_wr)<(457-447)do if not _wo.item.Parent or not _wo.prompt.Parent then _wq=true break end if _wo.prompt.Enabled then _ln.Text="Mengambil ".._wn.."..."_fm(_wo.prompt,_ws)task.wait(0.15)end if not _wo.item.Parent or not _wo.prompt.Parent then _wq=true break end task.wait(0.35)_wq=(not _wo.item.Parent)or(not _wo.prompt.Parent)or(not _wo.prompt.Enabled)break end if _wq then task.wait(0.3)_Q[_wn]=(_Q[_wn]or(5506-5506))+(-5618+5619)_R+=(-6959+6960)if _ml[_wn]then _ml[_wn].Text="Terkumpul: ".._Q[_wn].." ".._mm[_wn]end _lo.Text="Total Terkumpul: ".._R.." Item"_vQ[_wo.item]=tick()+_x _vU+=(4027-4026)if _vU>=_B then _vT=(_vT%#_vP)+(-8723+8724)_vU=(4738-4738)end else _ln.Text="Gagal interaksi, coba lagi..."_vQ[_wo.item]=tick()+_y end task.wait(0.2)end end)task.spawn(function()local _wt=setmetatable({},{__mode="k"})local function _wu(_wv)local _ww,_wx=pcall(function()return require(_e:WaitForChild(_wv,(-7458+7461)))end)return(_ww and type(_wx)=="table")and _wx or nil end local _wy,_wz,_wA=_wu("AyamConfig"),_wu("SapiConfig"),_wu("BabiConfig")local _wB=(_wy and _wy.Pakan and _wy.Pakan.item)or "Jagung"local _wC=(_wz and _wz.Pakan and _wz.Pakan.item)or "Jagung"local _wD=(_wA and _wA.Palung and _wA.Palung.Kapasitas)or(1745-1735)local _wE=(_wA and _wA.Gosok and _wA.Gosok.Lama)or(-1316+1319)local _wF={}if _wA and type(_wA.Pakan)=="table"then for _wG,_wH in pairs(_wA.Pakan)do if type(_wH)=="table"and _wH.itemId then table.insert(_wF,_wH)end end table.sort(_wF,function(_wI,_wJ)return(_wI.mutu or(-8448+8448))>(_wJ.mutu or(-5303+5303))end)end if#_wF==(3402-3402)then _wF={{itemId="SateKepiting",nama="Sate Kepiting"},{itemId="PisangRajaRebus",nama="Pisang Raja Rebus"},{itemId="TumisKamboja",nama="Tumis Kamboja"},{itemId="SateGagak",nama="Sate Gagak"},{itemId="JamurRebus",nama="Jamur Rebus"},}end local _wK={ayam="KandangAyam",sapi="KandangSapi",babi="KandangBabi"}local _wL={ayam="Ayam",sapi="Sapi",babi="Babi"}local function _wM(_wN,_wO)local _wP=_mn[_wN]if _wP and _wP.status then _wP.status.Text=_wO end end local function _wQ(_wR)local _wS=_i:FindFirstChildOfClass("Backpack")for _wT,_wU in ipairs({_i.Character,_wS})do if _wU then for _wV,_wW in ipairs(_wU:GetChildren())do if _wW:IsA("Tool")and _wR(_wW)then return _wW end end end end return nil end local function _wX(_wY)return _wQ(function(_wZ)return _wZ:GetAttribute("ItemId")==_wY and not _wZ:GetAttribute("IsSeed")end)end local function _xa(_xb)local _xc=_wX(_xb)if not _xc then return(3434-3434)end return tonumber(_xc.Name:match("[xX](%d+)%s*$"))or(-5609+5610)end local function _xd(_xe)local _xf,_xg=_da()if not _xg or not _xe or not _xe.Parent then return false end if _xe.Parent==_i.Character then return true end _xg:UnequipTools()task.wait(0.1)_xg:EquipTool(_xe)task.wait(0.35)return _xe.Parent==_i.Character end local function _xh(_xi)local _xj=_xi.Parent if not _xj then return nil end if _xj:IsA("Attachment")then return _xj.WorldPosition end if _xj:IsA("BasePart")then return _xj.Position end if _xj:IsA("Model")then return _xj:GetPivot().Position end local _xk=_xj:FindFirstChildWhichIsA("BasePart",true)return _xk and _xk.Position or nil end local function _xl(_xm)local _xn=_xm.Parent local _xo=_xn and _xn:FindFirstChild("TextLabel",true)if _xo and _xo:IsA("TextLabel")then local _xp,_xq=_xo.Text:match("(%d+)%s*/%s*(%d+)")if _xp and _xq then return tonumber(_xp),tonumber(_xq)end end return nil,nil end local function _xr(_xs)return tonumber(_xs.ObjectText:match("[xX](%d+)%)"))end local function _xt(_xu)local _xv=(-8781+8782)local _xw=_xu:FindFirstAncestorWhichIsA("Model")while _xw and _xw.Parent~=workspace do _xw=_xw.Parent end local _xx=_xw and _xw:FindFirstChild("Info")local _xy=_xx and _xx:FindFirstChild("Baris1",true)if _xy and _xy:IsA("TextLabel")then _xv=tonumber(_xy.Text:match("Lv%s*(%d+)"))or(5267-5266)end if _wA and type(_wA.KapasitasPalung)=="function"then local _xz,_xA=pcall(_wA.KapasitasPalung,_xv)if _xz and tonumber(_xA)then return tonumber(_xA)end end return _wD end local _xB,_xC=nil,(-8629+8629)for _xD,_xE in ipairs(_e:GetDescendants())do if _xE:IsA("RemoteEvent")then pcall(function()_xE.OnClientEvent:Connect(function(_xF)if not _p()then return end if type(_xF)=="table"and _xF.kind=="babi"and type(_xF.text)=="string"then _xB,_xC=_xF.text:lower(),tick()end end)end)end end local _xG=(-5690+5790)local function _xH(_xI)local _xJ=_xI while _xJ and _xJ~=workspace do if _xJ.Name:find("^Babi_")then return _xJ end _xJ=_xJ.Parent end return nil end local function _xK(_xL)if not _xL:FindFirstAncestor("modelbabi")then return nil end local _xM=_xH(_xL)local _xN=_xM and _xM:FindFirstChild("OH_Babi",true)if not _xN then return nil end local _xO=_xN:FindFirstChild("StatusLabel",true)local _xP=_xN:FindFirstChild("NamaLabel",true)if not(_xO and _xO:IsA("TextLabel"))then return nil end local _xQ=tonumber(_xO.Text:match("[Rr]awatan%s*(%d+)%s*%%"))if not _xQ then return nil end return _xQ,(_xP and _xP:IsA("TextLabel")and _xP.Text~=""and _xP.Text)or "Babi Ngepet"end task.spawn(function()while _p()do local _xR=_mn.babi if _xR and _xR.btns then for _xS,_xT in pairs(_xR.btns)do if _xS~="auto"then local _xU=_xa(_xS)_xR.stock[_xS]=_xU _xT.Text=(_xR.short[_xS]or _xS).."\
-"..(_xU>(-3950+3950)and("x".._xU)or "habis")_xT.TextTransparency=(_xU>(3979-3979))and(-5453+5453)or 0.55 end end end task.wait((8601-8599))end end)local function _xV(_xW)if _xW.role=="gosok"then local _xZ=_wQ(function(_xX)local _xY=_xX.Name:lower()return _xY:find("pengosok")~=nil or _xY:find("penggosok")~=nil end)return _xZ,"Pengosok"end if _xW.role=="pakan"then if _xW.jenis=="ayam"then return _wX(_wB),_wB end if _xW.jenis=="sapi"then return _wX(_wC),_wC end local _ya=getgenv().BabiPakanPilihan or "auto"if _ya~="auto"then local _yb=_ya for _yc,_yd in ipairs(_wF)do if _yd.itemId==_ya then _yb=_yd.nama or _ya end end return _wX(_ya),_yb end local _ye=_xW.palungNama and _xW.palungNama:lower()if _ye then for _yf,_yg in ipairs(_wF)do if(_yg.nama or""):lower()==_ye then local _yh=_wX(_yg.itemId)if _yh then return _yh,_yg.nama end end end end for _yi,_yj in ipairs(_wF)do local _yk=_wX(_yj.itemId)if _yk then return _yk,_yj.nama end end return nil,"pakan babi"end return nil,nil end local function _yl(_ym)local _yn={}local _yo=tostring(_i.UserId)local _yp=_fq()local _yq=_wK[_ym]for _yr,_ys in ipairs(workspace:GetChildren())do if _ys.Name:find(_yq)and(_ys.Name:find(_yo)or(_yp and _ys.Parent==_yp))then table.insert(_yn,_ys)end end if _yp then for _yt,_yu in ipairs(_yp:GetChildren())do if _yu.Name:find(_yq)and not table.find(_yn,_yu)then table.insert(_yn,_yu)end end end return _yn end local function _yv(_yw,_yx)local _yy={}local _yz=_yl(_yw)local _yA=_mn[_yw]if _yA and _yA.info then _yA.info.Text=(#_yz>(1769-1769))and("Kandang terdeteksi: "..#_yz.." bangunan")or "Kandang belum ditemukan di plot"end for _yB,_yC in ipairs(_yz)do for _yD,_yE in ipairs(_yC:GetDescendants())do if _yE:IsA("ProximityPrompt")and _yE.Enabled and(not _wt[_yE]or tick()>_wt[_yE])then local _yF,_yG,_yH=_yE.ActionText:lower(),_yE.ObjectText:lower(),_yE.Name:lower()local _yI,_yJ,_yK local _yL,_yM if _yw=="babi"then if _yF:find("bawa")then if getgenv().AutoKlaimNgepetActive then local _yN,_yO=_xK(_yE)if _yN and _yN>=_xG then _yI,_yK="klaim","AutoKlaimNgepetActive"_yL,_yM=_yO,_yN end end else local _yP=_yG:find("bandar")or _yF:find("ambil")if not _yP then if _yF:find("gosok")or _yF:find("cuci")then if getgenv().AutoGosokBabiActive and _yE:FindFirstAncestor("modelinduk")then _yI,_yK="gosok","AutoGosokBabiActive"end elseif _yG:find("palung")or _yG:find("tempat makan")or _yF:find("palung")or _yF:find("tuang")then if getgenv().AutoBabiActive then _yI,_yK="pakan","AutoBabiActive"_yJ=_yE.ObjectText:match("%((.-)%s*[xX]%d+%)")local _yQ=_xr(_yE)if _yQ and _yQ>=_xt(_yE)then _wt[_yE]=tick()+(9321-9306)_yI=nil end end end end end else local _yR=_yF:find("ambil ayam")or _yF:find("ambil sapi")if not _yR then if _yH=="pakanprompt"or _yF:find("beri makan")then _yI="pakan"local _yS,_yT=_xl(_yE)if _yS and _yT and _yS>=_yT then _wt[_yE]=tick()+(3553-3543)_yI=nil end elseif _yH=="ambilprompt"or _yF:find("ambil semua")then _yI="panen"end _yK=_yx end end if _yI then local _yU=_xh(_yE)if _yU then table.insert(_yy,{prompt=_yE,pos=_yU,role=_yI,jenis=_yw,flag=_yK,palungNama=_yJ,babiNama=_yL,persen=_yM,text=_yE.ActionText.." ".._yE.ObjectText,hold=_yE.HoldDuration or 0.4,})end end end end end local _yV={panen=(9654-9653),pakan=(-5874+5876),klaim=(-9565+9568),gosok=(2275-2271)}table.sort(_yy,function(_yW,_yX)if _yW.role~=_yX.role then return _yV[_yW.role]<_yV[_yX.role]end return _yW.text<_yX.text end)return _yy end local function _yY(_yZ)local _za=_mn[_yZ.jenis]local _zb=_yZ.flag local function _zc()return not _p()or not getgenv()[_zb]or not _da()end if _zc()then return false end if not _yZ.prompt.Parent or not _yZ.prompt.Enabled then return true end local _zd,_ze if _yZ.role=="pakan"or _yZ.role=="gosok"then _zd,_ze=_xV(_yZ)if not _zd then _wM(_yZ.jenis,"Tidak ada "..tostring(_ze).." di tas")_wt[_yZ.prompt]=tick()+(4168-4148)return true end end local _zf=_xh(_yZ.prompt)or _yZ.pos local _zg=_da()local _zh=(not _zg)or(_zg.Position-_zf).Magnitude>(-4129+4137)_wM(_yZ.jenis,"Menuju ".._yZ.text.."...")_ea(true)_fd(_zf+Vector3.new((-4670+4670),(-9446+9449),(492-492)),_zc)if _zc()then return false end if _zh then task.wait(0.5)end if _zd then _wM(_yZ.jenis,"Pegang "..tostring(_ze).."...")if not _xd(_zd)then _wt[_yZ.prompt]=tick()+(8205-8195)return true end task.wait(0.2)if not _yZ.prompt.Parent or not _yZ.prompt.Enabled then return true end end local _zi=_wL[_yZ.jenis]local function _zj(_zk)_Q[_zi]+=_zk if _za and _za.counter then _za.counter.Text="Hasil ".._zi..": ".._Q[_zi].." Kali"end end if _yZ.role=="pakan"then local _zl,_zm,_zn=(5904-5904),(7319-7319),false local function _zo()return(_zd and _zd.Parent)and(tonumber(_zd.Name:match("[xX](%d+)%s*$"))or(-8939+8940))or(-8197+8197)end if _yZ.jenis=="babi"then local _zp=_xt(_yZ.prompt)local _zq,_zr=(-9137+9137),false for _zs=(6932-6931),_zp+(-595+603)do if _zc()then return false end if not _yZ.prompt.Parent or not _yZ.prompt.Enabled then break end local _zt=_xr(_yZ.prompt)or(-9208+9208)if _zt>=_zp then _zn=true break end if not _zd or not _zd.Parent then _zd,_ze=_xV(_yZ)if not _zd then _wM(_yZ.jenis,"Pakan "..tostring(_ze).." habis")break end end if not _xd(_zd)then break end _wM(_yZ.jenis,"Mengisi palung "..tostring(_ze).." (".._zt.."/".._zp..")")local _zu=_zo()local _zv=tick()_fm(_yZ.prompt,_yZ.hold)local _zw,_zx=false,nil while tick()-_zv<2.0 do task.wait(0.15)local _zy=_xr(_yZ.prompt)or(8449-8449)if _zy>_zt or _zo()<_zu then _zw=true break end if _xC>=_zv then _zx=_xB break end end if _zw then _zm+=(7846-7845)_zl,_zq=(5261-5261),(3179-3179)task.wait(1.0)elseif _zx and _zx:find("sabar")then _zq+=(5977-5976)if _zq>=(3068-3063)then break end task.wait(1.3)elseif _zx and _zx:find("penuh")then _zn=true break elseif _zx and(_zx:find("pakan lain")or _zx:find("beda"))then _zr=true break else _zl+=(6881-6880)if _zl>=(-2942+2945)then break end task.wait(0.8)end end if _zr then _wM(_yZ.jenis,"Palung berisi pakan lain - tunggu habis / samakan pakan")_wt[_yZ.prompt]=tick()+(6742-6712)if _zm>(4357-4357)then _zj(_zm)end task.wait(0.2)return true end else local _zz=(-1398+1403)for _zA=(4068-4067),_zz do if _zc()then return false end if not _yZ.prompt.Parent or not _yZ.prompt.Enabled then break end local _zB,_zC=_xl(_yZ.prompt)if _zB and _zC and _zB>=_zC then _zn=true break end if not _zd or not _zd.Parent then _zd,_ze=_xV(_yZ)if not _zd then _wM(_yZ.jenis,"Pakan "..tostring(_ze).." habis")break end end if not _xd(_zd)then break end _wM(_yZ.jenis,"Mengisi pakan "..tostring(_ze).." ("..tostring(_zB or "?").."/"..tostring(_zC or "?")..")")_fm(_yZ.prompt,_yZ.hold)task.wait(0.6)_zm+=(-3790+3791)local _zD=(_xl(_yZ.prompt))if _zB and _zD and _zD<=_zB then _zl+=(-5030+5031)if _zl>=(-5619+5621)then break end else _zl=(-5328+5328)end end end if _zm>(-3141+3141)then _zj(_zm)end if _zn then _wM(_yZ.jenis,"Pakan penuh")_wt[_yZ.prompt]=tick()+(-8799+8819)elseif _zl>=(-7065+7067)or _zm==(-826+826)then _wt[_yZ.prompt]=tick()+(8526-8511)else _wt[_yZ.prompt]=nil end elseif _yZ.role=="klaim"then local _zE=_yZ.babiNama or "Babi Ngepet"local _zF,_zG=_da()if _zG then _zG:UnequipTools()end task.wait(_zh and 1.0 or 0.3)local _zH=false for _zI=(-6271+6272),(5613-5610)do if _zc()then return false end if not _yZ.prompt:IsDescendantOf(workspace)then _zH=true break end _wM(_yZ.jenis,string.format("Klaim %s (Rawatan %d%%) - percobaan %d...",_zE,_yZ.persen or _xG,_zI))_fm(_yZ.prompt,_yZ.hold)local _zJ=tick()while tick()-_zJ<1.5 do task.wait(0.1)if not _yZ.prompt:IsDescendantOf(workspace)or not _yZ.prompt.Enabled then _zH=true break end end if _zH then break end task.wait(0.4)end if _zH then _Q.Ngepet+=(6848-6847)local _zK=_mn.klaim if _zK and _zK.counter then _zK.counter.Text="Klaim Ngepet: ".._Q.Ngepet.." Ekor"end _wM(_yZ.jenis,"Berhasil klaim ".._zE.." (masuk tas)")_wt[_yZ.prompt]=tick()+(6655-6652)else _wM(_yZ.jenis,"Gagal klaim ".._zE.." (coba lagi nanti)")_wt[_yZ.prompt]=tick()+(-5361+5381)end elseif _yZ.role=="panen"then local _zL=(_xl(_yZ.prompt))local _zM=false for _zN=(-5684+5685),(5834-5831)do if _zc()then return false end _wM(_yZ.jenis,"Ambil ".._yZ.prompt.ObjectText.." (percobaan ".._zN..")...")_fm(_yZ.prompt,_yZ.hold)local _zO=tick()while tick()-_zO<0.8 do task.wait(0.1)local _zP=(_xl(_yZ.prompt))if not _yZ.prompt.Enabled or(_zL and _zP and _zP<_zL)then _zM=true break end end if _zM then break end task.wait(0.3)end if _zM then _wM(_yZ.jenis,"Berhasil ambil ".._yZ.prompt.ObjectText)_zj((6627-6626))end _wt[_yZ.prompt]=tick()+(_zM and(-1740+1743)or(9184-9176))else _wM(_yZ.jenis,"Interaksi: ".._yZ.prompt.ActionText.." ".._yZ.prompt.ObjectText.."...")_fm(_yZ.prompt,_yZ.hold)if _yZ.role=="gosok"then task.wait(_wE+0.2)end task.wait(_yZ.role=="gosok"and 0.2 or 0.05)_zj((-3057+3058))_wt[_yZ.prompt]=tick()+(4280-4274)end task.wait(_yZ.role=="panen"and 0.05 or 0.2)return true end while _p()do task.wait(0.4)local _zQ={ayam=getgenv().AutoAyamActive,sapi=getgenv().AutoSapiActive,babi=getgenv().AutoBabiActive or getgenv().AutoGosokBabiActive or getgenv().AutoKlaimNgepetActive,}if not(_zQ.ayam or _zQ.sapi or _zQ.babi)then task.wait(0.5)continue end local _zR=_da()if not _zR then continue end local _zS={}local _zT={ayam="AutoAyamActive",sapi="AutoSapiActive",babi=nil}for _zU,_zV in ipairs({"ayam","sapi","babi"})do if _zQ[_zV]then local _zW=_yv(_zV,_zT[_zV])if#_zW==(898-898)then if _zV=="babi"and not getgenv().AutoBabiActive and not getgenv().AutoGosokBabiActive then _wM(_zV,"Menunggu Babi Ngepet Rawatan ".._xG.."%...")else _wM(_zV,"Menunggu: pakan penuh / belum ada hasil...")end end for _zX,_zY in ipairs(_zW)do table.insert(_zS,_zY)end end end if#_zS==(-5553+5553)then task.wait(1.0)continue end for _zZ,_Aa in ipairs(_zS)do if not _p()or not _da()then break end if not getgenv()[_Aa.flag]then continue end if not _yY(_Aa)then break end end local _Ab,_Ac=_da()if _Ac then _Ac:UnequipTools()end _ea(false)task.wait(0.3)end end)task.spawn(function()local _Ad=(9223-9123)local _Ae={}local function _Af(_Ag)local _Ah=getgenv().PH_RepairUI if _Ah and _Ah.status then _Ah.status.Text=_Ag end end local function _Ai()local _Aj=workspace:FindFirstChild("KiosAktif")if not _Aj then return nil end local _Ak=_Aj:FindFirstChild("Kios_".._i.Name)if not _Ak then for _Al,_Am in ipairs(_Aj:GetChildren())do if _Am:GetAttribute("OwnerUserId")==_i.UserId then _Ak=_Am;break end end end local _An=_Ak and _Ak:FindFirstChild("pCraft",true)if _An and _An:IsA("Attachment")then return _An.WorldPosition end if _An and _An:IsA("BasePart")then return _An.Position end return nil end local function _Ao()local _Ap,_Aq={},tick()local function _Ar(_As)if not _As then return end for _At,_Au in ipairs(_As:GetChildren())do if _Au:IsA("Tool")and _Au:GetAttribute("AlatTambang")then local _Av,_Aw=_Au:GetAttribute("Dur"),_Au:GetAttribute("DurMaks")if type(_Av)=="number"and type(_Aw)=="number"and _Av<_Ad and _Av<_Aw and(not _Ae[_Au]or _Aq>_Ae[_Au])then table.insert(_Ap,_Au)end end end end _Ar(_i:FindFirstChildOfClass("Backpack"))_Ar(_i.Character)return _Ap end local function _Ax(_Ay)local _Az=_Ay:GetAttribute("AlatId")if _Az and tostring(_Az)~=""then return tostring(_Az)end return "toko:"..tostring(_Ay:GetAttribute("ToolName")or _Ay.Name)end while _p()do task.wait((-4635+4637))if not getgenv().AutoRepairActive then continue end if not(getgenv().PohonFarmActive or getgenv().BatuFarmActive)then _Af("Status: Siaga (jalan saat farm kayu/batu)")continue end local _AA=_Ao()if#_AA==(4207-4207)then _Af("Status: Alat aman (Dur >= ".._Ad..")")continue end local _AB=_Ai()local _AC=_e:FindFirstChild("Remotes")and _e.Remotes:FindFirstChild("TempaAksi")if not _AC then local _AD,_AE=pcall(function()return require(_e:WaitForChild("RemoteRegistry",(2228-2225)))end)if _AD and type(_AE)=="table"then local _AF=_AE.get or _AE.cari if _AF then local _AG,_AH=pcall(_AF,"TempaAksi")if _AG then _AC=_AH end end end end _AC=_AC or _bq({"r029eb117e7d9434591e601adc512a5cd","tempaaksi"})if not _AB or not _AC then _Af(not _AB and "Meja Tempa kios tidak ditemukan"or "Remote TempaAksi tidak ditemukan")task.wait((6577-6572))continue end local _AI=_da()if not _AI then continue end local _AJ=_AI.Position local _AK=_AI:FindFirstChild("FlyFloat")~=nil getgenv().PH_Repairing=true local _AX,_AY=pcall(function()task.wait(1.0)_Af("Menuju Meja Tempa...")local _AL,_AM=_da()if _AM then _AM:UnequipTools()end _ea(true)_fd(_AB+Vector3.new((6153-6153),(-4027+4030),(3782-3782)),function()return not _p()or not _da()end)task.wait(0.6)for _AN,_AO in ipairs(_AA)do if not _p()then break end local _AP=tostring(_AO:GetAttribute("NamaTampil")or _AO.Name)local _AQ=tonumber(_AO:GetAttribute("Dur"))or(5433-5433)local _AR=_Ax(_AO)_Af("Memperbaiki ".._AP.." ("..math.floor(_AQ)..")...")local _AS,_AT=pcall(function()return _AC:InvokeServer({aksi="perbaiki",kunci=_AR,darurat=false})end)local _AU=_AS and type(_AT)=="table"and _AT.ok if not _AU and _AQ<=(2060-2060)then _AS,_AT=pcall(function()return _AC:InvokeServer({aksi="perbaiki",kunci=_AR,darurat=true})end)_AU=_AS and type(_AT)=="table"and _AT.ok end if _AU then getgenv().PH_RepairCount=(getgenv().PH_RepairCount or(-7792+7792))+(-8140+8141)local _AV=getgenv().PH_RepairUI if _AV and _AV.counter then _AV.counter.Text="Diperbaiki: "..getgenv().PH_RepairCount.." kali"end _Af("Berhasil memperbaiki ".._AP)else _Ae[_AO]=tick()+(-1166+1226)local _AW=(_AS and type(_AT)=="table"and _AT.reason)or "gagal"_Af("Gagal ".._AP..": "..tostring(_AW))end task.wait(0.5)end _Af("Kembali ke lokasi farm...")_fd(_AJ,function()return not _p()or not _da()end)_ea(_AK)end)getgenv().PH_Repairing=false if not _AX then warn("[Pasar Hutan] Auto Perbaiki error:",_AY)_Af("Error perbaikan, coba lagi...")task.wait((8799-8796))end end end)do local _AZ=(4825-4810)local _Ba,_Bb=nil,(-3797+3797)local function _Bc(_Bd,_Be)_Bd=string.lower(tostring(_Bd or""))if _Bd==""then return false end local _Bf=_Be and{"kompor","stove","masak","cook"}or{"kompor","stove","pcook","pmasak"}for _Bg,_Bh in ipairs(_Bf)do if string.find(_Bd,_Bh,(-9085+9086),true)then return true end end return false end local function _Bi(_Bj)if not _Bj then return nil end if _Bj:IsA("Attachment")then return _Bj.WorldPosition end if _Bj:IsA("BasePart")then return _Bj.Position end if _Bj:IsA("Model")then return _Bj:GetPivot().Position end local _Bk=_Bj:FindFirstChildWhichIsA("BasePart",true)return _Bk and _Bk.Position or nil end local function _Bl()local _Bm=_da()local _Bn=_Bm and _Bm.Position local _Bo=_i.Character local _Bp,_Bq local function _Br(_Bs)if not _Bs or(_Bo and _Bs:IsDescendantOf(_Bo))then return end local _Bt=_Bi(_Bs)if not _Bt then return end local _Bu=_Bn and(_Bn-_Bt).Magnitude or(-5838+5838)if not _Bq or _Bu<_Bq then _Bp,_Bq=_Bs,_Bu end end local function _Bv(_Bw)for _Bx,_By in ipairs(_Bw:GetDescendants())do if _By:IsA("ProximityPrompt")then if _Bc(_By.ObjectText,true)or _Bc(_By.ActionText,true)then _Br(_By.Parent)end elseif _By:IsA("Attachment")or _By:IsA("BasePart")or _By:IsA("Model")then if _Bc(_By.Name)then _Br(_By)end end end end local _Bz=workspace:FindFirstChild("KiosAktif")if _Bz then local _BA=_Bz:FindFirstChild("Kios_".._i.Name)if not _BA then for _BB,_BC in ipairs(_Bz:GetChildren())do if _BC:GetAttribute("OwnerUserId")==_i.UserId then _BA=_BC;break end end end if _BA then _Bv(_BA)if _Bp then return _Bp end end end _Bv(workspace)return _Bp end local function _BD()if _Ba and _Ba.Parent then local _BE=_Bi(_Ba)if _BE then return _BE end end _Ba=nil if tick()-_Bb<(5027-5017)then return nil end _Bb=tick()_Ba=_Bl()return _Bi(_Ba)end _te.resetStove=function()_Ba,_Bb=nil,(-9928+9928)end _te.goToStove=function()if getgenv().PH_Repairing then return false end local _BF=_da()if not _BF then return false end local _BG=_BD()if not _BG then _mR.Text="Kompor tidak ditemukan, dekati kompor manual"return false end if(_BF.Position-_BG).Magnitude<=_AZ then return true end _mR.Text="Menuju kompor..."local _BH=_fd(_BG+Vector3.new((3747-3747),(8323-8320),(5438-5438)),function()return not _p()or not getgenv().AutoMasakActive or not _da()end)task.wait(0.5)return _BH end end task.spawn(function()while _p()do task.wait(2.0)if getgenv().AutoMasakActive and _X and _Y then _te.goToStove()local _BI,_BJ=pcall(function()return _Y:InvokeServer()end)if _BI and type(_BJ)=="table"and _BJ.ok then local _BK=_BJ.slots or{}local _BL=_BJ.maxQueue or(-7630+7633)local _BM=_BL-#_BK if _BM>(6787-6787)then local _BN,_BO=(-4080+4080),nil for _BP=(4065-4064),_BM do _mR.Text="Memasak ".._H.." di Kompor..."local _BQ,_BR=pcall(function()return _X:InvokeServer(_H)end)if _BQ and type(_BR)=="table"and _BR.ok then _BN+=(-3538+3539)_Q.Dapur+=(5106-5105)_mS.Text="Makanan Dimasak: ".._Q.Dapur.." Porsi"task.wait(0.3)else if _BQ and type(_BR)=="table"then _BO=_BR.err or _BR.error or _BR.msg or _BR.reason end break end end if _BN>(-1116+1116)then _mR.Text="Sukses memasak ".._H.." x".._BN.."!"elseif _BO and string.find(string.lower(tostring(_BO)),"dekati",(2935-2934),true)then _mR.Text="Dekati kompor dulu"_te.resetStove()else _mR.Text="Bahan ".._H.." belum cukup di tas"..(_BO and(" ("..tostring(_BO)..")")or"")end else _mR.Text="Antrian kompor penuh ("..#_BK.."/".._BL..")"end end end if getgenv().AutoOlahActive and _Z and _ba then local _BS,_BT=pcall(function()return _ba:InvokeServer()end)if _BS and type(_BT)=="table"and _BT.ok then _mU.Text="Mengolah ".._I.."..."local _BU,_BV=pcall(function()return _Z:InvokeServer(_I,(-7534+7535))end)if _BU and type(_BV)=="table"and _BV.ok then _Q.Olah+=(-8885+8886)_mV.Text="Bahan Diolah: ".._Q.Olah.." Kali"_mU.Text="Berhasil mengolah ".._I.."!"else _mU.Text="Bahan olahan belum tersedia di tas"end end end task.wait(3.0)end end);(function()local _BW=_bD.pg local _BX=(9703-9695)local _BY,_BZ,_Ca,_Cb local _Cc={}local _Cd=(-135+135)local _Ce=false local function _Cf(_Cg)if _BW and _BW.status then _BW.status.Text=_Cg end end local function _Ch()if _BY and _BY.Parent and _BZ and _BZ.Parent and _Ca and _Ca.Parent then return true end _BY,_BZ,_Ca,_Cb=nil,nil,nil,nil local _Ci=workspace:FindFirstChild("KiosAktif")if not _Ci then return false end local _Cj=_Ci:FindFirstChild("Kios_".._i.Name)if not _Cj then for _Ck,_Cl in ipairs(_Ci:GetChildren())do if _Cl:GetAttribute("OwnerUserId")==_i.UserId then _Cj=_Cl;break end end end if not _Cj then return false end local _Cm=_Cj:FindFirstChild("pPangang",true)local _Cn=_Cm and _Cm:FindFirstChildWhichIsA("ProximityPrompt")if not _Cn then for _Co,_Cp in ipairs(_Cj:GetDescendants())do if _Cp:IsA("ProximityPrompt")and(_Cp.Name=="PanggangPrompt"or _Cp.ActionText=="Panggang Babi")then _Cn,_Cm=_Cp,_Cp.Parent break end end end if not(_Cm and _Cn)then return false end _BY,_BZ,_Ca=_Cj,_Cm,_Cn _Cb=_Cj:FindFirstChild("Pemangang",true)return true end local function _Cq()return _Cb~=nil and _Cb.Parent~=nil and _Cb:GetAttribute("Memanggang")==true end local function _Cr(_Cs)if not _BZ then return nil end for _Ct,_Cu in ipairs(_BZ:GetDescendants())do if _Cu:IsA("TextLabel")and _Cu.Name==_Cs and _Cu.Text~=""then return _Cu.Text end end return nil end task.spawn(function()local _Cv=_i:WaitForChild("PlayerGui",(1032-1022))local _Cw=_Cv and _Cv:WaitForChild("NotifGui",(-7419+7429))if not _Cw then return end local function _Cx(_Cy)if not _Cy or _Cy==""or _Cy=="Notification Message"then return end local _Cz=_Cc[#_Cc]if _Cz and _Cz.text==_Cy and tick()-_Cz.t<0.6 then return end _Cc[#_Cc+(3386-3385)]={t=tick(),text=_Cy}if#_Cc>(-7973+8003)then table.remove(_Cc,(-8549+8550))end end local function _CA(_CB)table.insert(_o,_CB:GetPropertyChangedSignal("Text"):Connect(function()_Cx(_CB.Text)end))end for _CC,_CD in ipairs(_Cw:GetDescendants())do if _CD:IsA("TextLabel")then _CA(_CD)end end table.insert(_o,_Cw.DescendantAdded:Connect(function(_CE)if _CE:IsA("TextLabel")then _CA(_CE)task.delay(0.1,function()_Cx(_CE.Text)end)end end))end)local function _CF(_CG)local _CH for _CI,_CJ in ipairs(_Cc)do if _CJ.t>=_CG then local _CK=string.lower(_CJ.text)if string.find(_CK,"anggang",(4240-4239),true)or string.find(_CK,"dewasa",(2935-2934),true)or string.find(_CK,"dekat",(-1652+1653),true)or string.find(_CK,"jauh",(2625-2624),true)or string.find(_CK,"babi",(-7227+7228),true)then _CH=_CJ.text end end end return _CH end local function _CL()local _CM=_da()if not _CM then return false end local _CN=_BZ.WorldPosition if(_CM.Position-_CN).Magnitude<=_BX then return true end _Cf("Menuju pemangang...")local _CO=_fd(_CN+Vector3.new((194-194),(9483-9480),(-7093+7097)),function()return not _p()or not getgenv().AutoPanggangActive or not _da()end)task.wait(0.5)return _CO end local function _CP(_CQ)local _CR,_CS=_da()if not _CS then return false end local _CT=_CQ.tool if not _CT or not _CT.Parent then return false end if _CT.Parent==_i.Character then return true end pcall(function()_CS:EquipTool(_CT)end)for _CU=(7655-7654),(5960-5945)do if _CT.Parent==_i.Character then return true end task.wait(0.1)end return false end local function _CV(_CW)local _CX=tick()if not _CP(_CW)then return false,"Gagal memegang babi ".._CW.kg.." kg"end task.wait(0.3)pcall(function()_Ca:InputHoldBegin()end)task.wait((_Ca.HoldDuration or 0.6)+0.15)pcall(function()_Ca:InputHoldEnd()end)for _CY=(-2063+2064),(-9044+9064)do task.wait(0.2)if _Cq()then return true,_CF(_CX)end end return false,_CF(_CX)end local function _CZ()if getgenv().PH_Repairing then return end if not _Ch()then _Cf("Pemangang tidak ditemukan (butuh Market Lv 6)")return end if _Cq()then _Ce=true _Cf("Memanggang... "..(_Cr("Sisa")or"").." | Antre: "..(_Cr("Antre")or "?"))return end if _Ce then _Ce=false _Cf("Panggangan selesai, lanjut babi berikutnya...")end local _Da=_BW.pick()if not _Da then local _Db=getgenv().PanggangBabiKg _Cf(_Db=="auto"and("Menunggu babi dewasa (min ".._BW.minKg.." kg) di tas")or("Babi "..tostring(_Db).." kg habis / tidak ada di tas"))return end if not _CL()then return end _Cf("Memanggang babi ".._Da.kg.." kg...")local _Dc,_Dd=_CV(_Da)if _Dc then _Cd=(-2743+2743)_Q.Panggang=(_Q.Panggang or(-142+142))+(4176-4175)local _De=tonumber(string.match(tostring(_Dd or""),"(%d+)%s*[Pp]orsi"))or(9289-9289)_BW.porsi=(_BW.porsi or(5723-5723))+_De _BW.counter.Text="Dipanggang: ".._Q.Panggang.." Babi | ".._BW.porsi.." Porsi"_Cf(_Dd and("Berhasil: ".._Dd)or("Berhasil memanggang babi ".._Da.kg.." kg"))return end local _Df=string.lower(tostring(_Dd or""))if string.find(_Df,"dewasa",(-164+165),true)then _BW.bad[_Da.id]=tick()+(7594-7474)_Cf("Ditolak: "..tostring(_Dd))elseif string.find(_Df,"dekat",(-1856+1857),true)or string.find(_Df,"jauh",(1613-1612),true)then _BY,_BZ,_Ca,_Cb=nil,nil,nil,nil _Cf("Dekati pemangang dulu")else _Cd+=(-8017+8018)_Cf("Gagal memanggang: "..tostring(_Dd or "tidak ada balasan").." (".._Cd.."/4)")if _Cd>=(5209-5205)then _BW.bad[_Da.id]=tick()+(-2876+2996)_Cd=(9450-9450)end end end task.spawn(function()while _p()do task.wait(1.5)if getgenv().AutoPanggangActive then local _Dg,_Dh=pcall(_CZ)if not _Dg then warn("[Pasar Hutan] Auto Panggang error:",_Dh)_Cf("Error: "..tostring(_Dh))task.wait((-9038+9041))end end end end)end)()task.spawn(function()while _p()do task.wait(1.5)if _qj and _kK.masak.Visible and _bD.masakRefresh then pcall(_bD.masakRefresh)end end end)task.spawn(function()local _Di=(3301-3301)while _p()do task.wait(1.0)if getgenv().AutoLatihPetActive and _W then if(tick()-_Di)>(-2892+3132)then pcall(function()_W:FireServer("latih")end)_Di=tick()_pp.Text="Pet Tuyul dilatih (EXP bertambah)!"end end if getgenv().AutoTuyulLiarActive then local _Dj=workspace:FindFirstChild("TuyulLiar")if _Dj and _Dj:IsA("Model")then local _Dk=_Dj:FindFirstChildWhichIsA("ProximityPrompt",true)local _Dl=_da()if _Dk and _Dk.Enabled and _Dl then _pm.Text="Tuyul Liar Terdeteksi! Mendekat..."local _Dm=_Dj:GetPivot().Position+Vector3.new((-8746+8746),1.5,(9586-9586))local _Dn=_dd("SateKepiting")or _dd("Sate Kepiting")if _Dn and _i.Character then local _Do=_i.Character:FindFirstChildOfClass("Humanoid")if _Do and _Dn.Parent~=_i.Character then _Do:EquipTool(_Dn)task.wait(0.2)end end _ea(true)_fd(_Dm,function()return not _p()or not getgenv().AutoTuyulLiarActive or not _da()end)_pm.Text="Memberi Sate Kepiting ke Tuyul Liar..."_fm(_Dk,0.35)task.wait(0.3)_Q.Tuyul+=(4704-4703)_pn.Text="Suap Berhasil: ".._Q.Tuyul.." Kali"task.wait(1.5)end else _pm.Text="Menunggu Tuyul Liar muncul di map..."end end end end)local _Dp={interval=(-1794+1797),}task.spawn(function()local _Dq=nil local _Dr=(1155-1155)local _Ds=(5220-5220)local _Dt=(-6966+6981)local _Du=(-5906+5929)local _Dv=nil local function _Dw(...)if getgenv().LapakDebug then print("[Lapak Debug]",...)end end local function _Dx()if _Dq and _Dq.Parent then return _Dq end local _Dy=_i.UserId local _Dz=tostring(_Dy)local _DA=(_bz and _bz.Plot and _bz.Plot.KiosFolderName)or "KiosAktif"local _DB=workspace:FindFirstChild(_DA)if _DB then local _DC=_DB:FindFirstChild("Kios_".._i.Name)if _DC then _Dq=_DC;return _DC end for _DD,_DE in ipairs(_DB:GetChildren())do if _DE:IsA("Model")and(_DE:GetAttribute("OwnerUserId")==_Dy or _DE:GetAttribute("Owner")==_Dy or _DE.Name:find(_Dz))then _Dq=_DE;return _DE end end end local _DF,_DG=_fq()if _DF then for _DH,_DI in ipairs(_DF:GetDescendants())do if _DI:IsA("Model")and(_DI:GetAttribute("OwnerUserId")==_Dy or _DI.Name:find("Kios")or _DI.Name:find("Lapak"))then _Dq=_DI;return _DI end end end for _DJ,_DK in ipairs({"Lapak","Kios","KiosAktif","LapakPemain"})do local _DL=workspace:FindFirstChild(_DK)if _DL then for _DM,_DN in ipairs(_DL:GetChildren())do if _DN:IsA("Model")and(_DN:GetAttribute("OwnerUserId")==_Dy or _DN.Name:find(_Dz)or _DN.Name:find(_i.Name))then _Dq=_DN;return _DN end end end end return nil end local function _DO(_DP)local _DQ={}if not _DP then return _DQ end for _DR,_DS in ipairs(_DP:GetDescendants())do if _DS:IsA("Attachment")and _DS.Name:match("^slot%d+$")then table.insert(_DQ,_DS)end end table.sort(_DQ,function(_DT,_DU)return(tonumber(_DT.Name:match("%d+$"))or(-8628+8628))<(tonumber(_DU.Name:match("%d+$"))or(9202-9202))end)return _DQ end local function _DV(_DW,...)if not _DW then return false,nil end local _DX={...}local _DY,_DZ=pcall(function()if _DW:IsA("RemoteFunction")then return _DW:InvokeServer(unpack(_DX))else _DW:FireServer(unpack(_DX))return true end end)_Dw("RakAksi",tostring(_DX[(6942-6941)]),tostring(_DX[(-4749+4751)]),tostring(_DX[(-7606+7609)]),"Status:",_DY,"Res:",tostring(_DZ))return _DY,_DZ end if _bc then table.insert(_o,_bc.OnClientEvent:Connect(function(_Ea)if not _p()or type(_Ea)~="table"then return end _Dr+=(-5002+5003)local _Eb=tonumber(_Ea.coin)or(7097-7097)_Ds+=_Eb if _mP then _mP.Text=string.format("Pendapatan Sesi: %d Koin",_Ds)end end))end task.spawn(function()while _p()do if _U then pcall(function()local _Ec=_U:InvokeServer("info")if type(_Ec)=="table"and _Ec.ok then if tonumber(_Ec.capRak)then _Dt=tonumber(_Ec.capRak)end if tonumber(_Ec.capNampan)then _Du=tonumber(_Ec.capNampan)end end end)end task.wait((-6554+6614))end end)while _p()and not(game:IsLoaded()and _da()and _i:FindFirstChildOfClass("Backpack"))do task.wait(0.5)end if _L.state then task.wait((2980-2977))end local function _Ed()if not getgenv().AutoKelolaLapakActive then return end if not _da()then _mN.Text="Menunggu karakter respawn..."return end if not _U or not _U.Parent then pcall(_be)if not _U then _mN.Text="Mencari Remote Rak Kios..."task.wait(1.5)return end end local _Ee=_Dx()if not _Ee then _mN.Text="Mencari Kios di Plot..."task.wait((-2956+2958))return end local _Ef=_DO(_Ee)if#_Ef==(5024-5024)then _mN.Text="Mencari slot etalase kios..."task.wait((-7172+7174))return end local _Eg=(workspace:GetAttribute("Phase")=="Malam"or _h:GetAttribute("Phase")=="Malam")and "Malam"or "Siang"local _Eh=_bD.scanInventory()local _Ei={}for _Ej,_Ek in ipairs(_bD.pilih[_Eg]or{})do if _Eh[_Ek]and _Eh[_Ek].count>(2965-2965)then table.insert(_Ei,_Ek)end end if#_Ei==(-5740+5740)then local _El=(_Eg=="Malam")and "Siang"or "Malam"for _Em,_En in ipairs(_bD.pilih[_El]or{})do if _Eh[_En]and _Eh[_En].count>(-1949+1949)then table.insert(_Ei,_En)end end end if#_Ei==(-5900+5900)and#(_bD.pilih.Siang or{})==(5008-5008)and#(_bD.pilih.Malam or{})==(5294-5294)then local _Eo={}for _Ep,_Eq in pairs(_Eh)do if _Eq.count>(-1703+1703)then table.insert(_Eo,_Eq)end end table.sort(_Eo,function(_Er,_Es)local _Et=_bD.cocok(_Er.id,_Eg)and(4801-4800)or(8514-8514)local _Eu=_bD.cocok(_Es.id,_Eg)and(-2164+2165)or(-3054+3054)if _Et~=_Eu then return _Et>_Eu end return(_Er.harga or(2424-2424))>(_Es.harga or(5528-5528))end)for _Ev,_Ew in ipairs(_Eo)do table.insert(_Ei,_Ew.id)end end local _Ex={}for _Ey,_Ez in ipairs(_Ei)do _Ex[_Ez]=true end local _EA=(_Dv~=nil and _Dv~=_Eg)if _EA then _Dw("Pergantian waktu terdeteksi dari",_Dv,"ke",_Eg)_mN.Text=string.format("Waktu berganti ke %s! Mengambil sisa barang lama...",_Eg)_Dv=_Eg elseif not _Dv then _Dv=_Eg end local _EB=(1078-1078)local _EC={}local _ED={}for _EE,_EF in ipairs(_Ef)do if not _p()or not getgenv().AutoKelolaLapakActive then break end local _EG=_EF:GetAttribute("Item")local _EH=(7785-7785)if _EG and _EF:FindFirstChild("Stok")then local _EI=_EF.Stok:FindFirstChild(_EG)if _EI and _EI:IsA("IntValue")then _EH=_EI.Value end end local _EJ=false if getgenv().AutoTarikSisaFase and _EG and _EH>(1594-1594)then if _EA then if(not _Ex[_EG])or(not _bD.cocok(_EG,_Eg))then _EJ=true end else if(not _bD.cocok(_EG,_Eg))and#_Ei>(2016-2016)and(not _Ex[_EG])then _EJ=true end end end if _EJ then _mN.Text=string.format("Tarik sisa %s dari %s (%s)...",_bD.namaItem(_EG),_EF.Name,_Eg)local _EK,_EL=_DV(_U,"ambil",_EF.Name)if _EK and type(_EL)=="table"and _EL.ok then _Dw("Berhasil ambil",_EG,"dari",_EF.Name,"jumlah:",_EL.n)end task.wait(0.4)table.insert(_EC,_EF)elseif _EG and _EH>(-8828+8828)then _EB+=(-9274+9275)local _EM=_bz and _bz.Items and _bz.Items[_EG]local _EN=(_EM and _EM.jenis=="rak")and _Dt or _Du if _EH<_EN and _Eh[_EG]and _Eh[_EG].count>(6354-6354)then table.insert(_ED,{slot=_EF,item=_EG,stok=_EH,cap=_EN})end else table.insert(_EC,_EF)end end if _EA then _Eh=_bD.scanInventory()end for _EO,_EP in ipairs(_ED)do if not _p()or not getgenv().AutoKelolaLapakActive then break end _mN.Text=string.format("Isi %s (%d/%d)...",_bD.namaItem(_EP.item),_EP.stok,_EP.cap)local _EQ,_ER=_DV(_U,"isi",_EP.slot.Name)if _EQ and type(_ER)=="table"and _ER.ok then local _ES=_ER.n or(8720-8719)if _Eh[_EP.item]then _Eh[_EP.item].count=math.max((-9007+9007),_Eh[_EP.item].count-_ES)end end task.wait(0.4)end if#_Ei>(898-898)and#_EC>(-2874+2874)then local _ET=(790-789)for _EU,_EV in ipairs(_EC)do if not _p()or not getgenv().AutoKelolaLapakActive then break end local _EW=nil for _EX=(-3342+3343),#_Ei do local _EY=_Ei[_ET]_ET=(_ET%#_Ei)+(1928-1927)if _Eh[_EY]and _Eh[_EY].count>(9780-9780)then _EW=_EY break end end if not _EW then break end _mN.Text=string.format("Taruh %s di %s...",_bD.namaItem(_EW),_EV.Name)local _EZ,_Fa=_DV(_U,"taruh",_EV.Name,_EW)if _EZ and type(_Fa)=="table"and _Fa.ok then local _Fb=_Fa.n or(7186-7185)_Eh[_EW].count=math.max((4335-4335),_Eh[_EW].count-_Fb)_EB+=(466-465)end task.wait(0.45)end end if#_Ei==(9215-9215)and#_EC>(4220-4220)then _mN.Text="Tidak ada barang di tas untuk restok"else _mN.Text=string.format("Memantau etalase (%d/%d Slot Terisi)",_EB,#_Ef)end _mO.Text=string.format("Etalase: %d/%d Slot | Terjual: %d Barang",_EB,#_Ef,_Dr)end while _p()do task.wait(_Dp.interval)if getgenv().AutoKelolaLapakActive then local _Fc,_Fd=pcall(_Ed)if not _Fc then warn("[Pasar Hutan] Error loop lapak (lanjut otomatis):",_Fd)_mN.Text="Error, mencoba lagi..."end end end end)do local function _Fe()local _Ff={lapak=getgenv().AutoKelolaLapakActive and true or false,siang=table.clone(_bD.pilih.Siang),malam=table.clone(_bD.pilih.Malam),}getgenv().PasarHutanSavedState=_Ff local _Fg,_Fh=pcall(function()return _L.http:JSONEncode(_Ff)end)if _Fg and _Fh~=_L.lastJson then _L.lastJson=_Fh if writefile then pcall(writefile,_L.stateFile,_Fh)end end end local function _Fi()if _L.queued then return end local _Fj=queue_on_teleport or(syn and syn.queue_on_teleport)or(fluxus and fluxus.queue_on_teleport)if not _Fj then warn("[Pasar Hutan] Executor tidak mendukung queue_on_teleport - skrip tidak bisa auto-reload.")return end _Fe()local _Fk=getgenv().PasarHutanLoader or("loadstring(readfile(\"".._L.scriptFile.."\"))()")_L.queued=true pcall(_Fj,"getgenv().PasarHutanResume = true\
-".._Fk)end table.insert(_o,_i.OnTeleport:Connect(function(_Fl)if not _p()then return end if _Fl==Enum.TeleportState.Started or _Fl==Enum.TeleportState.InProgress then _Fi()end end))task.spawn(function()while _p()do _Fe()task.wait((2599-2596))end end)end if getgenv().AutoKelolaLapakActive then _mQ.BackgroundColor3=_hJ.danger _mQ.TextColor3=Color3.new((7049-7048),(-358+359),(-9164+9165))_mQ.Text="STOP LAPAK"_mN.Text="Status: Resume setelah ganti server..."end _bD.refreshList()task.spawn(function()local _Fm=workspace:GetAttribute("Phase")while _p()do task.wait(2.5)local _Fn=workspace:GetAttribute("Phase")or _h:GetAttribute("Phase")if _Fn and _Fn~=_Fm then _Fm=_Fn if _Fn=="Siang"or _Fn=="Malam"then _bD.viewPhase=_Fn if _bD.ui.refreshSeg then _bD.ui.refreshSeg()end end end if _qj and _kK.lapak.Visible and _bD.refreshList then _bD.refreshList()end end end)_rv()_qL()_rb()_qt("farm")_kD(getgenv().AntiAfkActive)_rx()_rE("AutoSemuaFarmActive",_lp,_ln,"Semua")_rE("KepitingFarmActive",_ls,_lq,"Kepiting")_rE("GagakFarmActive",_lH.toggle,_lH.status,"Gagak")_rE("DupaFarmActive",_lv,_lt,"Dupa")_rE("KemenyanFarmActive",_ly,_lw,"Kemenyan")_rE("MelatiFarmActive",_lF.toggle,_lF.status,"Melati")_rE("JamurFarmActive",_lG.toggle,_lG.status,"Jamur")_rE("PohonFarmActive",_lB,_lz,"Pohon")_rE("BatuFarmActive",_lE,_lC,"Batu")print("[Pasar Hutan v6.5.20] Berhasil dimuat! Auto Panggang Babi (pilih kg), Auto Klaim Babi Ngepet 100%, Gosok Induk switch, Auto Masak 10 menu, Mode Biji Besi, Alat Terbaik & Auto Perbaiki aktif.")
+-- ==============================================================================
+-- UBEY HUB V4 | PASAR HUTAN
+-- GUI + sistem key dari Ubey Hub V4, isi script = Pasar Hutan v6.5
+-- Key divalidasi di Supabase Edge Function (verify-key).
+-- Opsional: set getgenv().UbeyHubLoader = 'loadstring(...)()' sebelum execute
+-- supaya Auto Lapak bisa lanjut otomatis setelah pindah server.
+-- ==============================================================================
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
+local Stats = game:GetService("Stats")
+local Lighting = game:GetService("Lighting")
+local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ====== TAMPILAN ======
+local HUB_TITLE = "UBEY HUB"
+local HUB_DISCORD = "discord.gg/YXuYeEpnXE"
+local DISCORD_LINK = "https://discord.gg/YXuYeEpnXE"
+local LOGO_ASSET = "rbxassetid://90770802417381"
+
+-- ====== SERVER VERIFIKASI ======
+local FUNCTION_URL = "https://vwwxvemxeztfiyuurhro.supabase.co/functions/v1/verify-key"
+local SUPABASE_ANON_KEY = "sb_publishable_rMWL7Qrjw9iG0c29vGZ0bw_O3swXT6n"
+local HEARTBEAT_INTERVAL = 120
+
+getgenv().SessionStartTime = os.time()
+
+------------------------------------------------------------------
+-- SESSION
+------------------------------------------------------------------
+local Session = {token = nil, key = nil, expiresAt = 0}
+
+local function IsVerified()
+	return Session.token ~= nil and os.time() < Session.expiresAt
+end
+
+-- semua flag fitur Pasar Hutan (dimatikan saat key dicabut / Stop Semua)
+local ToggleSetters = {}
+local ALL_FLAGS = {
+	"AutoSemuaFarmActive", "KepitingFarmActive", "GagakFarmActive", "DupaFarmActive", "KemenyanFarmActive",
+	"MelatiFarmActive", "JamurFarmActive", "PohonFarmActive", "BatuFarmActive", "AutoTuyulLiarActive",
+	"AutoAyamActive", "AutoSapiActive", "AutoBabiActive", "AutoGosokBabiActive", "AutoKlaimNgepetActive",
+	"AutoTanamActive", "AutoSiramActive", "AutoPanenActive", "AutoKelolaLapakActive", "AutoMasakActive",
+	"AutoOlahActive", "AutoPanggangActive", "AutoRepairActive", "AutoLatihPetActive", "AntiPetirActive",
+	"BatuBesiMode", "GagakOwlMode",
+}
+
+local function StopAll()
+	for _, f in ipairs(ALL_FLAGS) do
+		getgenv()[f] = false
+		local s = ToggleSetters[f]
+		if s then pcall(s, false) end
+	end
+end
+
+local Lock
+local OnVerified = function() end
+
+------------------------------------------------------------------
+-- CONFIG
+------------------------------------------------------------------
+local CONFIG_FILE = "UbeyHubV4_PasarHutan_Config.json"
+local KEY_FILE = "UbeyHubV3_SavedKey.txt"
+
+local function DefaultConfig()
+	return {WaterDuration = "2"}
+end
+getgenv().UbeyConfig = DefaultConfig()
+
+local function SaveConfig()
+	pcall(function()
+		if writefile then writefile(CONFIG_FILE, HttpService:JSONEncode(getgenv().UbeyConfig)) end
+	end)
+end
+
+local function LoadConfig()
+	pcall(function()
+		if readfile and isfile and isfile(CONFIG_FILE) then
+			local ok, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+			if ok and type(data) == "table" then
+				for k, _ in pairs(DefaultConfig()) do
+					if data[k] ~= nil then getgenv().UbeyConfig[k] = data[k] end
+				end
+			end
+		end
+	end)
+end
+
+local function ResetConfig()
+	pcall(function()
+		getgenv().UbeyConfig = DefaultConfig()
+		getgenv().WaterDuration = 2
+		if delfile and isfile then
+			if isfile(CONFIG_FILE) then delfile(CONFIG_FILE) end
+			if isfile(KEY_FILE) then delfile(KEY_FILE) end
+		end
+	end)
+end
+
+LoadConfig()
+getgenv().WaterDuration = tonumber(getgenv().UbeyConfig.WaterDuration) or 2
+
+------------------------------------------------------------------
+-- HWID & REQUEST
+------------------------------------------------------------------
+local function GetDeviceHWID()
+	local hwid = nil
+	pcall(function()
+		if gethwid then hwid = gethwid()
+		elseif RbxAnalyticsService then hwid = RbxAnalyticsService:GetClientId() end
+	end)
+	return tostring(hwid or ("UNKNOWN_DEVICE_" .. tostring(LocalPlayer.UserId)))
+end
+local CurrentHWID = GetDeviceHWID()
+
+local function GetRequestFunc()
+	return (syn and syn.request) or (http and http.request) or request or (fluxus and fluxus.request)
+end
+
+local function CallServer(body)
+	local req = GetRequestFunc()
+	if not req then return nil, "Executor tidak mendukung request HTTP." end
+	local ok, res = pcall(req, {
+		Url = FUNCTION_URL, Method = "POST",
+		Headers = {
+			["Content-Type"] = "application/json",
+			["apikey"] = SUPABASE_ANON_KEY,
+			["Authorization"] = "Bearer " .. SUPABASE_ANON_KEY
+		},
+		Body = HttpService:JSONEncode(body)
+	})
+	if not ok or not res then return nil, "Gagal terhubung ke server verifikasi." end
+	local ok2, data = pcall(function() return HttpService:JSONDecode(res.Body or "") end)
+	if not ok2 or type(data) ~= "table" then return nil, "Respon server tidak valid." end
+	return data
+end
+
+------------------------------------------------------------------
+-- AUTO RECONNECT
+------------------------------------------------------------------
+task.spawn(function()
+	pcall(function()
+		CoreGui.ChildAdded:Connect(function(child)
+			if child.Name == "ErrorPrompt" or child.Name == "DisconnectPrompt" then
+				task.wait(1)
+				pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
+			end
+		end)
+	end)
+end)
+
+-- ==============================================================================
+-- GUI SETUP
+-- ==============================================================================
+local function GetGuiParent()
+	local ok, h = pcall(function() return gethui and gethui() end)
+	if ok and h then return h end
+	return PlayerGui
+end
+local GuiParent = GetGuiParent()
+
+pcall(function()
+	for _, p in ipairs({GuiParent, PlayerGui}) do
+		local old = p:FindFirstChild("UbeyHub")
+		if old then old:Destroy() end
+	end
+end)
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "UbeyHub"
+Gui.ResetOnSpawn = false
+Gui.DisplayOrder = 999
+Gui.Parent = GuiParent
+
+local C = {
+	bg = Color3.fromRGB(9, 12, 26), side = Color3.fromRGB(13, 17, 36),
+	card = Color3.fromRGB(15, 21, 44), line = Color3.fromRGB(30, 42, 90),
+	accent = Color3.fromRGB(45, 95, 255), off = Color3.fromRGB(32, 44, 105),
+	text = Color3.fromRGB(240, 243, 255), sub = Color3.fromRGB(150, 160, 195),
+	good = Color3.fromRGB(0, 230, 150), bad = Color3.fromRGB(255, 80, 80),
+	warn = Color3.fromRGB(255, 200, 0), row = Color3.fromRGB(22, 30, 62)
+}
+
+local function New(class, props, parent)
+	local o = Instance.new(class)
+	for k, v in pairs(props) do o[k] = v end
+	o.Parent = parent
+	return o
+end
+local function Round(o, r) return New("UICorner", {CornerRadius = UDim.new(0, r or 8)}, o) end
+local function Label(parent, text, size, color, font, pos, sz, align)
+	return New("TextLabel", {
+		BackgroundTransparency = 1, Text = text, TextSize = size, TextColor3 = color,
+		Font = font, Position = pos or UDim2.new(), Size = sz or UDim2.new(1, 0, 1, 0),
+		TextXAlignment = align or Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd
+	}, parent)
+end
+
+local DRAG_THRESHOLD = 15
+
+local function MakeDraggable(obj, handle)
+	handle = handle or obj
+	local dragging, dragInput, dragStart, startPos, moved
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging, moved = true, false
+			dragStart, startPos = input.Position, obj.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	handle.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local d = input.Position - dragStart
+			if d.Magnitude > DRAG_THRESHOLD then moved = true end
+			if moved then
+				obj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+			end
+		end
+	end)
+	return function() return moved end
+end
+
+------------------------------------------------------------------
+-- KEY FRAME
+------------------------------------------------------------------
+local KeyFrame = New("Frame", {
+	Size = UDim2.new(0, 400, 0, 262), Position = UDim2.new(0.5, -200, 0.5, -131),
+	BackgroundColor3 = C.bg, Visible = false, Active = true
+}, Gui)
+Round(KeyFrame, 14)
+New("UIStroke", {Color = C.line, Thickness = 1.5}, KeyFrame)
+MakeDraggable(KeyFrame)
+
+Label(KeyFrame, HUB_TITLE .. " • Key System", 16, C.text, Enum.Font.GothamBold, UDim2.new(0, 20, 0, 14), UDim2.new(1, -40, 0, 22))
+Label(KeyFrame, HUB_DISCORD, 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 20, 0, 36), UDim2.new(1, -40, 0, 16))
+Label(KeyFrame, "Masukkan key dari bot Discord untuk melanjutkan.", 12, C.sub, Enum.Font.Gotham, UDim2.new(0, 20, 0, 62), UDim2.new(1, -40, 0, 18))
+
+local KeyBox = New("TextBox", {
+	Size = UDim2.new(1, -40, 0, 40), Position = UDim2.new(0, 20, 0, 88),
+	BackgroundColor3 = C.card, PlaceholderText = "Paste key di sini...", PlaceholderColor3 = C.sub,
+	Text = "", TextColor3 = C.text, Font = Enum.Font.Gotham, TextSize = 13, ClearTextOnFocus = false
+}, KeyFrame)
+Round(KeyBox, 10)
+New("UIStroke", {Color = C.line}, KeyBox)
+
+local SubmitKeyBtn = New("TextButton", {
+	Size = UDim2.new(0.5, -26, 0, 38), Position = UDim2.new(0, 20, 0, 140),
+	BackgroundColor3 = C.accent, Text = "Verifikasi Key", TextColor3 = Color3.new(1, 1, 1),
+	Font = Enum.Font.GothamBold, TextSize = 13
+}, KeyFrame)
+Round(SubmitKeyBtn, 10)
+
+local GetKeyDiscordBtn = New("TextButton", {
+	Size = UDim2.new(0.5, -26, 0, 38), Position = UDim2.new(0.5, 6, 0, 140),
+	BackgroundColor3 = Color3.fromRGB(88, 101, 242), Text = "Get Key (Discord)", TextColor3 = Color3.new(1, 1, 1),
+	Font = Enum.Font.GothamBold, TextSize = 13
+}, KeyFrame)
+Round(GetKeyDiscordBtn, 10)
+
+local StatusKey = Label(KeyFrame, "", 12, C.bad, Enum.Font.Gotham, UDim2.new(0, 20, 0, 188), UDim2.new(1, -40, 0, 22), Enum.TextXAlignment.Center)
+
+local Disclosure = Label(KeyFrame, "Saat verifikasi, username Roblox & ID perangkat (HWID) dikirim ke server untuk mengikat key ke akunmu.",
+	10, C.sub, Enum.Font.Gotham, UDim2.new(0, 20, 0, 214), UDim2.new(1, -40, 0, 36), Enum.TextXAlignment.Center)
+Disclosure.TextWrapped = true
+Disclosure.TextTruncate = Enum.TextTruncate.None
+
+------------------------------------------------------------------
+-- MAIN WINDOW
+------------------------------------------------------------------
+local WIN_W, WIN_H = 580, 370
+local Main = New("Frame", {
+	Size = UDim2.new(0, WIN_W, 0, WIN_H), Position = UDim2.new(0.5, -WIN_W / 2, 0.5, -WIN_H / 2),
+	BackgroundColor3 = C.bg, Visible = false, ClipsDescendants = true, Active = true
+}, Gui)
+Round(Main, 14)
+New("UIStroke", {Color = C.line, Thickness = 1.5}, Main)
+
+local Header = New("Frame", {Size = UDim2.new(1, 0, 0, 42), BackgroundTransparency = 1}, Main)
+MakeDraggable(Main, Header)
+Label(Header, HUB_TITLE, 15, C.text, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 5), UDim2.new(0, 110, 0, 20))
+Label(Header, "PASAR HUTAN", 10, C.warn, Enum.Font.GothamBold, UDim2.new(0, 16, 0, 23), UDim2.new(0, 110, 0, 14))
+Label(Header, HUB_DISCORD, 10, C.sub, Enum.Font.Gotham, UDim2.new(0, 112, 0, 0), UDim2.new(0, 130, 1, 0))
+local StatLabel = Label(Header, "📡 -- ms", 11, C.accent, Enum.Font.GothamBold, UDim2.new(0, 245, 0, 0), UDim2.new(1, -330, 1, 0), Enum.TextXAlignment.Right)
+
+local MinimizeBtn = New("TextButton", {
+	Size = UDim2.new(0, 34, 0, 34), Position = UDim2.new(1, -80, 0, 4), BackgroundTransparency = 1,
+	Text = "—", TextColor3 = C.text, Font = Enum.Font.GothamBold, TextSize = 16
+}, Header)
+local CloseBtn = New("TextButton", {
+	Size = UDim2.new(0, 34, 0, 34), Position = UDim2.new(1, -44, 0, 4), BackgroundTransparency = 1,
+	Text = "✕", TextColor3 = C.text, Font = Enum.Font.GothamBold, TextSize = 16
+}, Header)
+
+local Body = New("Frame", {Size = UDim2.new(1, 0, 1, -42), Position = UDim2.new(0, 0, 0, 42), BackgroundTransparency = 1}, Main)
+
+local Sidebar = New("ScrollingFrame", {
+	Size = UDim2.new(0, 150, 1, -10), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
+	ScrollBarThickness = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, BorderSizePixel = 0,
+	ScrollingEnabled = false
+}, Body)
+New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, Sidebar)
+
+New("Frame", {Size = UDim2.new(0, 2, 1, -24), Position = UDim2.new(0, 166, 0, 4), BackgroundColor3 = C.accent, BorderSizePixel = 0}, Body)
+
+local Content = New("Frame", {Size = UDim2.new(1, -186, 1, 0), Position = UDim2.new(0, 178, 0, 0), BackgroundTransparency = 1}, Body)
+local PageTitle = Label(Content, "", 19, C.text, Enum.Font.GothamBold, UDim2.new(0, 2, 0, 0), UDim2.new(1, 0, 0, 30))
+local PagesHolder = New("Frame", {Size = UDim2.new(1, 0, 1, -44), Position = UDim2.new(0, 0, 0, 38), BackgroundTransparency = 1}, Content)
+
+local isMinimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	Body.Visible = not isMinimized
+	TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+		Size = UDim2.new(0, WIN_W, 0, isMinimized and 42 or WIN_H)
+	}):Play()
+end)
+CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
+
+-- Ping | waktu main
+task.spawn(function()
+	while true do
+		pcall(function()
+			local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+			local elapsed = os.time() - getgenv().SessionStartTime
+			local h, m, s = math.floor(elapsed / 3600), math.floor((elapsed % 3600) / 60), elapsed % 60
+			local t = h > 0 and string.format("%dh %02dm", h, m) or string.format("%02dm %02ds", m, s)
+			StatLabel.Text = string.format("📡 %d ms  |  ⏱ %s", ping, t)
+		end)
+		task.wait(1)
+	end
+end)
+
+Lock = function(msg)
+	Session.token, Session.key, Session.expiresAt = nil, nil, 0
+	StopAll()
+	pcall(function()
+		Main.Visible = false
+		KeyFrame.Visible = true
+		StatusKey.TextColor3 = C.bad
+		StatusKey.Text = msg or ""
+	end)
+end
+
+-- Anti-tamper
+task.spawn(function()
+	while true do
+		task.wait(2)
+		if not KeyFrame or not KeyFrame.Parent then
+			Session.token, Session.key, Session.expiresAt = nil, nil, 0
+			StopAll()
+			if Main and Main.Parent then Main:Destroy() end
+			break
+		end
+	end
+end)
+
+-- Heartbeat
+task.spawn(function()
+	while true do
+		task.wait(HEARTBEAT_INTERVAL)
+		if Session.token then
+			local data = CallServer({
+				action = "heartbeat", key = Session.key, token = Session.token,
+				hwid = CurrentHWID, username = LocalPlayer.Name
+			})
+			if data and data.ok then
+				Session.token = data.token or Session.token
+				Session.expiresAt = os.time() + (tonumber(data.ttl) or 300) + 60
+			elseif data and data.ok == false then
+				Lock(data.reason or "Sesi key dicabut oleh server.")
+			end
+			if Session.token and os.time() >= Session.expiresAt then
+				Lock("Sesi kedaluwarsa, verifikasi ulang.")
+			end
+		end
+	end
+end)
+
+------------------------------------------------------------------
+-- UI LIBRARY
+------------------------------------------------------------------
+local UI = {}
+local Tabs = {}
+
+function UI.Tab(name, icon)
+	local btn = New("TextButton", {
+		Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = C.card, BackgroundTransparency = 1,
+		AutoButtonColor = false, Text = "", LayoutOrder = #Tabs + 1
+	}, Sidebar)
+	Round(btn, 10)
+	local bar = New("Frame", {Size = UDim2.new(0, 3, 0, 16), Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = C.accent, Visible = false, BorderSizePixel = 0}, btn)
+	Round(bar, 2)
+	Label(btn, icon, 14, C.text, Enum.Font.Gotham, UDim2.new(0, 12, 0, 0), UDim2.new(0, 24, 1, 0), Enum.TextXAlignment.Center)
+	local lbl = Label(btn, name, 12, C.sub, Enum.Font.GothamMedium, UDim2.new(0, 42, 0, 0), UDim2.new(1, -46, 1, 0))
+
+	local page = New("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Visible = false, BorderSizePixel = 0,
+		ScrollBarThickness = 3, ScrollBarImageColor3 = C.accent, CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y
+	}, PagesHolder)
+	New("UIListLayout", {Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder}, page)
+	New("UIPadding", {PaddingRight = UDim.new(0, 6), PaddingBottom = UDim.new(0, 8)}, page)
+
+	local tab = {Button = btn, Bar = bar, Label = lbl, Page = page, Name = name}
+	table.insert(Tabs, tab)
+
+	btn.MouseButton1Click:Connect(function()
+		for _, t in ipairs(Tabs) do
+			local on = (t == tab)
+			t.Page.Visible = on
+			t.Bar.Visible = on
+			t.Button.BackgroundTransparency = on and 0 or 1
+			t.Label.TextColor3 = on and C.text or C.sub
+		end
+		PageTitle.Text = name
+	end)
+	if #Tabs == 1 then
+		page.Visible, bar.Visible = true, true
+		btn.BackgroundTransparency = 0
+		lbl.TextColor3 = C.text
+		PageTitle.Text = name
+	end
+	return page
+end
+
+local function Card(page, h)
+	local f = New("Frame", {Size = UDim2.new(1, -4, 0, h or 54), BackgroundColor3 = C.card}, page)
+	Round(f, 10)
+	New("UIStroke", {Color = C.line, Thickness = 1}, f)
+	return f
+end
+
+local function CardText(card, title, desc, rightPad)
+	if desc and desc ~= "" then
+		Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 8), UDim2.new(1, -rightPad, 0, 18))
+		Label(card, desc, 11, C.sub, Enum.Font.Gotham, UDim2.new(0, 12, 0, 27), UDim2.new(1, -rightPad, 0, 18))
+	else
+		Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 0), UDim2.new(1, -rightPad, 1, 0))
+	end
+end
+
+function UI.Section(page, text, color)
+	return Label(page, text, 12, color or C.accent, Enum.Font.GothamBold, nil, UDim2.new(1, -4, 0, 22))
+end
+
+function UI.Toggle(page, title, desc, default, cb)
+	local card = Card(page)
+	CardText(card, title, desc, 90)
+	local sw = New("TextButton", {
+		Text = "", AutoButtonColor = false, Size = UDim2.new(0, 52, 0, 26),
+		Position = UDim2.new(1, -64, 0.5, -13), BackgroundColor3 = C.off
+	}, card)
+	Round(sw, 13)
+	local knob = New("Frame", {Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(0, 3, 0.5, -10), BackgroundColor3 = C.accent}, sw)
+	Round(knob, 10)
+	local state = default and true or false
+	local function render()
+		local ti = TweenInfo.new(0.15)
+		TweenService:Create(knob, ti, {
+			Position = state and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10),
+			BackgroundColor3 = state and Color3.new(1, 1, 1) or C.accent
+		}):Play()
+		TweenService:Create(sw, ti, {BackgroundColor3 = state and C.accent or C.off}):Play()
+	end
+	render()
+	sw.MouseButton1Click:Connect(function()
+		if not IsVerified() then
+			state = false
+			render()
+			return
+		end
+		state = not state
+		render()
+		task.spawn(cb, state)
+	end)
+	return {Set = function(v) state = v and true or false; render() end}
+end
+
+function UI.Button(page, title, desc, btnText, cb, color)
+	local card = Card(page)
+	CardText(card, title, desc, 130)
+	local b = New("TextButton", {
+		Size = UDim2.new(0, 104, 0, 34), Position = UDim2.new(1, -116, 0.5, -17),
+		BackgroundColor3 = color or C.accent, Text = btnText, TextColor3 = Color3.new(1, 1, 1),
+		Font = Enum.Font.GothamBold, TextSize = 12, TextTruncate = Enum.TextTruncate.AtEnd
+	}, card)
+	Round(b, 8)
+	b.MouseButton1Click:Connect(function()
+		if not IsVerified() then return end
+		task.spawn(cb, b)
+	end)
+	return b, card
+end
+
+function UI.Input(page, title, desc, default, placeholder, cb)
+	local card = Card(page)
+	CardText(card, title, desc, 140)
+	local box = New("TextBox", {
+		Size = UDim2.new(0, 112, 0, 34), Position = UDim2.new(1, -124, 0.5, -17),
+		BackgroundColor3 = C.bg, Text = tostring(default or ""), PlaceholderText = placeholder or "",
+		PlaceholderColor3 = C.sub, TextColor3 = C.text, Font = Enum.Font.Gotham, TextSize = 12, ClearTextOnFocus = false
+	}, card)
+	Round(box, 8)
+	New("UIStroke", {Color = C.line}, box)
+	box.FocusLost:Connect(function() cb(box.Text) end)
+	return box
+end
+
+-- pilihan segmen (mis. SIANG | MALAM)
+function UI.Segment(page, title, options, get, set)
+	local card = Card(page, 66)
+	Label(card, title, 13, C.text, Enum.Font.GothamMedium, UDim2.new(0, 12, 0, 6), UDim2.new(1, -24, 0, 18))
+	local row = New("Frame", {Size = UDim2.new(1, -24, 0, 30), Position = UDim2.new(0, 12, 0, 28), BackgroundColor3 = C.bg}, card)
+	Round(row, 8)
+	local btns = {}
+	local n = #options
+	local function render()
+		local cur = get()
+		for key, b in pairs(btns) do
+			local on = (key == cur)
+			b.BackgroundColor3 = on and C.accent or C.bg
+			b.TextColor3 = on and Color3.new(1, 1, 1) or C.sub
+		end
+	end
+	for i, o in ipairs(options) do
+		local b = New("TextButton", {
+			Size = UDim2.new(1 / n, -4, 1, -4), Position = UDim2.new((i - 1) / n, 2, 0, 2),
+			BackgroundColor3 = C.bg, Text = o.text, Font = Enum.Font.GothamBold, TextSize = 11,
+			TextColor3 = C.sub, AutoButtonColor = false, BorderSizePixel = 0
+		}, row)
+		Round(b, 6)
+		btns[o.key] = b
+		b.MouseButton1Click:Connect(function() set(o.key) render() end)
+	end
+	render()
+	return render
+end
+
+-- kartu status beberapa baris: obj.Set(nomorBaris, teks)
+function UI.Status(page, lines)
+	local card = New("Frame", {
+		Size = UDim2.new(1, -4, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = C.card
+	}, page)
+	Round(card, 10)
+	New("UIStroke", {Color = C.line}, card)
+	New("UIPadding", {
+		PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8),
+		PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12)
+	}, card)
+	local lbl = New("TextLabel", {
+		BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
+		Text = "Siap.", TextSize = 11, TextColor3 = C.text, Font = Enum.Font.Gotham, TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top
+	}, card)
+	local texts = {}
+	for i = 1, lines do texts[i] = "" end
+	local obj = {}
+	obj.Set = function(i, t)
+		texts[i] = tostring(t or "")
+		local out = {}
+		for _, s in ipairs(texts) do if s ~= "" then table.insert(out, s) end end
+		lbl.Text = table.concat(out, "\n")
+	end
+	return obj
+end
+
+-- daftar yang bisa discroll dan dipilih
+function UI.List(page, height, rowH)
+	local card = Card(page, height)
+	local sf = New("ScrollingFrame", {
+		Size = UDim2.new(1, -12, 1, -12), Position = UDim2.new(0, 6, 0, 6), BackgroundTransparency = 1,
+		BorderSizePixel = 0, ScrollBarThickness = 3, ScrollBarImageColor3 = C.accent,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y
+	}, card)
+	New("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, sf)
+	local obj = {Frame = card, _y = 0}
+	obj.Clear = function()
+		obj._y = sf.CanvasPosition.Y
+		for _, c in ipairs(sf:GetChildren()) do
+			if c:IsA("TextButton") then c:Destroy() end
+		end
+	end
+	obj.Add = function(text, selected, onClick, rich, h, dim)
+		local b = New("TextButton", {
+			Size = UDim2.new(1, -6, 0, h or rowH or 26), BackgroundColor3 = selected and C.accent or C.row,
+			Text = text, RichText = rich and true or false, TextColor3 = selected and Color3.new(1, 1, 1) or (dim and C.sub or C.text),
+			Font = Enum.Font.GothamMedium, TextSize = rich and 10 or 11, TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = true, AutoButtonColor = true, BorderSizePixel = 0
+		}, sf)
+		Round(b, 6)
+		New("UIPadding", {PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 6)}, b)
+		b.MouseButton1Click:Connect(function() onClick() end)
+		return b
+	end
+	obj.Done = function()
+		local y = obj._y
+		task.defer(function() pcall(function() sf.CanvasPosition = Vector2.new(0, y) end) end)
+	end
+	return obj
+end
+
+-- beberapa tombol sejajar dalam satu kartu
+function UI.Buttons(page, defs)
+	local card = Card(page, 46)
+	local n = #defs
+	for i, d in ipairs(defs) do
+		local b = New("TextButton", {
+			Size = UDim2.new(1 / n, -8, 1, -12), Position = UDim2.new((i - 1) / n, 4, 0, 6),
+			BackgroundColor3 = d.color or C.accent, Text = d.text, TextColor3 = Color3.new(1, 1, 1),
+			Font = Enum.Font.GothamBold, TextSize = 10, TextWrapped = true, AutoButtonColor = true, BorderSizePixel = 0
+		}, card)
+		Round(b, 8)
+		b.MouseButton1Click:Connect(function()
+			if not IsVerified() then return end
+			task.spawn(d.cb, b)
+		end)
+	end
+	return card
+end
+
+local function Flash(btn, text, ok)
+	local old = btn.Text
+	local oldColor = btn.BackgroundColor3
+	btn.Text = text
+	btn.BackgroundColor3 = ok and C.good or C.bad
+	task.wait(1.8)
+	btn.Text = old
+	btn.BackgroundColor3 = oldColor
+end
+
+------------------------------------------------------------------
+-- TABS
+------------------------------------------------------------------
+local KebunPage = UI.Tab("Kebun", "🌱")
+local FarmPage = UI.Tab("Auto Farm", "⛏️")
+local TernakPage = UI.Tab("Peternakan", "🐔")
+local LapakPage = UI.Tab("Lapak", "🏪")
+local MasakPage = UI.Tab("Masak", "🍳")
+local TuyulPage = UI.Tab("Tuyul & Pet", "👻")
+local PlayerPage = UI.Tab("Player", "⚡")
+local SettingsPage = UI.Tab("Settings", "⚙️")
+local CreditsPage = UI.Tab("Credits", "💎")
+
+------------------------------------------------------------------
+-- KEY VALIDATION
+------------------------------------------------------------------
+GetKeyDiscordBtn.MouseButton1Click:Connect(function()
+	local ok = pcall(function() setclipboard(DISCORD_LINK) end)
+	StatusKey.TextColor3 = ok and C.accent or C.bad
+	StatusKey.Text = ok and "Link Discord disalin!" or ("Buka manual: " .. DISCORD_LINK)
+end)
+
+local validating = false
+local function ValidateKey(enteredKey, isAutoLogin)
+	enteredKey = tostring(enteredKey or ""):gsub("^%s+", ""):gsub("%s+$", "")
+	if validating then return end
+	if enteredKey == "" then
+		if not isAutoLogin then
+			StatusKey.TextColor3 = C.bad
+			StatusKey.Text = "Masukkan Key terlebih dahulu!"
+		end
+		KeyFrame.Visible = true
+		return
+	end
+	validating = true
+	if not isAutoLogin then
+		StatusKey.TextColor3 = C.warn
+		StatusKey.Text = "Memeriksa validasi akun & key..."
+	end
+
+	task.spawn(function()
+		local data, err = CallServer({
+			action = "verify", key = enteredKey, hwid = CurrentHWID,
+			username = LocalPlayer.Name, userId = LocalPlayer.UserId, placeId = game.PlaceId
+		})
+		validating = false
+
+		if not data then
+			if not isAutoLogin then StatusKey.TextColor3 = C.bad; StatusKey.Text = err or "Gagal verifikasi." end
+			KeyFrame.Visible = true
+			return
+		end
+		if not data.ok or type(data.token) ~= "string" then
+			if not isAutoLogin then StatusKey.TextColor3 = C.bad; StatusKey.Text = tostring(data.reason or "Key tidak valid!") end
+			KeyFrame.Visible = true
+			return
+		end
+
+		Session.token = data.token
+		Session.key = enteredKey
+		Session.expiresAt = os.time() + (tonumber(data.ttl) or 300) + 60
+
+		pcall(function() if writefile then writefile(KEY_FILE, enteredKey) end end)
+		StatusKey.Text = ""
+		KeyFrame.Visible = false
+		Main.Visible = true
+		pcall(OnVerified)
+	end)
+end
+
+SubmitKeyBtn.MouseButton1Click:Connect(function() ValidateKey(KeyBox.Text, false) end)
+
+task.spawn(function()
+	task.wait(1) -- beri waktu modul Pasar Hutan selesai dimuat
+	if readfile and isfile and isfile(KEY_FILE) then
+		local savedKey = readfile(KEY_FILE)
+		if savedKey and savedKey ~= "" then
+			KeyBox.Text = savedKey
+			ValidateKey(savedKey, true)
+			return
+		end
+	end
+	KeyFrame.Visible = true
+end)
+
+------------------------------------------------------------------
+-- PASAR HUTAN | CORE (dipakai semua tab)
+------------------------------------------------------------------
+local H = {
+	Total = 0, Returning = false, PetirDanger = false, JamurReturning = false,
+	PohonSize = "semua", BatuSize = "semua", Harvested = 0, WalkSpeed = 22, PromptMode = "hold",
+}
+local Q = {
+	Kepiting = 0, Gagak = 0, Dupa = 0, Kemenyan = 0, Melati = 0, Jamur = 0, Pohon = 0, Batu = 0,
+	Ayam = 0, Sapi = 0, Babi = 0, Ngepet = 0, Lapak = 0, Tuyul = 0, Dapur = 0, Olah = 0, Panggang = 0,
+}
+local FARM_FLAGS = {
+	"AutoSemuaFarmActive", "KepitingFarmActive", "GagakFarmActive", "DupaFarmActive", "KemenyanFarmActive",
+	"MelatiFarmActive", "JamurFarmActive", "PohonFarmActive", "BatuFarmActive", "AutoTuyulLiarActive",
+}
+local ANIMAL_FLAGS = {"AutoAyamActive", "AutoSapiActive", "AutoBabiActive", "AutoGosokBabiActive", "AutoKlaimNgepetActive"}
+local ACTIVE_FLAGS = { -- Gagak sengaja tidak masuk (sama seperti script asli)
+	"AutoSemuaFarmActive", "KepitingFarmActive", "DupaFarmActive", "KemenyanFarmActive", "MelatiFarmActive",
+	"JamurFarmActive", "PohonFarmActive", "BatuFarmActive", "AutoAyamActive", "AutoSapiActive", "AutoBabiActive",
+	"AutoGosokBabiActive", "AutoKlaimNgepetActive", "AutoTuyulLiarActive",
+}
+
+do
+	local RS = game:GetService("ReplicatedStorage")
+	local RunService = game:GetService("RunService")
+	local VIM = game:GetService("VirtualInputManager")
+	local PPS = game:GetService("ProximityPromptService")
+
+	-- setiap kali execute, loop lama otomatis berhenti
+	getgenv().UbeyPHRunId = (getgenv().UbeyPHRunId or 0) + 1
+	local RUN = getgenv().UbeyPHRunId
+	for _, c in ipairs(getgenv().UbeyPHConns or {}) do pcall(function() c:Disconnect() end) end
+	local Conns = {}
+	getgenv().UbeyPHConns = Conns
+
+	H.RS = RS
+	H.Run = function() return getgenv().UbeyPHRunId == RUN end
+	H.Conn = function(c) table.insert(Conns, c) return c end
+
+	for _, f in ipairs(ALL_FLAGS) do getgenv()[f] = false end
+	getgenv().PH_Repairing = false
+	getgenv().AutoTarikSisaFase = true
+	getgenv().BabiPakanPilihan = getgenv().BabiPakanPilihan or "auto"
+	getgenv().PanggangBabiKg = getgenv().PanggangBabiKg or "auto"
+	getgenv().BatuIronBase = nil
+	getgenv().AntiAFKRunning = true
+
+	----------------------------------------------------------------
+	-- REMOTE
+	----------------------------------------------------------------
+	H.R = {}
+	local remoteMap = {}
+	local function Find(names)
+		for _, n in ipairs(names) do
+			local k = string.lower(n)
+			if remoteMap[k] then return remoteMap[k] end
+		end
+		for key, inst in pairs(remoteMap) do
+			for _, n in ipairs(names) do
+				if string.find(key, string.lower(n)) then return inst end
+			end
+		end
+		return nil
+	end
+	H.Find = Find
+	local REG_NAMES = {
+		Rak = "RakAksi", Lapak = "LapakAksi", Tanam = "Tanam", Panen = "Panen", Pet = "PetCmd",
+		Stove = "CookStove", StovePoll = "CookQueuePoll", OlahStart = "OlahMulai", OlahPoll = "OlahPoll",
+		Petir = "Petir", SaleFx = "SaleFx", Tempa = "TempaAksi",
+	}
+	local FALLBACK = {
+		Rak = {"r60fc0f14c95948a1b8f424b0c87c9ae4", "rakaksi", "rak"},
+		Lapak = {"rf1cca891fcc741358fad82b58785b3b9", "lapakaksi", "lapak"},
+		Tanam = {"r253d6aea043740e6a58d3993f00a778a", "tanam"},
+		Panen = {"re21f8e95de624bfaae4b4c6918f08a57", "panen"},
+		Pet = {"r7af0f7737fc845cc97af22d6032eeca5", "petcmd"},
+		Stove = {"r8d5a4dd477db4290a641760b60794296", "cookstove"},
+		StovePoll = {"r48d79ce5b49e413e9e43439fb4e52236", "cookqueuepoll"},
+		OlahStart = {"rfa2c229485a548c0a0122bd19f578e40", "olahmulai"},
+		OlahPoll = {"rafad8eca2ca6493ab24ac83fe78b2993", "olahpoll"},
+		Petir = {"rdbc34f083ba248a198c5af3d8ece430f", "petir"},
+		SaleFx = {"re1c6efd0e0244e8d8996c1e0552e3c45", "salefx"},
+		Tempa = {"r029eb117e7d9434591e601adc512a5cd", "tempaaksi"},
+	}
+	function H.LoadRemotes()
+		pcall(function()
+			local reg = RS:WaitForChild("RemoteRegistry", 3)
+			if not reg then return end
+			local mod = require(reg)
+			if type(mod) == "table" then
+				for k, v in pairs(mod) do
+					if typeof(v) == "Instance" then remoteMap[string.lower(tostring(k))] = v end
+				end
+			end
+			local getter = mod.get or mod.cari
+			if getter then
+				for key, nm in pairs(REG_NAMES) do
+					pcall(function()
+						local r = getter(nm)
+						if typeof(r) == "Instance" then H.R[key] = r end
+					end)
+				end
+				if getupvalues then
+					pcall(function()
+						for _, up in ipairs(getupvalues(getter)) do
+							if type(up) == "table" then
+								for k, v in pairs(up) do
+									if typeof(v) == "Instance" then remoteMap[string.lower(tostring(k))] = v
+									elseif type(v) == "string" and typeof(k) == "Instance" then remoteMap[string.lower(tostring(v))] = k end
+								end
+							end
+						end
+					end)
+				end
+			end
+		end)
+		for _, d in ipairs(RS:GetDescendants()) do
+			if d:IsA("RemoteEvent") or d:IsA("RemoteFunction") then remoteMap[string.lower(d.Name)] = d end
+		end
+		for key, names in pairs(FALLBACK) do
+			if not H.R[key] then H.R[key] = Find(names) end
+		end
+	end
+	H.LoadRemotes()
+
+	H.GC = nil
+	pcall(function() H.GC = require(RS:WaitForChild("GameConfig", 3)) end)
+
+	----------------------------------------------------------------
+	-- KARAKTER & ALAT
+	----------------------------------------------------------------
+	function H.Char()
+		local ch = LocalPlayer.Character
+		if not ch then return nil, nil end
+		return ch:FindFirstChild("HumanoidRootPart"), ch:FindFirstChildOfClass("Humanoid")
+	end
+	function H.Live()
+		local hrp, hum = H.Char()
+		if hrp and hum and hum.Health > 0 then return hrp, hum end
+		return nil, nil
+	end
+	function H.FindTool(name)
+		local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+		return (bp and bp:FindFirstChild(name)) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(name))
+	end
+	function H.Clean(s)
+		s = tostring(s or "")
+		s = s:gsub("%s*[xX]%s*%d+", "")
+		s = s:gsub("%s*%(%d+%)", "")
+		s = s:gsub("%s*%[%d+%]", "")
+		s = s:gsub("^%s+", "")
+		s = s:gsub("%s+$", "")
+		return s
+	end
+
+	local function ToolOk(t)
+		if t:GetAttribute("Rusak") == true then return false end
+		local d = t:GetAttribute("Dur")
+		if type(d) == "number" and d <= 0 then return false end
+		return true
+	end
+	local function ToolScore(t)
+		local d, m = t:GetAttribute("Dur"), t:GetAttribute("DurMaks")
+		local frac = (type(d) == "number" and type(m) == "number" and m > 0) and (d / m) or 0
+		return (tonumber(t:GetAttribute("Tier")) or 0) * 1e6 + (tonumber(t:GetAttribute("Damage")) or 0) * 1e3
+			+ (tonumber(t:GetAttribute("Mutu")) or 0) * 10 + (tonumber(t:GetAttribute("Tingkat")) or 0) + frac * 0.5
+	end
+	function H.BestTool(cat)
+		local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+		local ch = LocalPlayer.Character
+		local list = {}
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if t:IsA("Tool") and t:GetAttribute("AlatTambang") and t:GetAttribute("Jenis") == cat then table.insert(list, t) end
+			end
+		end
+		scan(ch)
+		scan(bp)
+		if #list > 0 then
+			local best, bs = nil, -math.huge
+			local fb, fs = nil, -math.huge
+			for _, t in ipairs(list) do
+				local s = ToolScore(t)
+				if ToolOk(t) then
+					if s > bs then best, bs = t, s end
+				elseif s > fs then fb, fs = t, s end
+			end
+			return best or fb
+		end
+		local kw = (cat == "Pohon") and "kapak" or "beliung"
+		local function byName(c)
+			if not c then return nil end
+			for _, t in ipairs(c:GetChildren()) do
+				if t:IsA("Tool") and t.Name:lower():find(kw) then return t end
+			end
+			return nil
+		end
+		return byName(ch) or byName(bp)
+	end
+	function H.EquipBest(cat)
+		local _, hum = H.Live()
+		if not hum then return false end
+		local t = H.BestTool(cat)
+		if not t then return false end
+		if t.Parent ~= LocalPlayer.Character then
+			hum:EquipTool(t)
+			task.wait(0.2)
+		end
+		return t.Parent == LocalPlayer.Character
+	end
+
+	----------------------------------------------------------------
+	-- GERAK
+	----------------------------------------------------------------
+	function H.ClearFly()
+		local hrp = H.Char()
+		if hrp then
+			local a = hrp:FindFirstChild("FlyLockPos")
+			if a then a:Destroy() end
+			local g = hrp:FindFirstChild("FlyLockGyro")
+			if g then g:Destroy() end
+		end
+		local _, hum = H.Live()
+		if hum and hum.PlatformStand then hum.PlatformStand = false end
+	end
+	function H.WalkCtx()
+		return getgenv().JamurFarmActive == true or getgenv().MelatiFarmActive == true or H.JamurReturning == true
+	end
+	function H.FlyFloat(on)
+		if H.WalkCtx() then on = false end
+		H.ClearFly()
+		local hrp = H.Char()
+		if not hrp then return end
+		local f = hrp:FindFirstChild("FlyFloat")
+		if on then
+			if not f then
+				f = Instance.new("BodyVelocity")
+				f.Name = "FlyFloat"
+				f.MaxForce = Vector3.new(9e8, 9e8, 9e8)
+				f.Parent = hrp
+			end
+			f.Velocity = Vector3.zero
+			hrp.AssemblyLinearVelocity = Vector3.zero
+		elseif f then
+			f:Destroy()
+		end
+	end
+	function H.AnyActive()
+		for _, f in ipairs(ACTIVE_FLAGS) do
+			if getgenv()[f] then return true end
+		end
+		return false
+	end
+
+	H.Conn(RunService.Stepped:Connect(function()
+		if not H.Run() or H.WalkCtx() or not (H.AnyActive() or H.Returning) then return end
+		local ch = LocalPlayer.Character
+		if not ch then return end
+		for _, p in ipairs(ch:GetDescendants()) do
+			if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
+		end
+	end))
+
+	function H.WalkToRaw(target, cancel, radius)
+		radius = radius or 3.5
+		local hrp, hum = H.Live()
+		if not hrp or not hum then return false end
+		local rp = RaycastParams.new()
+		rp.FilterType = Enum.RaycastFilterType.Exclude
+		rp.FilterDescendantsInstances = {LocalPlayer.Character}
+		local ray = workspace:Raycast(target + Vector3.new(0, 4, 0), Vector3.new(0, -60, 0), rp)
+		local goal = ray and (ray.Position + Vector3.new(0, 0.5, 0)) or target
+		local function dist()
+			local h = H.Live()
+			if not h then return math.huge end
+			local d = h.Position - goal
+			return Vector3.new(d.X, 0, d.Z).Magnitude
+		end
+		local function cancelled() return not H.Run() or (cancel and cancel()) or false end
+		local speed = math.max(hum.WalkSpeed, 8)
+		local deadline = tick() + math.clamp((hrp.Position - goal).Magnitude / speed * 2 + 8, 10, 120)
+		local PFS = game:GetService("PathfindingService")
+		local attempts = 0
+		while dist() > radius and tick() < deadline and attempts < 6 do
+			if cancelled() then return false end
+			attempts += 1
+			local h = H.Live()
+			if not h then return false end
+			local path = PFS:CreatePath({AgentRadius = 2, AgentHeight = 5, AgentCanJump = true})
+			local ok = pcall(function() path:ComputeAsync(h.Position, goal) end)
+			local wps
+			if ok and path.Status == Enum.PathStatus.Success then
+				wps = path:GetWaypoints()
+			else
+				wps = {{Position = goal, Action = Enum.PathWaypointAction.Walk}}
+			end
+			local stuck = false
+			for i, wp in ipairs(wps) do
+				if i == 1 and #wps > 1 then continue end
+				if cancelled() then return false end
+				if dist() <= radius then break end
+				local h2, hm2 = H.Live()
+				if not h2 then return false end
+				if wp.Action == Enum.PathWaypointAction.Jump then hm2.Jump = true end
+				hm2:MoveTo(wp.Position)
+				local t0, lastPos, lastMove = tick(), h2.Position, tick()
+				while (tick() - t0) < 4 and tick() < deadline do
+					task.wait(0.1)
+					if cancelled() then return false end
+					local h3 = H.Live()
+					if not h3 then return false end
+					local dd = h3.Position - wp.Position
+					if Vector3.new(dd.X, 0, dd.Z).Magnitude < 3 then break end
+					if dist() <= radius then break end
+					if (h3.Position - lastPos).Magnitude > 0.6 then
+						lastPos, lastMove = h3.Position, tick()
+					elseif (tick() - lastMove) > 1.2 then
+						hm2.Jump = true
+						stuck = true
+						break
+					end
+				end
+				if stuck then break end
+			end
+		end
+		local reached = dist() <= (radius + 1.5)
+		local h, hm = H.Live()
+		if h and hm then hm:MoveTo(h.Position) end
+		return reached
+	end
+	function H.WalkTo(target, cancel, radius)
+		local _, hum = H.Live()
+		local orig = hum and hum.WalkSpeed
+		if hum and orig and H.WalkSpeed > orig then hum.WalkSpeed = H.WalkSpeed end
+		local ok, res = pcall(H.WalkToRaw, target, cancel, radius)
+		if hum and orig then
+			pcall(function() if hum.Parent then hum.WalkSpeed = orig end end)
+		end
+		if not ok then
+			warn("[WalkTo] " .. tostring(res))
+			return false
+		end
+		return res
+	end
+	function H.MoveNear(pos, cancel, walk)
+		if walk then return H.WalkTo(pos, cancel, 3.5) end
+		local hrp = H.Live()
+		if not hrp then return false end
+		hrp.CFrame = CFrame.new(pos)
+		task.wait(0.15)
+		return true
+	end
+	function H.TeleportTo(pos, cancel, walk)
+		if walk then return H.WalkTo(pos, cancel) end
+		local hrp = H.Live()
+		if not hrp then return false end
+		local from = hrp.Position
+		local d = (from - pos).Magnitude
+		if d <= 25 then
+			hrp.CFrame = CFrame.new(pos)
+			return true
+		end
+		local steps = math.ceil(d / 25)
+		for i = 1, steps do
+			if cancel and cancel() then return false end
+			hrp = H.Live()
+			if not hrp then return false end
+			hrp.CFrame = CFrame.new(from:Lerp(pos, i / steps))
+			task.wait(0.08)
+		end
+		hrp = H.Live()
+		if hrp then hrp.CFrame = CFrame.new(pos) end
+		return true
+	end
+
+	function H.Fire(prompt, hold)
+		if not (prompt and prompt.Parent and prompt.Enabled) then return end
+		local d = hold or prompt.HoldDuration or 1.1
+		if H.PromptMode == "fire" and fireproximityprompt then
+			pcall(fireproximityprompt, prompt, d + 0.1)
+			task.wait(0.2)
+		elseif H.PromptMode == "vim" then
+			pcall(function() VIM:SendKeyEvent(true, Enum.KeyCode.E, false, game) end)
+			task.wait(d + 0.05)
+			pcall(function() VIM:SendKeyEvent(false, Enum.KeyCode.E, false, game) end)
+		else
+			pcall(function()
+				prompt:InputHoldBegin()
+				task.wait(d + 0.05)
+				prompt:InputHoldEnd()
+			end)
+		end
+	end
+
+	-- pantau prompt yang sedang tampil (dipakai untuk menambang batu)
+	local shown = setmetatable({}, {__mode = "k"})
+	H.Conn(PPS.PromptShown:Connect(function(p) shown[p] = true end))
+	H.Conn(PPS.PromptHidden:Connect(function(p) shown[p] = nil end))
+	local function WaitShown(p, t)
+		local t0 = tick()
+		while tick() - t0 < t do
+			if shown[p] then return true end
+			if not p.Parent or not p.Enabled then return false end
+			task.wait(0.05)
+		end
+		return shown[p] == true
+	end
+	function H.EnsurePrompt(p)
+		if WaitShown(p, 1.3) then return true end
+		local hrp = H.Live()
+		local pos = p.Parent and (p.Parent:IsA("Attachment") and p.Parent.WorldPosition or (p.Parent:IsA("BasePart") and p.Parent.Position))
+		if hrp and pos then
+			local flat = Vector3.new(pos.X, hrp.Position.Y, pos.Z)
+			local diff = hrp.Position - flat
+			local d = diff.Magnitude
+			if d > 4.5 then
+				local back = math.max(4, d * 0.7)
+				hrp.CFrame = CFrame.lookAt(flat + diff.Unit * back, flat)
+				hrp.AssemblyLinearVelocity = Vector3.zero
+			end
+		end
+		return WaitShown(p, 1.0)
+	end
+
+	-- kamera khusus saat menambang batu
+	local function RestoreCam()
+		local s = getgenv().PH_CamSaved
+		if not s then return end
+		pcall(function()
+			LocalPlayer.CameraMinZoomDistance = 0.5
+			LocalPlayer.CameraMaxZoomDistance = s.maxZ
+			LocalPlayer.CameraMinZoomDistance = s.minZ
+			LocalPlayer.DevCameraOcclusionMode = s.occ
+		end)
+		getgenv().PH_CamSaved = nil
+	end
+	RestoreCam()
+	H.RestoreCam = RestoreCam
+	function H.LockCam()
+		pcall(function()
+			if not getgenv().PH_CamSaved then
+				getgenv().PH_CamSaved = {
+					occ = LocalPlayer.DevCameraOcclusionMode,
+					minZ = LocalPlayer.CameraMinZoomDistance,
+					maxZ = LocalPlayer.CameraMaxZoomDistance,
+				}
+			end
+			LocalPlayer.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
+			LocalPlayer.CameraMinZoomDistance = 0.5
+			LocalPlayer.CameraMaxZoomDistance = 14
+			LocalPlayer.CameraMinZoomDistance = 14
+		end)
+	end
+	function H.FaceRock(rock)
+		local hrp = H.Live()
+		if not hrp or not rock or not rock.Parent then return end
+		local target = Vector3.new(rock.Position.X, hrp.Position.Y, rock.Position.Z)
+		local diff = target - hrp.Position
+		if diff.Magnitude < 0.5 then return end
+		if hrp.CFrame.LookVector:Dot(diff.Unit) < 0.98 then hrp.CFrame = CFrame.lookAt(hrp.Position, target) end
+	end
+
+	----------------------------------------------------------------
+	-- PLOT, PANEN, NODE
+	----------------------------------------------------------------
+	function H.Plot()
+		local folder = workspace:FindFirstChild("Plot") or workspace:FindFirstChild("Plots")
+		if not folder then return nil, nil end
+		local uid = LocalPlayer.UserId
+		for _, p in ipairs(folder:GetChildren()) do
+			local lahan = p:FindFirstChild("Lahan1") or p:FindFirstChild("Lahan")
+			if (lahan and (lahan:GetAttribute("Owner") == uid or lahan:GetAttribute("OwnerId") == uid))
+				or p:GetAttribute("Owner") == uid or p:GetAttribute("OwnerUserId") == uid or p.Name:find(tostring(uid)) then
+				return p, lahan
+			end
+		end
+		return nil, nil
+	end
+
+	local harvestLast = setmetatable({}, {__mode = "k"})
+	function H.Harvest(plant)
+		local rem = H.R.Panen
+		if not rem then return end
+		if not (plant and plant.Parent) or plant:GetAttribute("Ready") ~= true then return end
+		local now = tick()
+		if harvestLast[plant] and (now - harvestLast[plant]) < 0.6 then return end
+		harvestLast[plant] = now
+		rem:FireServer(plant)
+		task.delay(0.3, function()
+			if not plant.Parent or plant:GetAttribute("Ready") ~= true then H.Harvested += 1 end
+		end)
+	end
+
+	function H.NodeOk(n)
+		return n and n.item and n.item.Parent ~= nil and n.prompt and n.prompt.Parent ~= nil and n.prompt.Enabled
+	end
+
+	function H.FetchBahan(query, cool)
+		local folder = workspace:FindFirstChild("SpawnBahan")
+		local hrp = H.Char()
+		if not folder or not hrp then return {} end
+		local out, now = {}, tick()
+		for _, p in ipairs(folder:GetChildren()) do
+			if p:IsA("BasePart") and string.find(string.lower(p.Name), query, 1, true) then
+				local vis = p:FindFirstChild("BahanVisual")
+				local prm = vis and vis:FindFirstChild("AmbilPrompt", true)
+				if prm and prm.Enabled and (not cool[p] or now > cool[p]) then
+					table.insert(out, {item = p, prompt = prm, pos = p.Position, dist = (hrp.Position - p.Position).Magnitude})
+				end
+			end
+		end
+		table.sort(out, function(a, b) return a.dist < b.dist end)
+		return out
+	end
+
+	function H.FetchCraft(jenis, sizeKey, cool)
+		local folder = workspace:FindFirstChild("BahanCraft")
+		local hrp = H.Char()
+		if not folder or not hrp then return {} end
+		local out, now = {}, tick()
+		for _, m in ipairs(folder:GetChildren()) do
+			local jn = m:GetAttribute("Jenis")
+			if not jn then jn = m.Name:lower():find("batu") and "Batu" or "Pohon" end
+			local lname = m.Name:lower()
+			local sizeOk = true
+			if sizeKey == "besar" then sizeOk = lname:find("besar") ~= nil
+			elseif sizeKey == "kecil" then sizeOk = lname:find("kecil") ~= nil
+			elseif sizeKey == "sedang" then sizeOk = lname:find("sedang") ~= nil end
+			if jn == jenis and sizeOk and not m:GetAttribute("Tumbang") then
+				local prm = m:FindFirstChildWhichIsA("ProximityPrompt", true)
+				local part = (prm and prm.Parent:IsA("BasePart") and prm.Parent)
+					or (prm and prm.Parent:IsA("Attachment") and prm.Parent.Parent:IsA("BasePart") and prm.Parent.Parent)
+					or m:FindFirstChildWhichIsA("BasePart", true)
+				if prm and prm.Enabled and part and (not cool[m] or now > cool[m]) then
+					local ppos = prm.Parent:IsA("Attachment") and prm.Parent.WorldPosition or part.Position
+					local pos
+					if jn == "Batu" then
+						local rp = part.Position
+						local off = math.max(part.Size.X, part.Size.Z) * 0.5 + 3.0
+						local dir = hrp.Position - rp
+						dir = Vector3.new(dir.X, 0, dir.Z)
+						dir = (dir.Magnitude < 0.1) and Vector3.new(0, 0, 1) or dir.Unit
+						local base = rp + dir * off
+						local rq = RaycastParams.new()
+						rq.FilterType = Enum.RaycastFilterType.Exclude
+						rq.FilterDescendantsInstances = {workspace.BahanCraft, LocalPlayer.Character}
+						local hit = workspace:Raycast(base + Vector3.new(0, 15, 0), Vector3.new(0, -60, 0), rq)
+						local y = hit and (hit.Position.Y + 3.0) or (part.Position.Y - part.Size.Y * 0.5 + 3.0)
+						pos = Vector3.new(base.X, y, base.Z)
+					else
+						pos = ppos
+					end
+					table.insert(out, {item = m, prompt = prm, part = part, pos = pos, dist = (hrp.Position - ppos).Magnitude})
+				end
+			end
+		end
+		table.sort(out, function(a, b) return a.dist < b.dist end)
+		return out
+	end
+
+	function H.IronCount()
+		local n = 0
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if t:IsA("Tool") and t:GetAttribute("ItemId") == "BijiBesi" then n += (t:GetAttribute("Count") or 1) end
+			end
+		end
+		scan(LocalPlayer:FindFirstChildOfClass("Backpack"))
+		scan(LocalPlayer.Character)
+		return n
+	end
+
+	-- hanya satu mode aktif: mulai farm -> farm lain mati; mulai farm -> ternak mati
+	local function Off(f)
+		getgenv()[f] = false
+		local s = ToggleSetters[f]
+		if s then pcall(s, false) end
+	end
+	function H.Exclusive(flag)
+		local isFarm = table.find(FARM_FLAGS, flag) ~= nil
+		local isAnimal = table.find(ANIMAL_FLAGS, flag) ~= nil
+		if not (isFarm or isAnimal) then return end
+		for _, f in ipairs(FARM_FLAGS) do
+			if f ~= flag and getgenv()[f] then Off(f) end
+		end
+		if isFarm then
+			for _, f in ipairs(ANIMAL_FLAGS) do
+				if getgenv()[f] then Off(f) end
+			end
+		end
+	end
+	H.Off = Off
+end
+
+-- toggle yang terhubung ke flag getgenv()
+local function FlagToggle(page, title, desc, flag, after, fly)
+	local t = UI.Toggle(page, title, desc, false, function(v)
+		if v and not IsVerified() then return end
+		getgenv()[flag] = v
+		if v then
+			H.Exclusive(flag)
+		elseif fly and not H.AnyActive() and not H.Returning then
+			H.FlyFloat(false)
+		end
+		if after then after(v) end
+	end)
+	ToggleSetters[flag] = t.Set
+	return t
+end
+
+------------------------------------------------------------------
+-- TAB KEBUN
+------------------------------------------------------------------
+do
+	local RS = H.RS
+	local selected = nil
+	local harvestAllBusy = false
+	local MAX_SMALL = 24
+	local BIG_FALLBACK = {Apel = true, Jeruk = true, Kopi = true, Pisang = true}
+	local PlantCatalog = nil
+	pcall(function() PlantCatalog = require(RS:WaitForChild("PlantCatalog", 3)) end)
+	local KS = {panen = false, tanam = false}
+
+	local function IsBig(key)
+		local p = PlantCatalog and PlantCatalog.Plants and PlantCatalog.Plants[key]
+		if p and p.potType then return p.potType == "PotBesar" end
+		return BIG_FALLBACK[key] == true
+	end
+	local function IsSeed(t)
+		return t:IsA("Tool") and (t:GetAttribute("IsSeed") or t:GetAttribute("PlantType") or t.Name:lower():find("bibit"))
+	end
+	local function SeedKey(t)
+		local pt = t:GetAttribute("PlantType")
+		if pt then return tostring(pt) end
+		return H.Clean(t.Name)
+	end
+	local function ScanSeeds()
+		local map, list = {}, {}
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if IsSeed(t) then
+					local key = SeedKey(t)
+					local cnt = t:GetAttribute("Count") or tonumber(t.Name:match("%d+")) or 1
+					local e = map[key]
+					if not e then
+						local clean = t:GetAttribute("PlantType") and tostring(t:GetAttribute("PlantType")) or key
+						clean = clean:gsub("^[Bb]ibit%s*", "")
+						e = {key = key, cleanName = clean, count = 0}
+						map[key] = e
+						table.insert(list, e)
+					end
+					e.count += cnt
+				end
+			end
+		end
+		scan(LocalPlayer:FindFirstChildOfClass("Backpack"))
+		scan(LocalPlayer.Character)
+		table.sort(list, function(a, b) return a.cleanName:lower() < b.cleanName:lower() end)
+		return list
+	end
+	local function FindSeed(key)
+		local ch = LocalPlayer.Character
+		if ch then
+			for _, t in ipairs(ch:GetChildren()) do
+				if IsSeed(t) and SeedKey(t) == key then return t end
+			end
+		end
+		local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+		if bp then
+			for _, t in ipairs(bp:GetChildren()) do
+				if IsSeed(t) and SeedKey(t) == key then return t end
+			end
+		end
+		return nil
+	end
+	local function EquipSeed(key)
+		local _, hum = H.Live()
+		if not hum then return nil end
+		local tool = FindSeed(key)
+		if not tool then return nil end
+		if tool.Parent ~= LocalPlayer.Character then
+			hum:UnequipTools()
+			task.wait(0.1)
+			tool = FindSeed(key)
+			if not tool then return nil end
+			hum:EquipTool(tool)
+			task.wait(0.25)
+		end
+		local cur = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+		if cur and IsSeed(cur) and SeedKey(cur) == key then return cur end
+		return nil
+	end
+	local function CountPlants(lahan)
+		local small, big = 0, 0
+		for _, p in ipairs(lahan.Tanaman:GetChildren()) do
+			if p:GetAttribute("Besar") == true then big += 1 else small += 1 end
+		end
+		return small, big
+	end
+	local function GridPoints(part)
+		local h = part.Size.Y / 2
+		local xs = {-9, -5.4, -1.8, 1.8, 5.4, 9}
+		local zs = {-9, -3, 3, 9}
+		local out = {}
+		for _, z in ipairs(zs) do
+			for _, x in ipairs(xs) do
+				table.insert(out, part.CFrame:PointToWorldSpace(Vector3.new(x, h, z)))
+			end
+		end
+		return out
+	end
+	local function BigPlots(plot)
+		local folder = plot and plot:FindFirstChild("LahanBesar")
+		local out = {}
+		if not folder then return out end
+		for _, p in ipairs(folder:GetChildren()) do
+			local n = tonumber(p.Name:match("%d+"))
+			local mesh = p:FindFirstChildWhichIsA("MeshPart", true)
+			if n and mesh then
+				table.insert(out, {n = n, key = "b" .. n, spot = Vector3.new(mesh.Position.X, mesh.Position.Y + mesh.Size.Y / 2, mesh.Position.Z)})
+			end
+		end
+		table.sort(out, function(a, b) return a.n < b.n end)
+		return out
+	end
+	local function BigOccupied(lahan, spot)
+		for _, p in ipairs(lahan.Tanaman:GetChildren()) do
+			if p:GetAttribute("Besar") == true then
+				local d = p:GetPivot().Position - spot
+				if Vector3.new(d.X, 0, d.Z).Magnitude < 5 then return true end
+			end
+		end
+		return false
+	end
+
+	-- UI
+	UI.Section(KebunPage, "KEBUN")
+	local seedHeader = UI.Status(KebunPage, 1)
+	seedHeader.Set(1, "Bibit Dipilih: (Memuat...)")
+	local seedList = UI.List(KebunPage, 128)
+
+	local RefreshSeeds
+	RefreshSeeds = function()
+		local list = ScanSeeds()
+		seedList.Clear()
+		if #list == 0 then
+			seedHeader.Set(1, "Bibit: Tidak ada bibit di tas!")
+			seedList.Done()
+			return
+		end
+		if not selected and #list == 1 then selected = list[1].key end
+		local found
+		for _, e in ipairs(list) do
+			if e.key == selected then found = e end
+		end
+		if not selected then seedHeader.Set(1, "Pilih bibit yang mau ditanam:")
+		elseif found then seedHeader.Set(1, "Ditanam: " .. found.cleanName)
+		else seedHeader.Set(1, "Bibit pilihan habis, pilih bibit lain") end
+		for _, e in ipairs(list) do
+			seedList.Add(e.cleanName .. (IsBig(e.key) and " [lahan besar]" or "") .. " (x" .. e.count .. ")", e.key == selected, function()
+				selected = e.key
+				RefreshSeeds()
+			end)
+		end
+		seedList.Done()
+	end
+	H.RefreshSeeds = RefreshSeeds
+
+	FlagToggle(KebunPage, "Auto Tanam", "Tanam bibit pilihan di lahan kosong.", "AutoTanamActive")
+	FlagToggle(KebunPage, "Auto Siram", "Siram tanaman yang airnya hampir habis.", "AutoSiramActive")
+	FlagToggle(KebunPage, "Auto Panen", "Panen tanaman yang sudah siap.", "AutoPanenActive")
+
+	UI.Segment(KebunPage, "Durasi Siram", {
+		{key = 2.0, text = "2.0s"}, {key = 2.5, text = "2.5s"}, {key = 3.0, text = "3.0s"},
+		{key = 3.5, text = "3.5s"}, {key = 4.0, text = "4.0s"},
+	}, function() return getgenv().WaterDuration end, function(k)
+		getgenv().WaterDuration = k
+		getgenv().UbeyConfig.WaterDuration = tostring(k)
+		SaveConfig()
+	end)
+
+	UI.Button(KebunPage, "Panen Semua", "Panen semua tanaman siap sekarang.", "PANEN", function(btn)
+		if harvestAllBusy then return end
+		local _, lahan = H.Plot()
+		if not lahan or not lahan:FindFirstChild("Tanaman") then Flash(btn, "Lahan tidak ada", false) return end
+		harvestAllBusy = true
+		for _, p in ipairs(lahan.Tanaman:GetChildren()) do
+			H.Harvest(p)
+			task.wait(0.1)
+		end
+		harvestAllBusy = false
+		Flash(btn, "Selesai ✓", true)
+	end, C.accent)
+
+	local kebunInfo = UI.Status(KebunPage, 1)
+	kebunInfo.Set(1, "Tanaman Aktif: 0 | Siap Panen: 0\nDipanen: 0 Hasil")
+
+	-- panen: tanaman kecil langsung, tanaman besar didatangi satu per satu
+	task.spawn(function()
+		local function harvestBig(list)
+			local t0 = tick()
+			while KS.tanam and (tick() - t0) < 2 and H.Run() do task.wait(0.05) end
+			KS.panen = true
+			local hrp = H.Live()
+			local saved = hrp and hrp.CFrame
+			local ok, err = pcall(function()
+				for _, p in ipairs(list) do
+					if not H.Run() or not getgenv().AutoPanenActive or H.AnyActive() or H.Returning then break end
+					if p.Parent and p:GetAttribute("Ready") == true then
+						local h = H.Live()
+						if not h then break end
+						if H.MoveNear(p:GetPivot().Position + Vector3.new(0, 3, 0), function()
+							return not getgenv().AutoPanenActive or H.AnyActive() or H.Returning
+						end, true) then
+							task.wait(0.1)
+							H.Harvest(p)
+							task.wait(0.15)
+						end
+					end
+				end
+				if saved and not getgenv().AutoSiramActive and not getgenv().AutoTanamActive then
+					H.WalkTo(saved.Position, function()
+						return not getgenv().AutoPanenActive or getgenv().AutoSiramActive or getgenv().AutoTanamActive
+					end, 3)
+				end
+			end)
+			KS.panen = false
+			if not ok then warn("[AutoPanen Besar] " .. tostring(err)) end
+		end
+		local lahan = nil
+		while H.Run() do
+			task.wait(0.2)
+			if not getgenv().AutoPanenActive or H.AnyActive() or H.Returning or harvestAllBusy then continue end
+			if not (lahan and lahan.Parent) then
+				local _, l = H.Plot()
+				lahan = l
+			end
+			local tan = lahan and lahan:FindFirstChild("Tanaman")
+			if not tan then continue end
+			local bigList = {}
+			for _, pl in ipairs(tan:GetChildren()) do
+				if not H.Run() or not getgenv().AutoPanenActive or H.AnyActive() or H.Returning then break end
+				if pl:GetAttribute("Ready") == true then
+					if pl:GetAttribute("Besar") == true then
+						table.insert(bigList, pl)
+					else
+						H.Harvest(pl)
+						task.wait(0.05)
+					end
+				end
+			end
+			if #bigList > 0 and H.Run() and getgenv().AutoPanenActive and not H.AnyActive() and not H.Returning then
+				harvestBig(bigList)
+			end
+		end
+	end)
+
+	-- siram + tanam
+	task.spawn(function()
+		local waterCool = setmetatable({}, {__mode = "k"})
+		local plantCool = {}
+		local smallBlock = nil
+		while H.Run() do
+			task.wait(1.2)
+			if H.AnyActive() or H.Returning then continue end
+			local plot, lahan = H.Plot()
+			if not lahan or not lahan:FindFirstChild("Tanaman") then
+				kebunInfo.Set(1, "Plot / Lahan milikmu tidak ditemukan")
+				continue
+			end
+			local ready = 0
+			for _, p in ipairs(lahan.Tanaman:GetChildren()) do
+				if p:GetAttribute("Ready") == true then ready += 1 end
+			end
+			local small, big = CountPlants(lahan)
+			kebunInfo.Set(1, string.format("Kecil: %d/%d | Besar: %d/12 | Siap Panen: %d\nDipanen: %d Hasil", small, MAX_SMALL, big, ready, H.Harvested))
+
+			if getgenv().AutoSiramActive then
+				local can = H.FindTool("PenyiramTanaman")
+				if can then
+					for _, plant in ipairs(lahan.Tanaman:GetChildren()) do
+						if not H.Run() or H.AnyActive() or H.Returning or not getgenv().AutoSiramActive then break end
+						while KS.panen and H.Run() do task.wait(0.05) end
+						local water = plant:GetAttribute("AirSisa")
+						local need = plant.Parent and plant:GetAttribute("Ready") ~= true and water ~= nil and water <= 25
+							and (not waterCool[plant] or tick() > waterCool[plant])
+						if need then
+							local h, hm = H.Live()
+							if not h then break end
+							hm:EquipTool(can)
+							task.wait(0.2)
+							h, hm = H.Live()
+							if not h then break end
+							if not H.MoveNear(plant:GetPivot().Position + Vector3.new(0, 2, 0), function()
+								return not getgenv().AutoSiramActive or KS.panen
+							end) then continue end
+							can:Activate()
+							local t0 = tick()
+							local interrupted = false
+							while (tick() - t0) < getgenv().WaterDuration do
+								if KS.panen then interrupted = true break end
+								if not H.Run() or not getgenv().AutoSiramActive or H.AnyActive() or H.Returning or not H.Live() then break end
+								task.wait(0.1)
+							end
+							can:Deactivate()
+							if not interrupted then waterCool[plant] = tick() + 10 end
+							task.wait(0.2)
+						end
+					end
+				end
+			end
+
+			if getgenv().AutoTanamActive and selected and not H.AnyActive() and not H.Returning and H.R.Tanam then
+				local planted = false
+				local seed = selected
+				if FindSeed(seed) then
+					local spots = {}
+					if IsBig(seed) then
+						for _, bp in ipairs(BigPlots(plot)) do
+							if not BigOccupied(lahan, bp.spot) then table.insert(spots, {key = bp.key, spot = bp.spot, big = true}) end
+						end
+					elseif not (smallBlock and tick() < smallBlock) then
+						local sm = CountPlants(lahan)
+						local grid = GridPoints(lahan)
+						for i = 1, math.max(MAX_SMALL - sm, 0) do
+							table.insert(spots, {key = "k" .. i, spot = grid[(sm + i - 1) % #grid + 1]})
+						end
+					end
+					for _, sp in ipairs(spots) do
+						if not H.Run() or not getgenv().AutoTanamActive or H.AnyActive() or H.Returning then break end
+						if not FindSeed(seed) then break end
+						while KS.panen and H.Run() do task.wait(0.05) end
+						local blocked = plantCool[sp.key] and tick() < plantCool[sp.key]
+						if not blocked then
+							KS.tanam = true
+							if not EquipSeed(seed) then break end
+							if not H.Live() then break end
+							if not H.MoveNear(sp.spot + Vector3.new(0, 3, 0), function()
+								return not getgenv().AutoTanamActive or KS.panen
+							end) then
+								KS.tanam = false
+								break
+							end
+							if not EquipSeed(seed) then break end
+							local before = #lahan.Tanaman:GetChildren()
+							H.R.Tanam:FireServer(sp.spot)
+							planted = true
+							task.wait(0.5)
+							if #lahan.Tanaman:GetChildren() <= before then
+								if sp.big then
+									plantCool[sp.key] = tick() + 30
+								else
+									smallBlock = tick() + 8
+									break
+								end
+							end
+						end
+						KS.tanam = false
+					end
+					KS.tanam = false
+				end
+				if planted then RefreshSeeds() end
+			end
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- TAB AUTO FARM
+------------------------------------------------------------------
+do
+	local RunService = game:GetService("RunService")
+	local VIM = game:GetService("VirtualInputManager")
+	local PFS = game:GetService("PathfindingService")
+
+	local LABEL = {
+		Kepiting = "Kepiting", Gagak = "Gagak", Dupa = "Dupa", Kemenyan = "Kemenyan", Melati = "Melati",
+		Jamur = "Jamur Kuburan", Pohon = "Kayu", Batu = "Batu",
+	}
+	local Counters = {}
+	local semuaStatus
+	local semuaCounter
+
+	-- kartu toggle + status (baris 1 = status, baris 2 = counter)
+	local function FarmUI(name, title, flag, extraLines)
+		local st
+		FlagToggle(FarmPage, title, nil, flag, function(v)
+			if not v and st then st.Set(1, "Status: Berhenti") end
+		end, true)
+		st = UI.Status(FarmPage, 2 + (extraLines or 0))
+		st.Set(1, "Status: Siap (OFF)")
+		st.Set(2, "Terkumpul: 0 " .. LABEL[name])
+		local obj = {st = st}
+		obj.status = function(t) st.Set(1, t) end
+		obj.counter = function(t) st.Set(2, t) end
+		Counters[name] = obj.counter
+		return obj
+	end
+
+	local SIZE_OPTS = {{key = "semua", text = "SEMUA"}, {key = "besar", text = "BESAR"}, {key = "kecil", text = "KECIL"}}
+
+	----------------------------------------------------------------
+	-- AUTO FARM SEMUA
+	----------------------------------------------------------------
+	UI.Section(FarmPage, "AUTO FARM SEMUA")
+	do
+		local st
+		FlagToggle(FarmPage, "Auto Farm Semua", "Kep > Dupa > Kem > Melati > Jamur", "AutoSemuaFarmActive", function(v)
+			if not v and st then st.Set(1, "Status: Berhenti") end
+		end, true)
+		st = UI.Status(FarmPage, 2)
+		st.Set(1, "Status: Siap (OFF)")
+		st.Set(2, "Total Terkumpul: 0 Item")
+		semuaStatus = function(t) st.Set(1, t) end
+		semuaCounter = function(t) st.Set(2, t) end
+	end
+
+	UI.Section(FarmPage, "FARM SATUAN")
+	local UIKep = FarmUI("Kepiting", "Auto Farm Kepiting", "KepitingFarmActive")
+	local UIDupa = FarmUI("Dupa", "Auto Farm Dupa", "DupaFarmActive")
+	local UIKem = FarmUI("Kemenyan", "Auto Farm Kemenyan", "KemenyanFarmActive")
+	local UIPohon = FarmUI("Pohon", "Auto Farm Pohon", "PohonFarmActive")
+	UI.Segment(FarmPage, "Ukuran Pohon", SIZE_OPTS, function() return H.PohonSize end, function(k) H.PohonSize = k end)
+	local UIBatu = FarmUI("Batu", "Auto Farm Batu", "BatuFarmActive", 1)
+	UI.Segment(FarmPage, "Ukuran Batu", SIZE_OPTS, function() return H.BatuSize end, function(k) H.BatuSize = k end)
+	UIBatu.st.Set(3, "Biji Besi: +0")
+	FlagToggle(FarmPage, "Mode Biji Besi", "Fokus batu besar/sedang untuk biji besi.", "BatuBesiMode")
+	local UIMelati = FarmUI("Melati", "Auto Farm Melati", "MelatiFarmActive")
+	local UIJamur = FarmUI("Jamur", "Auto Farm Jamur Kuburan", "JamurFarmActive")
+	local UIGagak = FarmUI("Gagak", "Auto Farm Gagak (jalan kaki)", "GagakFarmActive")
+	FlagToggle(FarmPage, "Pakai Owl Staff", "Terbang +-30 stud/dtk (staff harus ada di tas).", "GagakOwlMode")
+
+	----------------------------------------------------------------
+	-- FARM GENERIK (bahan, kayu, batu, melati, jamur)
+	----------------------------------------------------------------
+	local function RunFarm(cfg)
+		task.spawn(function()
+			local cool = setmetatable({}, {__mode = "k"})
+			local savedPos = nil
+			local atHome = false
+			local walk = (cfg.name == "Jamur" or cfg.name == "Melati")
+			local function active()
+				return H.Run() and getgenv()[cfg.flag] and not getgenv().PH_Repairing
+			end
+			local function goTo(pos, label)
+				local hrp = H.Live()
+				if not hrp then return end
+				local d = (hrp.Position - pos).Magnitude
+				H.FlyFloat(true)
+				cfg.status((label or (walk and "Berjalan" or "Teleport")) .. " (" .. math.floor(d) .. " studs)...")
+				return H.TeleportTo(pos, function() return not active() or not H.Live() end, walk)
+			end
+			while H.Run() do
+				task.wait(0.15)
+				if getgenv().PH_Repairing and getgenv()[cfg.flag] then
+					cfg.status("Menunggu perbaikan alat...")
+					task.wait(0.5)
+					continue
+				end
+				if not getgenv()[cfg.flag] then
+					if cfg.name == "Batu" then H.RestoreCam() end
+					if savedPos then
+						local sp = savedPos
+						savedPos = nil
+						local hrp = H.Live()
+						if hrp and not H.AnyActive() and (hrp.Position - sp).Magnitude > 4 then
+							H.Returning = true
+							if walk then H.JamurReturning = true end
+							H.FlyFloat(true)
+							cfg.status("Kembali ke titik awal...")
+							H.TeleportTo(sp, function() return not H.Run() or H.AnyActive() or not H.Live() end, walk)
+							H.JamurReturning = false
+							H.Returning = false
+							if not H.AnyActive() then H.FlyFloat(false) end
+							cfg.status("Status: Berhenti")
+						end
+					end
+					atHome = false
+					if not H.AnyActive() and not H.Returning then H.FlyFloat(false) end
+					task.wait(0.5)
+					continue
+				end
+				local hrp, hum = H.Live()
+				if not hrp then task.wait(1) continue end
+				if not savedPos then savedPos = hrp.Position end
+				if cfg.toolCategory and not H.EquipBest(cfg.toolCategory) then
+					cfg.status("Alat tidak ditemukan di tas!")
+					task.wait(2)
+					continue
+				end
+				if cfg.name == "Batu" and getgenv().BatuIronBase == nil then getgenv().BatuIronBase = H.IronCount() end
+				cfg.status("Mencari " .. cfg.name .. "...")
+				local nodes = cfg.fetch(cool)
+				if #nodes == 0 then
+					if not atHome and savedPos then
+						if (hrp.Position - savedPos).Magnitude > 4 then
+							goTo(savedPos, "Kembali ke titik awal")
+							local h = H.Live()
+							atHome = (h and (h.Position - savedPos).Magnitude <= 6) or false
+						else
+							atHome = true
+						end
+					end
+					if active() then cfg.status("Semua " .. cfg.name:lower() .. " habis! Menunggu respawn...") end
+					H.FlyFloat(false)
+					task.wait(2.5)
+					continue
+				end
+				atHome = false
+				local node = nodes[1]
+				local targetPos = (cfg.toolCategory == "Batu") and node.pos or (node.pos + Vector3.new(0, 1.6, 0))
+				local reached = goTo(targetPos)
+				hrp, hum = H.Live()
+				if not active() or not hrp then continue end
+				if reached == false and walk then
+					cfg.status("Tidak terjangkau, lewati...")
+					cool[node.item] = tick() + 9
+					continue
+				end
+				if cfg.toolCategory == "Batu" then
+					H.FlyFloat(false)
+					H.LockCam()
+					H.FaceRock(node.part)
+				else
+					H.FlyFloat(true)
+				end
+				task.wait(0.2)
+				if not H.NodeOk(node) or node.item:GetAttribute("Tumbang") == true then
+					cool[node.item] = tick() + 3
+					continue
+				end
+				if cfg.toolCategory then
+					H.EquipBest(cfg.toolCategory)
+					task.wait(0.1)
+				end
+				local destroyed = false
+				local t0 = tick()
+				local maxWait = cfg.maxWait or 25
+				local hold = node.prompt.HoldDuration or cfg.hold
+				while active() and H.Live() and (tick() - t0) < maxWait do
+					if node.item:GetAttribute("Tumbang") == true or not node.item.Parent or not node.prompt.Parent then
+						destroyed = true
+						break
+					end
+					if cfg.toolCategory == "Batu" then
+						H.FaceRock(node.part)
+						pcall(function() node.prompt.RequiresLineOfSight = false end)
+						task.wait(0.05)
+					end
+					if node.prompt.Enabled then
+						cfg.status((cfg.verb or "Mengambil") .. " " .. cfg.name .. "...")
+						local okp = true
+						if cfg.toolCategory == "Batu" then
+							okp = H.EnsurePrompt(node.prompt)
+							H.FaceRock(node.part)
+						end
+						if okp then
+							H.Fire(node.prompt, hold)
+						else
+							cfg.status("Prompt batu tertutup, pakai cadangan...")
+							if fireproximityprompt then pcall(fireproximityprompt, node.prompt) end
+							task.wait(0.3)
+						end
+						task.wait(0.15)
+					end
+					if node.item:GetAttribute("Tumbang") == true or not node.item.Parent or not node.prompt.Parent then
+						destroyed = true
+						break
+					end
+					if cfg.waitDestroy then
+						cfg.status("Menunggu " .. cfg.name:lower() .. " tumbang/hancur...")
+						local w0 = tick()
+						while not node.prompt.Enabled and (tick() - w0) < 2.5 do
+							if node.item:GetAttribute("Tumbang") == true then destroyed = true break end
+							task.wait(0.1)
+						end
+					else
+						task.wait(0.35)
+						destroyed = (not node.item.Parent) or (not node.prompt.Parent) or (not node.prompt.Enabled)
+						break
+					end
+				end
+				if destroyed then
+					task.wait(0.3)
+					Q[cfg.name] = (Q[cfg.name] or 0) + 1
+					cfg.counter("Terkumpul: " .. Q[cfg.name] .. " " .. (LABEL[cfg.name] or cfg.name))
+					if cfg.name == "Batu" and getgenv().BatuIronBase then
+						local g = math.max(0, H.IronCount() - getgenv().BatuIronBase)
+						UIBatu.st.Set(3, "Biji Besi: +" .. g)
+					end
+					cool[node.item] = tick() + (cfg.cooldown or 15)
+				else
+					cfg.status("Gagal interaksi, coba lagi...")
+					cool[node.item] = tick() + 3
+				end
+				task.wait(0.2)
+			end
+		end)
+	end
+
+	RunFarm({flag = "KepitingFarmActive", name = "Kepiting", status = UIKep.status, counter = UIKep.counter,
+		fetch = function(c) return H.FetchBahan("kepiting", c) end})
+	RunFarm({flag = "DupaFarmActive", name = "Dupa", status = UIDupa.status, counter = UIDupa.counter,
+		fetch = function(c) return H.FetchBahan("dupa", c) end})
+	RunFarm({flag = "KemenyanFarmActive", name = "Kemenyan", status = UIKem.status, counter = UIKem.counter,
+		fetch = function(c) return H.FetchBahan("kemenyan", c) end})
+	RunFarm({flag = "MelatiFarmActive", name = "Melati", status = UIMelati.status, counter = UIMelati.counter,
+		fetch = function(c) return H.FetchBahan("melati", c) end})
+	RunFarm({flag = "JamurFarmActive", name = "Jamur", status = UIJamur.status, counter = UIJamur.counter,
+		fetch = function(c) return H.FetchBahan("jamurkuburan", c) end})
+	RunFarm({flag = "PohonFarmActive", name = "Pohon", verb = "Menebang", toolCategory = "Pohon",
+		status = UIPohon.status, counter = UIPohon.counter, hold = 0.35, waitDestroy = true, maxWait = 25, cooldown = 25,
+		fetch = function(c) return H.FetchCraft("Pohon", H.PohonSize, c) end})
+	RunFarm({flag = "BatuFarmActive", name = "Batu", verb = "Menambang", toolCategory = "Batu",
+		status = UIBatu.status, counter = UIBatu.counter, hold = 0.35, waitDestroy = true, maxWait = 25, cooldown = 25,
+		fetch = function(c)
+			if getgenv().BatuBesiMode then
+				local l = H.FetchCraft("Batu", "besar", c)
+				if #l == 0 then l = H.FetchCraft("Batu", "sedang", c) end
+				return l
+			end
+			return H.FetchCraft("Batu", H.BatuSize, c)
+		end})
+
+	----------------------------------------------------------------
+	-- AUTO FARM SEMUA (loop)
+	----------------------------------------------------------------
+	task.spawn(function()
+		local CATS = {
+			{category = "Kepiting", query = "kepiting"}, {category = "Dupa", query = "dupa"},
+			{category = "Kemenyan", query = "kemenyan"}, {category = "Melati", query = "melati"},
+			{category = "Jamur", query = "jamurkuburan"},
+		}
+		local cool = setmetatable({}, {__mode = "k"})
+		local savedPos = nil
+		local atHome = false
+		local catIdx = 1
+		local function active() return H.Run() and getgenv().AutoSemuaFarmActive end
+		local function goTo(pos, label)
+			local hrp = H.Live()
+			if not hrp then return end
+			local d = (hrp.Position - pos).Magnitude
+			H.FlyFloat(true)
+			semuaStatus((label or "Teleport") .. " (" .. math.floor(d) .. " studs)...")
+			return H.TeleportTo(pos, function() return not active() or not H.Live() end)
+		end
+		local function goHome(pos)
+			if not H.Run() or H.AnyActive() then return end
+			local hrp = H.Live()
+			if not hrp then return end
+			local d = (hrp.Position - pos).Magnitude
+			if d <= 4 then return end
+			H.Returning = true
+			H.FlyFloat(true)
+			semuaStatus("Kembali ke titik awal (" .. math.floor(d) .. " studs)...")
+			H.TeleportTo(pos, function() return not H.Run() or H.AnyActive() or not H.Live() end)
+			H.Returning = false
+			if not H.AnyActive() then H.FlyFloat(false) end
+			semuaStatus("Status: Berhenti")
+		end
+		local function pickNext()
+			for off = 0, #CATS - 1 do
+				local idx = ((catIdx - 1 + off) % #CATS) + 1
+				local c = CATS[idx]
+				local nodes = H.FetchBahan(c.query, cool)
+				if #nodes > 0 then
+					catIdx = idx
+					return c.category, nodes[1]
+				end
+			end
+			return nil, nil
+		end
+		while H.Run() do
+			task.wait(0.15)
+			if not getgenv().AutoSemuaFarmActive then
+				if savedPos then
+					local sp = savedPos
+					savedPos = nil
+					goHome(sp)
+				end
+				atHome = false
+				catIdx = 1
+				task.wait(0.5)
+				continue
+			end
+			local hrp = H.Live()
+			if not hrp then task.wait(1) continue end
+			if not savedPos then savedPos = hrp.Position end
+			semuaStatus("Mencari " .. CATS[catIdx].category .. "...")
+			local cat, node = pickNext()
+			if not node then
+				if not atHome and savedPos then
+					if (hrp.Position - savedPos).Magnitude > 4 then
+						goTo(savedPos, "Kembali ke titik awal")
+						local h = H.Live()
+						atHome = (h and (h.Position - savedPos).Magnitude <= 6) or false
+					else
+						atHome = true
+					end
+				end
+				if active() then semuaStatus("Semua bahan habis! Menunggu respawn...") end
+				H.FlyFloat(false)
+				task.wait(2.5)
+				continue
+			end
+			atHome = false
+			goTo(node.pos + Vector3.new(0, 1.6, 0), "Teleport ke " .. cat)
+			hrp = H.Live()
+			if not active() or not hrp then continue end
+			H.FlyFloat(true)
+			task.wait(0.2)
+			if not H.NodeOk(node) then
+				cool[node.item] = tick() + 3
+				continue
+			end
+			local ok = false
+			local t0 = tick()
+			local hold = node.prompt.HoldDuration
+			while active() and H.Live() and (tick() - t0) < 10 do
+				if not node.item.Parent or not node.prompt.Parent then ok = true break end
+				if node.prompt.Enabled then
+					semuaStatus("Mengambil " .. cat .. "...")
+					H.Fire(node.prompt, hold)
+					task.wait(0.15)
+				end
+				if not node.item.Parent or not node.prompt.Parent then ok = true break end
+				task.wait(0.35)
+				ok = (not node.item.Parent) or (not node.prompt.Parent) or (not node.prompt.Enabled)
+				break
+			end
+			if ok then
+				task.wait(0.3)
+				Q[cat] = (Q[cat] or 0) + 1
+				H.Total += 1
+				if Counters[cat] then Counters[cat]("Terkumpul: " .. Q[cat] .. " " .. LABEL[cat]) end
+				semuaCounter("Total Terkumpul: " .. H.Total .. " Item")
+				cool[node.item] = tick() + 15
+			else
+				semuaStatus("Gagal interaksi, coba lagi...")
+				cool[node.item] = tick() + 3
+			end
+			task.wait(0.2)
+		end
+	end)
+
+	----------------------------------------------------------------
+	-- GAGAK (jalan kaki / terbang dengan Owl Staff)
+	----------------------------------------------------------------
+	task.spawn(function()
+		local cool = setmetatable({}, {__mode = "k"})
+		local rp = RaycastParams.new()
+		rp.FilterType = Enum.RaycastFilterType.Exclude
+		local ow = {conn = nil, held = false, prevCam = nil, aim = nil, used = false, blockedUntil = 0}
+		local function active() return H.Run() and getgenv().GagakFarmActive end
+		local function say(t) UIGagak.status(t) end
+		local function groundPos(p)
+			rp.FilterDescendantsInstances = {LocalPlayer.Character}
+			local r = workspace:Raycast(p, Vector3.new(0, -150, 0), rp)
+			return r and r.Position or Vector3.new(p.X, p.Y - 7, p.Z)
+		end
+		local function isNear(node)
+			local hrp = H.Live()
+			if not hrp then return false end
+			local reach = (node.prompt.MaxActivationDistance or 6) - 1.5
+			return (hrp.Position - node.pos).Magnitude <= math.max(2, reach)
+		end
+		local function walkTo(goal, node)
+			local hrp, hum = H.Live()
+			if not hrp then return false end
+			if isNear(node) then return true end
+			local wps
+			local path = PFS:CreatePath({AgentRadius = 2, AgentHeight = 5, AgentCanJump = true})
+			local ok = pcall(function() path:ComputeAsync(hrp.Position, goal) end)
+			if ok and path.Status == Enum.PathStatus.Success then
+				wps = path:GetWaypoints()
+			else
+				wps = {{Position = goal, Action = Enum.PathWaypointAction.Walk}}
+			end
+			for _, wp in ipairs(wps) do
+				if not active() then return false end
+				local h, hm = H.Live()
+				if not h then return false end
+				if wp.Action == Enum.PathWaypointAction.Jump then hm.Jump = true end
+				hm:MoveTo(wp.Position)
+				local t0, lastPos, lastMove = tick(), h.Position, tick()
+				while active() do
+					task.wait(0.1)
+					local h2, hm2 = H.Live()
+					if not h2 then return false end
+					if isNear(node) then
+						hm2:MoveTo(h2.Position)
+						return true
+					end
+					if H.PetirDanger then
+						say("Petir! Menunggu aman...")
+						t0 = t0 + 0.1
+						lastMove = tick()
+					else
+						local flat = Vector3.new(h2.Position.X - wp.Position.X, 0, h2.Position.Z - wp.Position.Z).Magnitude
+						if flat < 3 then break end
+						if (h2.Position - lastPos).Magnitude > 1 then
+							lastPos, lastMove = h2.Position, tick()
+						elseif tick() - lastMove > 1.5 then
+							hm2.Jump = true
+							hm2:MoveTo(wp.Position)
+							if tick() - lastMove > 6 then return false end
+						end
+						if tick() - t0 > 12 then break end
+					end
+				end
+			end
+			return isNear(node)
+		end
+		local function hold(on)
+			if ow.held == on then return end
+			ow.held = on
+			pcall(function() VIM:SendKeyEvent(on, Enum.KeyCode.W, false, game) end)
+		end
+		local function getStaff()
+			local ch = LocalPlayer.Character
+			local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+			return (ch and ch:FindFirstChild("OwlStaff")) or (bp and bp:FindFirstChild("OwlStaff"))
+		end
+		local function releaseAim()
+			hold(false)
+			if ow.conn then
+				ow.conn:Disconnect()
+				ow.conn = nil
+			end
+			ow.aim = nil
+			if ow.prevCam then
+				local cam = workspace.CurrentCamera
+				cam.CameraType = (ow.prevCam == Enum.CameraType.Scriptable) and Enum.CameraType.Custom or ow.prevCam
+				ow.prevCam = nil
+			end
+		end
+		local function startAim()
+			if ow.conn then return end
+			local cam = workspace.CurrentCamera
+			ow.prevCam = cam.CameraType
+			cam.CameraType = Enum.CameraType.Scriptable
+			ow.conn = RunService.RenderStepped:Connect(function()
+				if not H.Run() then releaseAim() return end
+				local hrp = H.Char()
+				local aim = ow.aim
+				if not hrp or not aim then return end
+				local dir = aim - hrp.Position
+				if dir.Magnitude < 0.1 then return end
+				dir = dir.Unit
+				if math.abs(dir.Y) > 0.999 then dir = (dir + Vector3.new(0.01, 0, 0)).Unit end
+				local camPos = hrp.Position - dir * 12
+				cam.CFrame = CFrame.lookAt(camPos, camPos + dir)
+			end)
+		end
+		local function ensureOwl()
+			local ch = LocalPlayer.Character
+			local _, hum = H.Live()
+			if not hum then return false end
+			if LocalPlayer:GetAttribute("IsOwl") and ch:FindFirstChild("OwlStaff") then
+				ow.used = true
+				return true
+			end
+			local staff = getStaff()
+			if not staff then return false end
+			if staff.Parent ~= ch then
+				hum:EquipTool(staff)
+				task.wait(0.35)
+			end
+			if not LocalPlayer:GetAttribute("IsOwl") then
+				staff:Activate()
+				local t0 = tick()
+				while tick() - t0 < 3 and not LocalPlayer:GetAttribute("IsOwl") do task.wait(0.1) end
+			end
+			local isOwl = LocalPlayer:GetAttribute("IsOwl") == true
+			if isOwl then ow.used = true end
+			return isOwl
+		end
+		local function stopOwl()
+			releaseAim()
+			if LocalPlayer:GetAttribute("IsOwl") then
+				local _, hum = H.Live()
+				if hum then hum:UnequipTools() end
+				local t0 = tick()
+				while tick() - t0 < 3 and LocalPlayer:GetAttribute("IsOwl") do task.wait(0.1) end
+				task.wait(0.3)
+			end
+			ow.used = false
+		end
+		local function flyTo(node)
+			if not ensureOwl() then return false end
+			startAim()
+			ow.aim = node.pos
+			hold(true)
+			local t0 = tick()
+			local best, lastProgress = math.huge, tick()
+			local stuckN = 0
+			while active() and getgenv().GagakOwlMode do
+				task.wait(0.05)
+				local h = H.Live()
+				if not h then return false end
+				if not LocalPlayer:GetAttribute("IsOwl") then
+					hold(false)
+					if not ensureOwl() then return false end
+					ow.aim = node.pos
+					hold(true)
+				end
+				if H.PetirDanger then
+					say("Petir! Menunggu aman...")
+					hold(false)
+					t0 = t0 + 0.05
+					lastProgress = tick()
+				else
+					hold(true)
+					local d = (h.Position - node.pos).Magnitude
+					if d <= 4.5 then return true end
+					if d < best - 1 then best, lastProgress = d, tick() end
+					if tick() - lastProgress > 1.5 then
+						stuckN += 1
+						if stuckN > 3 then return false end
+						say("Terhalang, naik dulu...")
+						local flat = Vector3.new(node.pos.X - h.Position.X, 0, node.pos.Z - h.Position.Z)
+						flat = (flat.Magnitude > 0.1) and (flat.Unit * 15) or Vector3.zero
+						ow.aim = h.Position + Vector3.new(0, 40, 0) + flat
+						task.wait(0.9)
+						ow.aim = node.pos
+						best, lastProgress = math.huge, tick()
+					end
+					if tick() - t0 > 30 then return false end
+				end
+			end
+			return false
+		end
+
+		while H.Run() do
+			task.wait(0.15)
+			if not getgenv().GagakFarmActive then
+				if ow.used or ow.conn then stopOwl() end
+				task.wait(0.5)
+				continue
+			end
+			local hrp, hum = H.Live()
+			if not hrp then
+				if ow.conn then releaseAim() end
+				task.wait(1)
+				continue
+			end
+			if hum.MaxHealth > 0 and (hum.Health / hum.MaxHealth) < 0.4 then
+				H.Off("GagakFarmActive")
+				stopOwl()
+				say("Berhenti otomatis: HP rendah (" .. math.floor(hum.Health) .. ")")
+				continue
+			end
+			if H.PetirDanger then
+				hold(false)
+				say("Petir! Menunggu aman...")
+				task.wait(0.5)
+				continue
+			end
+			say("Mencari Gagak...")
+			local nodes = H.FetchBahan("gagak", cool)
+			if #nodes == 0 then
+				if ow.used or ow.conn then stopOwl() end
+				say("Semua gagak habis! Menunggu respawn...")
+				task.wait(2.5)
+				continue
+			end
+			local node = nodes[1]
+			local useOwl = getgenv().GagakOwlMode and tick() >= ow.blockedUntil
+			if useOwl and not getStaff() then
+				ow.blockedUntil = tick() + 30
+				say("Owl Staff tidak ada di tas, jalan kaki 30 dtk")
+				useOwl = false
+			end
+			if useOwl and not ensureOwl() then
+				ow.blockedUntil = tick() + 30
+				say("Owl Staff gagal aktif, jalan kaki 30 dtk")
+				useOwl = false
+			end
+			if not useOwl and (ow.used or ow.conn) then stopOwl() end
+			local reached
+			if useOwl then
+				say("Terbang ke Gagak (" .. math.floor(node.dist) .. " studs)...")
+				reached = flyTo(node)
+			else
+				say("Jalan ke Gagak (" .. math.floor(node.dist) .. " studs)...")
+				reached = walkTo(groundPos(node.pos) + Vector3.new(0, 3, 0), node)
+			end
+			if not active() then continue end
+			if not reached or not H.NodeOk(node) then
+				if useOwl then hold(false) end
+				cool[node.item] = tick() + 3
+				say("Gagal menjangkau, coba target lain...")
+				continue
+			end
+			say("Mengambil Gagak...")
+			H.Fire(node.prompt, node.prompt.HoldDuration or 0.5)
+			task.wait(0.35)
+			local done = (not node.item.Parent) or (not node.prompt.Parent) or (not node.prompt.Enabled)
+			if done then
+				Q.Gagak += 1
+				H.Total += 1
+				UIGagak.counter("Terkumpul: " .. Q.Gagak .. " Gagak")
+				semuaCounter("Total Terkumpul: " .. H.Total .. " Item")
+				cool[node.item] = tick() + 15
+			else
+				say("Gagal interaksi, coba lagi...")
+				cool[node.item] = tick() + 3
+			end
+			task.wait(0.2)
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- TAB PETERNAKAN (ayam, sapi, babi)
+------------------------------------------------------------------
+do
+	local RS = H.RS
+	local function Req(name)
+		local ok, m = pcall(function() return require(RS:WaitForChild(name, 3)) end)
+		return (ok and type(m) == "table") and m or nil
+	end
+	local AyamC, SapiC, BabiC = Req("AyamConfig"), Req("SapiConfig"), Req("BabiConfig")
+	local FEED_AYAM = (AyamC and AyamC.Pakan and AyamC.Pakan.item) or "Jagung"
+	local FEED_SAPI = (SapiC and SapiC.Pakan and SapiC.Pakan.item) or "Jagung"
+	local PALUNG_CAP = (BabiC and BabiC.Palung and BabiC.Palung.Kapasitas) or 10
+	local GOSOK_TIME = (BabiC and BabiC.Gosok and BabiC.Gosok.Lama) or 3
+	local MIN_RAWATAN = 100
+	local PAKAN = {}
+	if BabiC and type(BabiC.Pakan) == "table" then
+		for _, v in pairs(BabiC.Pakan) do
+			if type(v) == "table" and v.itemId then table.insert(PAKAN, v) end
+		end
+		table.sort(PAKAN, function(a, b) return (a.mutu or 0) > (b.mutu or 0) end)
+	end
+	if #PAKAN == 0 then
+		PAKAN = {
+			{itemId = "SateKepiting", nama = "Sate Kepiting"}, {itemId = "PisangRajaRebus", nama = "Pisang Raja Rebus"},
+			{itemId = "TumisKamboja", nama = "Tumis Kamboja"}, {itemId = "SateGagak", nama = "Sate Gagak"},
+			{itemId = "JamurRebus", nama = "Jamur Rebus"},
+		}
+	end
+	local KAND = {ayam = "KandangAyam", sapi = "KandangSapi", babi = "KandangBabi"}
+	local LBL = {ayam = "Ayam", sapi = "Sapi", babi = "Babi"}
+	local cool = setmetatable({}, {__mode = "k"})
+	local A = {ayam = {}, sapi = {}, babi = {}}
+
+	-- UI
+	local function AnimalUI(key, title, flag, lines)
+		FlagToggle(TernakPage, title, nil, flag, function(v)
+			local st = A[key].st
+			if not st then return end
+			if v then
+				st.Set(1, "Status: Memantau kandang...")
+			else
+				local stillOn = key == "babi" and (getgenv().AutoBabiActive or getgenv().AutoGosokBabiActive or getgenv().AutoKlaimNgepetActive)
+				if not stillOn then st.Set(1, "Status: Berhenti") end
+			end
+		end, true)
+	end
+
+	UI.Section(TernakPage, "KANDANG AYAM  |  Isi Pakan + Telur")
+	AnimalUI("ayam", "Auto Ayam", "AutoAyamActive")
+	A.ayam.st = UI.Status(TernakPage, 3)
+	A.ayam.st.Set(1, "Status: Siap (OFF)")
+	A.ayam.st.Set(2, "Kandang: Memindai...")
+	A.ayam.st.Set(3, "Hasil Ayam: 0 Kali")
+
+	UI.Section(TernakPage, "KANDANG SAPI  |  Isi Pakan + Susu")
+	AnimalUI("sapi", "Auto Sapi", "AutoSapiActive")
+	A.sapi.st = UI.Status(TernakPage, 3)
+	A.sapi.st.Set(1, "Status: Siap (OFF)")
+	A.sapi.st.Set(2, "Kandang: Memindai...")
+	A.sapi.st.Set(3, "Hasil Sapi: 0 Kali")
+
+	UI.Section(TernakPage, "KANDANG BABI  |  Palung + Gosok + Klaim")
+	AnimalUI("babi", "Auto Babi (Isi Palung)", "AutoBabiActive")
+	AnimalUI("babi", "Gosok Induk", "AutoGosokBabiActive")
+	AnimalUI("babi", "Klaim Babi Ngepet", "AutoKlaimNgepetActive")
+	A.babi.st = UI.Status(TernakPage, 4)
+	A.babi.st.Set(1, "Status: Siap (OFF)")
+	A.babi.st.Set(2, "Kandang: Memindai...")
+	A.babi.st.Set(3, "Hasil Babi: 0 Kali")
+	A.babi.st.Set(4, "Klaim Ngepet: 0 Ekor")
+
+	UI.Section(TernakPage, "PAKAN BABI (tap untuk pilih)")
+	local pakanList = UI.List(TernakPage, 140)
+
+	local function Say(jenis, text)
+		local a = A[jenis]
+		if a and a.st then a.st.Set(1, text) end
+	end
+
+	-- barang & tool
+	local function FindToolBy(pred)
+		local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+		for _, holder in ipairs({LocalPlayer.Character, bp}) do
+			if holder then
+				for _, t in ipairs(holder:GetChildren()) do
+					if t:IsA("Tool") and pred(t) then return t end
+				end
+			end
+		end
+		return nil
+	end
+	local function FindItem(id)
+		return FindToolBy(function(t) return t:GetAttribute("ItemId") == id and not t:GetAttribute("IsSeed") end)
+	end
+	local function StockOf(id)
+		local t = FindItem(id)
+		if not t then return 0 end
+		return tonumber(t.Name:match("[xX](%d+)%s*$")) or 1
+	end
+	local function EquipItem(tool)
+		local _, hum = H.Live()
+		if not hum or not tool or not tool.Parent then return false end
+		if tool.Parent == LocalPlayer.Character then return true end
+		hum:UnequipTools()
+		task.wait(0.1)
+		hum:EquipTool(tool)
+		task.wait(0.35)
+		return tool.Parent == LocalPlayer.Character
+	end
+	local function PromptPos(p)
+		local par = p.Parent
+		if not par then return nil end
+		if par:IsA("Attachment") then return par.WorldPosition end
+		if par:IsA("BasePart") then return par.Position end
+		if par:IsA("Model") then return par:GetPivot().Position end
+		local bp = par:FindFirstChildWhichIsA("BasePart", true)
+		return bp and bp.Position or nil
+	end
+	local function ReadFraction(p) -- "3/10" dari label di dekat prompt
+		local par = p.Parent
+		local lbl = par and par:FindFirstChild("TextLabel", true)
+		if lbl and lbl:IsA("TextLabel") then
+			local a, b = lbl.Text:match("(%d+)%s*/%s*(%d+)")
+			if a and b then return tonumber(a), tonumber(b) end
+		end
+		return nil, nil
+	end
+	local function ObjectCount(p)
+		return tonumber(p.ObjectText:match("[xX](%d+)%)"))
+	end
+	local function PalungCap(p)
+		local lv = 1
+		local m = p:FindFirstAncestorWhichIsA("Model")
+		while m and m.Parent ~= workspace do m = m.Parent end
+		local info = m and m:FindFirstChild("Info")
+		local line = info and info:FindFirstChild("Baris1", true)
+		if line and line:IsA("TextLabel") then lv = tonumber(line.Text:match("Lv%s*(%d+)")) or 1 end
+		if BabiC and type(BabiC.KapasitasPalung) == "function" then
+			local ok, cap = pcall(BabiC.KapasitasPalung, lv)
+			if ok and tonumber(cap) then return tonumber(cap) end
+		end
+		return PALUNG_CAP
+	end
+
+	-- pesan server tentang babi (sabar / penuh / pakan lain)
+	local lastMsg, lastMsgT = nil, 0
+	for _, d in ipairs(RS:GetDescendants()) do
+		if d:IsA("RemoteEvent") then
+			pcall(function()
+				H.Conn(d.OnClientEvent:Connect(function(p)
+					if not H.Run() then return end
+					if type(p) == "table" and p.kind == "babi" and type(p.text) == "string" then
+						lastMsg, lastMsgT = p.text:lower(), tick()
+					end
+				end))
+			end)
+		end
+	end
+
+	local function BabiModel(inst)
+		local x = inst
+		while x and x ~= workspace do
+			if x.Name:find("^Babi_") then return x end
+			x = x.Parent
+		end
+		return nil
+	end
+	local function BabiRawatan(p)
+		if not p:FindFirstAncestor("modelbabi") then return nil end
+		local m = BabiModel(p)
+		local oh = m and m:FindFirstChild("OH_Babi", true)
+		if not oh then return nil end
+		local sl = oh:FindFirstChild("StatusLabel", true)
+		local nl = oh:FindFirstChild("NamaLabel", true)
+		if not (sl and sl:IsA("TextLabel")) then return nil end
+		local pct = tonumber(sl.Text:match("[Rr]awatan%s*(%d+)%s*%%"))
+		if not pct then return nil end
+		return pct, (nl and nl:IsA("TextLabel") and nl.Text ~= "" and nl.Text) or "Babi Ngepet"
+	end
+
+	-- tampilan stok pakan babi
+	local PAKAN_OPTS = {
+		{key = "auto", short = "AUTO (TERBAIK)"}, {key = "SateKepiting", short = "KEPITING"},
+		{key = "TumisKamboja", short = "KAMBOJA"}, {key = "PisangRajaRebus", short = "PISANG"},
+		{key = "SateGagak", short = "GAGAK"}, {key = "JamurRebus", short = "JAMUR"},
+	}
+	local stock = {}
+	local lastSig = ""
+	local function RefreshPakan(force)
+		local sig = tostring(getgenv().BabiPakanPilihan)
+		for _, o in ipairs(PAKAN_OPTS) do
+			if o.key ~= "auto" then
+				stock[o.key] = StockOf(o.key)
+				sig = sig .. o.key .. stock[o.key] .. ";"
+			end
+		end
+		if sig == lastSig and not force then return end
+		lastSig = sig
+		pakanList.Clear()
+		for _, o in ipairs(PAKAN_OPTS) do
+			local label = o.short
+			local empty = false
+			if o.key ~= "auto" then
+				local n = stock[o.key] or 0
+				label = label .. "   " .. (n > 0 and ("x" .. n) or "habis")
+				empty = n <= 0
+			end
+			local sel = (getgenv().BabiPakanPilihan or "auto") == o.key
+			pakanList.Add(label, sel, function()
+				if o.key ~= "auto" and (stock[o.key] or 0) <= 0 then
+					Say("babi", "Pakan " .. o.short .. " tidak tersedia di tas")
+					return
+				end
+				getgenv().BabiPakanPilihan = o.key
+				Say("babi", "Pakan dipilih: " .. o.short)
+				RefreshPakan(true)
+			end, false, 24, empty)
+		end
+		pakanList.Done()
+	end
+	RefreshPakan(true)
+	task.spawn(function()
+		while H.Run() do
+			task.wait(2)
+			pcall(RefreshPakan, false)
+		end
+	end)
+
+	local function PickItem(e)
+		if e.role == "gosok" then
+			local t = FindToolBy(function(x)
+				local n = x.Name:lower()
+				return n:find("pengosok") ~= nil or n:find("penggosok") ~= nil
+			end)
+			return t, "Pengosok"
+		end
+		if e.role == "pakan" then
+			if e.jenis == "ayam" then return FindItem(FEED_AYAM), FEED_AYAM end
+			if e.jenis == "sapi" then return FindItem(FEED_SAPI), FEED_SAPI end
+			local pick = getgenv().BabiPakanPilihan or "auto"
+			if pick ~= "auto" then
+				local nm = pick
+				for _, p in ipairs(PAKAN) do
+					if p.itemId == pick then nm = p.nama or pick end
+				end
+				return FindItem(pick), nm
+			end
+			local want = e.palungNama and e.palungNama:lower()
+			if want then
+				for _, p in ipairs(PAKAN) do
+					if (p.nama or ""):lower() == want then
+						local t = FindItem(p.itemId)
+						if t then return t, p.nama end
+					end
+				end
+			end
+			for _, p in ipairs(PAKAN) do
+				local t = FindItem(p.itemId)
+				if t then return t, p.nama end
+			end
+			return nil, "pakan babi"
+		end
+		return nil, nil
+	end
+
+	local function Kandangs(j)
+		local out = {}
+		local uid = tostring(LocalPlayer.UserId)
+		local plot = H.Plot()
+		local nm = KAND[j]
+		for _, c in ipairs(workspace:GetChildren()) do
+			if c.Name:find(nm) and (c.Name:find(uid) or (plot and c.Parent == plot)) then table.insert(out, c) end
+		end
+		if plot then
+			for _, c in ipairs(plot:GetChildren()) do
+				if c.Name:find(nm) and not table.find(out, c) then table.insert(out, c) end
+			end
+		end
+		return out
+	end
+
+	local function Collect(jenis, flagParam)
+		local out = {}
+		local ks = Kandangs(jenis)
+		A[jenis].st.Set(2, (#ks > 0) and ("Kandang terdeteksi: " .. #ks .. " bangunan") or "Kandang belum ditemukan di plot")
+		for _, k in ipairs(ks) do
+			for _, p in ipairs(k:GetDescendants()) do
+				if p:IsA("ProximityPrompt") and p.Enabled and (not cool[p] or tick() > cool[p]) then
+					local action, obj, nm = p.ActionText:lower(), p.ObjectText:lower(), p.Name:lower()
+					local role, flag, palungNama, babiNama, persen
+					if jenis == "babi" then
+						if action:find("bawa") then
+							if getgenv().AutoKlaimNgepetActive then
+								local pct, name = BabiRawatan(p)
+								if pct and pct >= MIN_RAWATAN then
+									role, flag = "klaim", "AutoKlaimNgepetActive"
+									babiNama, persen = name, pct
+								end
+							end
+						else
+							local isTake = obj:find("bandar") or action:find("ambil")
+							if not isTake then
+								if action:find("gosok") or action:find("cuci") then
+									if getgenv().AutoGosokBabiActive and p:FindFirstAncestor("modelinduk") then
+										role, flag = "gosok", "AutoGosokBabiActive"
+									end
+								elseif obj:find("palung") or obj:find("tempat makan") or action:find("palung") or action:find("tuang") then
+									if getgenv().AutoBabiActive then
+										role, flag = "pakan", "AutoBabiActive"
+										palungNama = p.ObjectText:match("%((.-)%s*[xX]%d+%)")
+										local cur = ObjectCount(p)
+										if cur and cur >= PalungCap(p) then
+											cool[p] = tick() + 15
+											role = nil
+										end
+									end
+								end
+							end
+						end
+					else
+						local isTake = action:find("ambil ayam") or action:find("ambil sapi")
+						if not isTake then
+							if nm == "pakanprompt" or action:find("beri makan") then
+								role = "pakan"
+								local cur, cap = ReadFraction(p)
+								if cur and cap and cur >= cap then
+									cool[p] = tick() + 10
+									role = nil
+								end
+							elseif nm == "ambilprompt" or action:find("ambil semua") then
+								role = "panen"
+							end
+						end
+						flag = flagParam
+					end
+					if role then
+						local pos = PromptPos(p)
+						if pos then
+							table.insert(out, {
+								prompt = p, pos = pos, role = role, jenis = jenis, flag = flag, palungNama = palungNama,
+								babiNama = babiNama, persen = persen, text = p.ActionText .. " " .. p.ObjectText,
+								hold = p.HoldDuration or 0.4,
+							})
+						end
+					end
+				end
+			end
+		end
+		local order = {panen = 1, pakan = 2, klaim = 3, gosok = 4}
+		table.sort(out, function(a, b)
+			if a.role ~= b.role then return order[a.role] < order[b.role] end
+			return a.text < b.text
+		end)
+		return out
+	end
+
+	local function Process(e)
+		local ui = A[e.jenis]
+		local flagName = e.flag
+		local function stop() return not H.Run() or not getgenv()[flagName] or not H.Live() end
+		if stop() then return false end
+		local p = e.prompt
+		if not p.Parent or not p.Enabled then return true end
+		local item, itemName
+		if e.role == "pakan" or e.role == "gosok" then
+			item, itemName = PickItem(e)
+			if not item then
+				Say(e.jenis, "Tidak ada " .. tostring(itemName) .. " di tas")
+				cool[p] = tick() + 20
+				return true
+			end
+		end
+		local pos = PromptPos(p) or e.pos
+		local hrp = H.Live()
+		local far = (not hrp) or (hrp.Position - pos).Magnitude > 8
+		Say(e.jenis, "Menuju " .. e.text .. "...")
+		H.FlyFloat(true)
+		H.TeleportTo(pos + Vector3.new(0, 3, 0), stop)
+		if stop() then return false end
+		if far then task.wait(0.5) end
+		if item then
+			Say(e.jenis, "Pegang " .. tostring(itemName) .. "...")
+			if not EquipItem(item) then
+				cool[p] = tick() + 10
+				return true
+			end
+			task.wait(0.2)
+			if not p.Parent or not p.Enabled then return true end
+		end
+		local label = LBL[e.jenis]
+		local function addCount(n)
+			Q[label] += n
+			ui.st.Set(3, "Hasil " .. label .. ": " .. Q[label] .. " Kali")
+		end
+
+		if e.role == "pakan" then
+			local fails, fills, full = 0, 0, false
+			local function stack()
+				return (item and item.Parent) and (tonumber(item.Name:match("[xX](%d+)%s*$")) or 1) or 0
+			end
+			if e.jenis == "babi" then
+				local cap = PalungCap(p)
+				local sabar, otherFeed = 0, false
+				for _ = 1, cap + 8 do
+					if stop() then return false end
+					if not p.Parent or not p.Enabled then break end
+					local cur = ObjectCount(p) or 0
+					if cur >= cap then full = true break end
+					if not item or not item.Parent then
+						item, itemName = PickItem(e)
+						if not item then
+							Say(e.jenis, "Pakan " .. tostring(itemName) .. " habis")
+							break
+						end
+					end
+					if not EquipItem(item) then break end
+					Say(e.jenis, "Mengisi palung " .. tostring(itemName) .. " (" .. cur .. "/" .. cap .. ")")
+					local before = stack()
+					local t0 = tick()
+					H.Fire(p, e.hold)
+					local advanced, msg = false, nil
+					while tick() - t0 < 2.0 do
+						task.wait(0.15)
+						local now = ObjectCount(p) or 0
+						if now > cur or stack() < before then advanced = true break end
+						if lastMsgT >= t0 then msg = lastMsg break end
+					end
+					if advanced then
+						fills += 1
+						fails, sabar = 0, 0
+						task.wait(1.0)
+					elseif msg and msg:find("sabar") then
+						sabar += 1
+						if sabar >= 5 then break end
+						task.wait(1.3)
+					elseif msg and msg:find("penuh") then
+						full = true
+						break
+					elseif msg and (msg:find("pakan lain") or msg:find("beda")) then
+						otherFeed = true
+						break
+					else
+						fails += 1
+						if fails >= 3 then break end
+						task.wait(0.8)
+					end
+				end
+				if otherFeed then
+					Say(e.jenis, "Palung berisi pakan lain - tunggu habis / samakan pakan")
+					cool[p] = tick() + 30
+					if fills > 0 then addCount(fills) end
+					task.wait(0.2)
+					return true
+				end
+			else
+				for _ = 1, 5 do
+					if stop() then return false end
+					if not p.Parent or not p.Enabled then break end
+					local cur, cap = ReadFraction(p)
+					if cur and cap and cur >= cap then full = true break end
+					if not item or not item.Parent then
+						item, itemName = PickItem(e)
+						if not item then
+							Say(e.jenis, "Pakan " .. tostring(itemName) .. " habis")
+							break
+						end
+					end
+					if not EquipItem(item) then break end
+					Say(e.jenis, "Mengisi pakan " .. tostring(itemName) .. " (" .. tostring(cur or "?") .. "/" .. tostring(cap or "?") .. ")")
+					H.Fire(p, e.hold)
+					task.wait(0.6)
+					fills += 1
+					local after = (ReadFraction(p))
+					if cur and after and after <= cur then
+						fails += 1
+						if fails >= 2 then break end
+					else
+						fails = 0
+					end
+				end
+			end
+			if fills > 0 then addCount(fills) end
+			if full then
+				Say(e.jenis, "Pakan penuh")
+				cool[p] = tick() + 20
+			elseif fails >= 2 or fills == 0 then
+				cool[p] = tick() + 15
+			else
+				cool[p] = nil
+			end
+		elseif e.role == "klaim" then
+			local nm = e.babiNama or "Babi Ngepet"
+			local _, hum = H.Live()
+			if hum then hum:UnequipTools() end
+			task.wait(far and 1.0 or 0.3)
+			local claimed = false
+			for i = 1, 3 do
+				if stop() then return false end
+				if not p:IsDescendantOf(workspace) then claimed = true break end
+				Say(e.jenis, string.format("Klaim %s (Rawatan %d%%) - percobaan %d...", nm, e.persen or MIN_RAWATAN, i))
+				H.Fire(p, e.hold)
+				local t0 = tick()
+				while tick() - t0 < 1.5 do
+					task.wait(0.1)
+					if not p:IsDescendantOf(workspace) or not p.Enabled then claimed = true break end
+				end
+				if claimed then break end
+				task.wait(0.4)
+			end
+			if claimed then
+				Q.Ngepet += 1
+				A.babi.st.Set(4, "Klaim Ngepet: " .. Q.Ngepet .. " Ekor")
+				Say(e.jenis, "Berhasil klaim " .. nm .. " (masuk tas)")
+				cool[p] = tick() + 3
+			else
+				Say(e.jenis, "Gagal klaim " .. nm .. " (coba lagi nanti)")
+				cool[p] = tick() + 20
+			end
+		elseif e.role == "panen" then
+			local before = (ReadFraction(p))
+			local ok = false
+			for n = 1, 3 do
+				if stop() then return false end
+				Say(e.jenis, "Ambil " .. p.ObjectText .. " (percobaan " .. n .. ")...")
+				H.Fire(p, e.hold)
+				local t0 = tick()
+				while tick() - t0 < 0.8 do
+					task.wait(0.1)
+					local now = (ReadFraction(p))
+					if not p.Enabled or (before and now and now < before) then ok = true break end
+				end
+				if ok then break end
+				task.wait(0.3)
+			end
+			if ok then
+				Say(e.jenis, "Berhasil ambil " .. p.ObjectText)
+				addCount(1)
+			end
+			cool[p] = tick() + (ok and 3 or 8)
+		else
+			Say(e.jenis, "Interaksi: " .. p.ActionText .. " " .. p.ObjectText .. "...")
+			H.Fire(p, e.hold)
+			if e.role == "gosok" then task.wait(GOSOK_TIME + 0.2) end
+			task.wait(e.role == "gosok" and 0.2 or 0.05)
+			addCount(1)
+			cool[p] = tick() + 6
+		end
+		task.wait(e.role == "panen" and 0.05 or 0.2)
+		return true
+	end
+
+	task.spawn(function()
+		while H.Run() do
+			task.wait(0.4)
+			local act = {
+				ayam = getgenv().AutoAyamActive, sapi = getgenv().AutoSapiActive,
+				babi = getgenv().AutoBabiActive or getgenv().AutoGosokBabiActive or getgenv().AutoKlaimNgepetActive,
+			}
+			if not (act.ayam or act.sapi or act.babi) then
+				task.wait(0.5)
+				continue
+			end
+			if not H.Live() then continue end
+			local queue = {}
+			local flagFor = {ayam = "AutoAyamActive", sapi = "AutoSapiActive", babi = nil}
+			for _, j in ipairs({"ayam", "sapi", "babi"}) do
+				if act[j] then
+					local list = Collect(j, flagFor[j])
+					if #list == 0 then
+						if j == "babi" and not getgenv().AutoBabiActive and not getgenv().AutoGosokBabiActive then
+							Say(j, "Menunggu Babi Ngepet Rawatan " .. MIN_RAWATAN .. "%...")
+						else
+							Say(j, "Menunggu: pakan penuh / belum ada hasil...")
+						end
+					end
+					for _, e in ipairs(list) do table.insert(queue, e) end
+				end
+			end
+			if #queue == 0 then
+				task.wait(1.0)
+				continue
+			end
+			for _, e in ipairs(queue) do
+				if not H.Run() or not H.Live() then break end
+				if not getgenv()[e.flag] then continue end
+				if not Process(e) then break end
+			end
+			local _, hm = H.Live()
+			if hm then hm:UnequipTools() end
+			H.FlyFloat(false)
+			task.wait(0.3)
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- TAB LAPAK
+------------------------------------------------------------------
+do
+	local RS = H.RS
+	local GC = H.GC
+	getgenv().LapakPilihSiang = getgenv().LapakPilihSiang or {}
+	getgenv().LapakPilihMalam = getgenv().LapakPilihMalam or {}
+
+	-- resume setelah pindah server
+	local stateFile = "UbeyPH_State_" .. tostring(LocalPlayer.UserId) .. ".json"
+	local resumeState = nil
+	if getgenv().UbeyPHResume then
+		getgenv().UbeyPHResume = nil
+		resumeState = getgenv().UbeyPHSavedState
+		if not resumeState and isfile and readfile then
+			pcall(function()
+				if isfile(stateFile) then resumeState = HttpService:JSONDecode(readfile(stateFile)) end
+			end)
+		end
+	end
+	if resumeState then
+		if type(resumeState.siang) == "table" and #resumeState.siang > 0 then getgenv().LapakPilihSiang = resumeState.siang end
+		if type(resumeState.malam) == "table" and #resumeState.malam > 0 then getgenv().LapakPilihMalam = resumeState.malam end
+		print("[Pasar Hutan] Resume setelah ganti server. Lapak:", resumeState.lapak and true or false)
+	end
+	H.ResumeLapak = (resumeState and resumeState.lapak) and true or false
+
+	local pilih = {Siang = getgenv().LapakPilihSiang, Malam = getgenv().LapakPilihMalam}
+	local viewPhase = (workspace:GetAttribute("Phase") == "Malam" or Lighting:GetAttribute("Phase") == "Malam") and "Malam" or "Siang"
+	local names = {}
+	local sold, income = 0, 0
+	local capRak, capNampan = 15, 23
+
+	-- fase mana saja yang cocok untuk tiap item (berdasarkan hantu di GameConfig)
+	local phaseCache, siangOnly = {}, nil
+	local function ComputeSiangOnly()
+		local G = (GC and GC.Ghost) or {}
+		local favMalam = {}
+		for _, t in pairs(G.Types or {}) do
+			if (t.fase or "malam") == "malam" and t.favorite then favMalam[t.favorite] = true end
+		end
+		for _, v in ipairs(G.DuaFase or {}) do favMalam[v] = true end
+		local out = {}
+		for _, t in pairs(G.Types or {}) do
+			if t.fase == "siang" and type(t.only) == "table" then
+				for _, it in ipairs(t.only) do
+					if not favMalam[it] then out[it] = true end
+				end
+			end
+		end
+		return out
+	end
+	local function PhaseInfo(id)
+		if phaseCache[id] then return phaseCache[id] end
+		siangOnly = siangOnly or ComputeSiangOnly()
+		local s, m = false, false
+		for _, t in pairs(((GC and GC.Ghost) or {}).Types or {}) do
+			local fase = t.fase or "malam"
+			local ok
+			if type(t.only) == "table" and #t.only > 0 then
+				ok = table.find(t.only, id) ~= nil
+			elseif fase == "malam" then
+				ok = (not siangOnly[id]) or (type(t.boleh) == "table" and table.find(t.boleh, id) ~= nil)
+			else
+				ok = true
+			end
+			if ok then
+				if fase == "siang" then s = true else m = true end
+			end
+		end
+		phaseCache[id] = {Siang = s, Malam = m}
+		return phaseCache[id]
+	end
+	local function Cocok(id, phase)
+		if not (GC and GC.Ghost) then return true end
+		local ok, res = pcall(function() return PhaseInfo(id)[phase] == true end)
+		return (ok and res) or false
+	end
+	local function NamaItem(id) return names[id] or H.Clean(id) end
+	local function BisaDitaruh(id)
+		local items = GC and GC.Items
+		if not items then return true end
+		local it = items[id]
+		return it ~= nil and it.jual == true
+	end
+	local function Jenis(id)
+		local items = GC and GC.Items
+		local it = items and items[id]
+		return it and it.jenis or "rak"
+	end
+
+	local function ScanInventory()
+		local inv = {}
+		local items = (GC and GC.Items) or {}
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if t:IsA("Tool") then
+					local clean = H.Clean(t.Name)
+					local id = t:GetAttribute("ItemId") or t:GetAttribute("Id") or t:GetAttribute("Item") or clean
+					local lower = clean:lower()
+					local special = t:GetAttribute("IsSeed") or t:GetAttribute("PlantType") or t:GetAttribute("AlatTambang")
+						or lower:find("bibit") or lower:find("kapak") or lower:find("beliung") or lower:find("penyiram")
+						or lower:find("payung") or lower:find("cangkul") or lower:find("pengosok") or lower:find("lantern") or lower:find("gerobak")
+					if not special then
+						local cfg = items[id] or items[clean]
+						if cfg and cfg.jual == true then
+							local key = (items[id] and id) or (items[clean] and clean) or id
+							local cnt = tonumber(t:GetAttribute("Count")) or tonumber(t.Name:match("[xX]%s*(%d+)"))
+								or tonumber(t.Name:match("%((%d+)%)")) or 1
+							local harga = (cfg and cfg.harga) or t:GetAttribute("Harga") or 10
+							inv[key] = inv[key] or {id = key, count = 0, harga = harga}
+							inv[key].count += cnt
+							names[key] = (cfg and cfg.display) or clean
+						end
+					end
+				end
+			end
+		end
+		scan(LocalPlayer:FindFirstChildOfClass("Backpack"))
+		scan(LocalPlayer.Character)
+		return inv
+	end
+
+	local function Toggle(phase, id)
+		local list = pilih[phase]
+		local idx = table.find(list, id)
+		if idx then table.remove(list, idx) else table.insert(list, id) end
+	end
+
+	local function Rows(phase)
+		local sel = pilih[phase] or {}
+		local inv = ScanInventory()
+		local items = (GC and GC.Items) or {}
+		local rows, inSel = {}, {}
+		for i = #sel, 1, -1 do
+			if not BisaDitaruh(sel[i]) then table.remove(sel, i) end
+		end
+		for idx, id in ipairs(sel) do
+			inSel[id] = true
+			local cfg = items[id]
+			table.insert(rows, {
+				id = id, sel = idx, count = inv[id] and inv[id].count or 0,
+				harga = (cfg and cfg.harga) or (inv[id] and inv[id].harga) or 0,
+			})
+		end
+		local rest = {}
+		for id, e in pairs(inv) do
+			if not inSel[id] and Cocok(id, phase) then table.insert(rest, e) end
+		end
+		table.sort(rest, function(a, b)
+			local ca = Cocok(a.id, phase) and 1 or 0
+			local cb = Cocok(b.id, phase) and 1 or 0
+			if ca ~= cb then return ca > cb end
+			if a.harga ~= b.harga then return (a.harga or 0) > (b.harga or 0) end
+			return a.id < b.id
+		end)
+		for _, e in ipairs(rest) do table.insert(rows, {id = e.id, sel = nil, count = e.count, harga = e.harga}) end
+		return rows
+	end
+
+	-- UI
+	UI.Section(LapakPage, "AUTO KELOLA LAPAK / KIOS")
+	local st
+	FlagToggle(LapakPage, "Auto Kelola Lapak", "Isi & rotasi etalase kios otomatis.", "AutoKelolaLapakActive", function(v)
+		if st then st.Set(1, v and "Status: Memulai kelola lapak..." or "Status: Berhenti") end
+	end)
+	st = UI.Status(LapakPage, 3)
+	st.Set(1, "Status: Siap (OFF)")
+	st.Set(2, "Etalase: 0/12 Slot | Terjual: 0 Barang")
+	st.Set(3, "Pendapatan Sesi: 0 Koin")
+
+	UI.Section(LapakPage, "ITEM AUTO RESTOK")
+	local refreshSeg = UI.Segment(LapakPage, "Fase", {{key = "Siang", text = "SIANG"}, {key = "Malam", text = "MALAM"}},
+		function() return viewPhase end, function(k)
+			viewPhase = k
+			H.RefreshLapak()
+		end)
+	local info = UI.Status(LapakPage, 1)
+	local list = UI.List(LapakPage, 160)
+
+	local function RefreshList()
+		list.Clear()
+		local rows = Rows(viewPhase)
+		info.Set(1, string.format("%s: %d item dipilih | nomor = urutan restok", viewPhase:upper(), #(pilih[viewPhase] or {})))
+		if #rows == 0 then info.Set(1, "Tidak ada item jual di tas untuk fase " .. viewPhase:lower()) end
+		for _, r in ipairs(rows) do
+			local sel = r.sel ~= nil
+			local text = string.format("%s%s (%s)  x%d  |  %d koin", sel and ("[" .. r.sel .. "] ") or "", NamaItem(r.id), tostring(Jenis(r.id) or "?"), r.count, r.harga)
+			list.Add(text, sel, function()
+				Toggle(viewPhase, r.id)
+				RefreshList()
+			end, false, 24, (r.count <= 0 and not sel))
+		end
+		list.Done()
+	end
+	H.RefreshLapak = RefreshList
+
+	UI.Buttons(LapakPage, {
+		{text = "PILIH SEMUA", color = C.good, cb = function()
+			for _, r in ipairs(Rows(viewPhase)) do
+				if not r.sel and r.count > 0 then table.insert(pilih[viewPhase], r.id) end
+			end
+			RefreshList()
+		end},
+		{text = "KOSONGKAN", color = Color3.fromRGB(180, 50, 50), cb = function()
+			table.clear(pilih[viewPhase])
+			RefreshList()
+		end},
+		{text = "REFRESH", color = C.off, cb = function() RefreshList() end},
+	})
+	RefreshList()
+
+	-- ganti fase otomatis mengikuti waktu game
+	task.spawn(function()
+		local lastP = workspace:GetAttribute("Phase")
+		while H.Run() do
+			task.wait(2.5)
+			local p = workspace:GetAttribute("Phase") or Lighting:GetAttribute("Phase")
+			if p and p ~= lastP then
+				lastP = p
+				if p == "Siang" or p == "Malam" then
+					viewPhase = p
+					refreshSeg()
+				end
+			end
+			if Main.Visible and LapakPage.Visible then RefreshList() end
+		end
+	end)
+
+	-- income dari event penjualan
+	if H.R.SaleFx then
+		H.Conn(H.R.SaleFx.OnClientEvent:Connect(function(d)
+			if not H.Run() or type(d) ~= "table" then return end
+			sold += 1
+			income += tonumber(d.coin) or 0
+			st.Set(3, string.format("Pendapatan Sesi: %d Koin", income))
+		end))
+	end
+
+	-- kapasitas rak / nampan dari server
+	task.spawn(function()
+		while H.Run() do
+			if H.R.Rak then
+				pcall(function()
+					local r = H.R.Rak:InvokeServer("info")
+					if type(r) == "table" and r.ok then
+						if tonumber(r.capRak) then capRak = tonumber(r.capRak) end
+						if tonumber(r.capNampan) then capNampan = tonumber(r.capNampan) end
+					end
+				end)
+			end
+			task.wait(60)
+		end
+	end)
+
+	-- kios milik pemain
+	local kiosCache = nil
+	local function FindKios()
+		if kiosCache and kiosCache.Parent then return kiosCache end
+		local uid = LocalPlayer.UserId
+		local uids = tostring(uid)
+		local fname = (GC and GC.Plot and GC.Plot.KiosFolderName) or "KiosAktif"
+		local folder = workspace:FindFirstChild(fname)
+		if folder then
+			local m = folder:FindFirstChild("Kios_" .. LocalPlayer.Name)
+			if m then kiosCache = m return m end
+			for _, c in ipairs(folder:GetChildren()) do
+				if c:IsA("Model") and (c:GetAttribute("OwnerUserId") == uid or c:GetAttribute("Owner") == uid or c.Name:find(uids)) then
+					kiosCache = c
+					return c
+				end
+			end
+		end
+		local plot = H.Plot()
+		if plot then
+			for _, d in ipairs(plot:GetDescendants()) do
+				if d:IsA("Model") and (d:GetAttribute("OwnerUserId") == uid or d.Name:find("Kios") or d.Name:find("Lapak")) then
+					kiosCache = d
+					return d
+				end
+			end
+		end
+		for _, fn in ipairs({"Lapak", "Kios", "KiosAktif", "LapakPemain"}) do
+			local f = workspace:FindFirstChild(fn)
+			if f then
+				for _, c in ipairs(f:GetChildren()) do
+					if c:IsA("Model") and (c:GetAttribute("OwnerUserId") == uid or c.Name:find(uids) or c.Name:find(LocalPlayer.Name)) then
+						kiosCache = c
+						return c
+					end
+				end
+			end
+		end
+		return nil
+	end
+	local function Slots(kios)
+		local out = {}
+		if not kios then return out end
+		for _, d in ipairs(kios:GetDescendants()) do
+			if d:IsA("Attachment") and d.Name:match("^slot%d+$") then table.insert(out, d) end
+		end
+		table.sort(out, function(a, b) return (tonumber(a.Name:match("%d+$")) or 0) < (tonumber(b.Name:match("%d+$")) or 0) end)
+		return out
+	end
+	local function CallRak(...)
+		local rem = H.R.Rak
+		if not rem then return false, nil end
+		local args = {...}
+		local ok, res = pcall(function()
+			if rem:IsA("RemoteFunction") then return rem:InvokeServer(unpack(args)) end
+			rem:FireServer(unpack(args))
+			return true
+		end)
+		if getgenv().LapakDebug then print("[Lapak Debug]", tostring(args[1]), tostring(args[2]), tostring(args[3]), ok, tostring(res)) end
+		return ok, res
+	end
+
+	local lastPhase = nil
+	local function Tick()
+		if not getgenv().AutoKelolaLapakActive then return end
+		if not H.Live() then st.Set(1, "Menunggu karakter respawn...") return end
+		if not H.R.Rak or not H.R.Rak.Parent then
+			pcall(H.LoadRemotes)
+			if not H.R.Rak then
+				st.Set(1, "Mencari Remote Rak Kios...")
+				task.wait(1.5)
+				return
+			end
+		end
+		local kios = FindKios()
+		if not kios then st.Set(1, "Mencari Kios di Plot...") task.wait(2) return end
+		local slots = Slots(kios)
+		if #slots == 0 then st.Set(1, "Mencari slot etalase kios...") task.wait(2) return end
+		local phase = (workspace:GetAttribute("Phase") == "Malam" or Lighting:GetAttribute("Phase") == "Malam") and "Malam" or "Siang"
+		local inv = ScanInventory()
+		local order = {}
+		for _, id in ipairs(pilih[phase] or {}) do
+			if inv[id] and inv[id].count > 0 then table.insert(order, id) end
+		end
+		if #order == 0 then
+			local other = (phase == "Malam") and "Siang" or "Malam"
+			for _, id in ipairs(pilih[other] or {}) do
+				if inv[id] and inv[id].count > 0 then table.insert(order, id) end
+			end
+		end
+		if #order == 0 and #(pilih.Siang or {}) == 0 and #(pilih.Malam or {}) == 0 then
+			local all = {}
+			for _, e in pairs(inv) do
+				if e.count > 0 then table.insert(all, e) end
+			end
+			table.sort(all, function(a, b)
+				local ca = Cocok(a.id, phase) and 1 or 0
+				local cb = Cocok(b.id, phase) and 1 or 0
+				if ca ~= cb then return ca > cb end
+				return (a.harga or 0) > (b.harga or 0)
+			end)
+			for _, e in ipairs(all) do table.insert(order, e.id) end
+		end
+		local inOrder = {}
+		for _, id in ipairs(order) do inOrder[id] = true end
+		local phaseChanged = (lastPhase ~= nil and lastPhase ~= phase)
+		if phaseChanged then
+			st.Set(1, string.format("Waktu berganti ke %s! Mengambil sisa barang lama...", phase))
+			lastPhase = phase
+		elseif not lastPhase then
+			lastPhase = phase
+		end
+
+		local filled = 0
+		local emptySlots, refill = {}, {}
+		for _, slot in ipairs(slots) do
+			if not H.Run() or not getgenv().AutoKelolaLapakActive then break end
+			local item = slot:GetAttribute("Item")
+			local stok = 0
+			if item and slot:FindFirstChild("Stok") then
+				local iv = slot.Stok:FindFirstChild(item)
+				if iv and iv:IsA("IntValue") then stok = iv.Value end
+			end
+			local pull = false
+			if getgenv().AutoTarikSisaFase and item and stok > 0 then
+				if phaseChanged then
+					if (not inOrder[item]) or (not Cocok(item, phase)) then pull = true end
+				else
+					if (not Cocok(item, phase)) and #order > 0 and (not inOrder[item]) then pull = true end
+				end
+			end
+			if pull then
+				st.Set(1, string.format("Tarik sisa %s dari %s (%s)...", NamaItem(item), slot.Name, phase))
+				CallRak("ambil", slot.Name)
+				task.wait(0.4)
+				table.insert(emptySlots, slot)
+			elseif item and stok > 0 then
+				filled += 1
+				local cfg = GC and GC.Items and GC.Items[item]
+				local cap = (cfg and cfg.jenis == "rak") and capRak or capNampan
+				if stok < cap and inv[item] and inv[item].count > 0 then
+					table.insert(refill, {slot = slot, item = item, stok = stok, cap = cap})
+				end
+			else
+				table.insert(emptySlots, slot)
+			end
+		end
+		if phaseChanged then inv = ScanInventory() end
+
+		for _, r in ipairs(refill) do
+			if not H.Run() or not getgenv().AutoKelolaLapakActive then break end
+			st.Set(1, string.format("Isi %s (%d/%d)...", NamaItem(r.item), r.stok, r.cap))
+			local ok, res = CallRak("isi", r.slot.Name)
+			if ok and type(res) == "table" and res.ok then
+				local n = res.n or 1
+				if inv[r.item] then inv[r.item].count = math.max(0, inv[r.item].count - n) end
+			end
+			task.wait(0.4)
+		end
+
+		if #order > 0 and #emptySlots > 0 then
+			local rr = 1
+			for _, slot in ipairs(emptySlots) do
+				if not H.Run() or not getgenv().AutoKelolaLapakActive then break end
+				local pickId = nil
+				for _ = 1, #order do
+					local id = order[rr]
+					rr = (rr % #order) + 1
+					if inv[id] and inv[id].count > 0 then pickId = id break end
+				end
+				if not pickId then break end
+				st.Set(1, string.format("Taruh %s di %s...", NamaItem(pickId), slot.Name))
+				local ok, res = CallRak("taruh", slot.Name, pickId)
+				if ok and type(res) == "table" and res.ok then
+					local n = res.n or 1
+					inv[pickId].count = math.max(0, inv[pickId].count - n)
+					filled += 1
+				end
+				task.wait(0.45)
+			end
+		end
+
+		if #order == 0 and #emptySlots > 0 then
+			st.Set(1, "Tidak ada barang di tas untuk restok")
+		else
+			st.Set(1, string.format("Memantau etalase (%d/%d Slot Terisi)", filled, #slots))
+		end
+		st.Set(2, string.format("Etalase: %d/%d Slot | Terjual: %d Barang", filled, #slots, sold))
+	end
+
+	task.spawn(function()
+		while H.Run() and not (game:IsLoaded() and H.Live() and LocalPlayer:FindFirstChildOfClass("Backpack")) do task.wait(0.5) end
+		if resumeState then task.wait(3) end
+		while H.Run() do
+			task.wait(3)
+			if getgenv().AutoKelolaLapakActive then
+				local ok, err = pcall(Tick)
+				if not ok then
+					warn("[Pasar Hutan] Error loop lapak (lanjut otomatis):", err)
+					st.Set(1, "Error, mencoba lagi...")
+				end
+			end
+		end
+	end)
+
+	-- simpan state + pasang auto-reload saat pindah server
+	local lastJson, queued = "", false
+	local function SaveState()
+		local s = {lapak = getgenv().AutoKelolaLapakActive and true or false, siang = table.clone(pilih.Siang), malam = table.clone(pilih.Malam)}
+		getgenv().UbeyPHSavedState = s
+		local ok, js = pcall(function() return HttpService:JSONEncode(s) end)
+		if ok and js ~= lastJson then
+			lastJson = js
+			if writefile then pcall(writefile, stateFile, js) end
+		end
+	end
+	local function QueueReload()
+		if queued then return end
+		local q = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+		if not q then
+			warn("[Pasar Hutan] Executor tidak mendukung queue_on_teleport - skrip tidak bisa auto-reload.")
+			return
+		end
+		local loader = getgenv().UbeyHubLoader
+		if not loader then
+			warn("[Pasar Hutan] getgenv().UbeyHubLoader belum diset - Auto Lapak tidak lanjut otomatis setelah pindah server.")
+			return
+		end
+		SaveState()
+		queued = true
+		pcall(q, "getgenv().UbeyPHResume = true\n" .. loader)
+	end
+	H.Conn(LocalPlayer.OnTeleport:Connect(function(s)
+		if not H.Run() then return end
+		if s == Enum.TeleportState.Started or s == Enum.TeleportState.InProgress then QueueReload() end
+	end))
+	task.spawn(function()
+		while H.Run() do
+			SaveState()
+			task.wait(3)
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- TAB MASAK (kompor, meja potong, pemangang)
+------------------------------------------------------------------
+local PG = {minKg = 30, bad = {}, porsi = 0}
+do
+	local RS = H.RS
+	local NAMES = {
+		DagingGagak = "Daging Gagak", JamurKuburan = "Jamur Kuburan", Kamboja = "Kamboja", KepitingSungai = "Kepiting Sungai",
+		Dupa = "Dupa", Pisang = "Pisang", BubukKopi = "Bubuk Kopi", Kemenyan = "Kemenyan", Telur = "Telur", Cabai = "Cabai",
+		Susu = "Susu", Kubis = "Kubis", Apel = "Apel", Jeruk = "Jeruk", AyamPotong = "Ayam Potong",
+	}
+	local MENUS = {
+		{key = "SateKepiting", label = "Sate Kepiting", method = "Membakar", time = 90, ing = {{"KepitingSungai", 3}, {"Dupa", 1}}},
+		{key = "KopiKemenyan", label = "Kopi Kemenyan", method = "Menyeduh", time = 90, ing = {{"BubukKopi", 1}, {"Kemenyan", 1}}},
+		{key = "TumisKamboja", label = "Tumis Kamboja", method = "Menumis", time = 90, ing = {{"Kamboja", 1}}},
+		{key = "PisangRebus", label = "Pisang Raja Rebus", method = "Merebus", time = 90, ing = {{"Pisang", 1}}},
+		{key = "Rebus", label = "Jamur Rebus Kuburan", method = "Merebus", time = 60, ing = {{"JamurKuburan", 1}}},
+		{key = "Bakar", label = "Sate Gagak", method = "Membakar", time = 60, ing = {{"DagingGagak", 1}}},
+		{key = "MartabakGagak", label = "Martabak Telur Gagak", method = "Menggoreng", time = 90, ing = {{"Telur", 2}, {"DagingGagak", 1}, {"Cabai", 2}}},
+		{key = "SotoKuburan", label = "Soto Jamur Kuburan", method = "Merebus", time = 120, ing = {{"Susu", 2}, {"JamurKuburan", 2}, {"Kubis", 1}}},
+		{key = "EsTelerArwah", label = "Es Teler Arwah", method = "Meracik", time = 150, ing = {{"Apel", 1}, {"Jeruk", 2}, {"Susu", 1}}},
+		{key = "IngkungSesajen", label = "Ingkung Ayam Sesajen", method = "Mengungkep", time = 180, ing = {{"AyamPotong", 1}, {"Susu", 1}, {"Pisang", 2}}},
+	}
+	local menuSel = "SateKepiting"
+	local olahSel = "PotongGagak"
+
+	local function CountItem(id)
+		local n = 0
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if t:IsA("Tool") and t:GetAttribute("ItemId") == id then n += tonumber(t:GetAttribute("Count")) or 1 end
+			end
+		end
+		scan(LocalPlayer:FindFirstChildOfClass("Backpack"))
+		scan(LocalPlayer.Character)
+		return n
+	end
+
+	-- UI masak
+	UI.Section(MasakPage, "AUTO MASAK (KOMPOR)")
+	local cookSt
+	FlagToggle(MasakPage, "Auto Masak", "Berdiri dekat kompor dulu, server menolak jika terlalu jauh.", "AutoMasakActive", function(v)
+		cookSt.Set(1, v and "Status: Menuju kompor..." or "Status: Berhenti")
+	end)
+	cookSt = UI.Status(MasakPage, 3)
+	cookSt.Set(1, "Status: Siap (OFF)")
+	cookSt.Set(2, "Makanan Dimasak: 0 Porsi")
+	cookSt.Set(3, "Menu dipilih: -")
+	local menuList = UI.List(MasakPage, 230)
+	local menuSig = ""
+	local function RefreshMenus(force)
+		local rows, sig = {}, menuSel
+		for _, m in ipairs(MENUS) do
+			local can = math.huge
+			local parts = {}
+			for _, ing in ipairs(m.ing) do
+				local have = CountItem(ing[1])
+				can = math.min(can, math.floor(have / ing[2]))
+				local col = (have >= ing[2]) and C.good or C.bad
+				table.insert(parts, string.format("<font color=\"#%s\">%dx %s (%d)</font>", col:ToHex(), ing[2], NAMES[ing[1]] or ing[1], have))
+			end
+			if can == math.huge then can = 0 end
+			local txt = string.format("<b>%s</b>\n%s | %d detik | %s\n%s", m.label, m.method, m.time,
+				can > 0 and ("Bisa masak: " .. can .. " porsi") or "Bahan belum cukup", table.concat(parts, "  "))
+			table.insert(rows, {m = m, txt = txt})
+			sig = sig .. txt
+		end
+		if sig == menuSig and not force then return end
+		menuSig = sig
+		menuList.Clear()
+		for _, r in ipairs(rows) do
+			local sel = (menuSel == r.m.key)
+			if sel then cookSt.Set(3, "Menu dipilih: " .. r.m.label) end
+			menuList.Add(r.txt, sel, function()
+				menuSel = r.m.key
+				RefreshMenus(true)
+			end, true, 62)
+		end
+		menuList.Done()
+	end
+	RefreshMenus(true)
+	H.RefreshMasak = RefreshMenus
+
+	UI.Section(MasakPage, "AUTO OLAH (MEJA POTONG)")
+	local olahSt
+	FlagToggle(MasakPage, "Auto Olah", "Olah bahan mentah di meja potong.", "AutoOlahActive", function(v)
+		olahSt.Set(1, v and "Status: Mengolah bahan..." or "Status: Berhenti")
+	end)
+	olahSt = UI.Status(MasakPage, 2)
+	olahSt.Set(1, "Status: Siap (OFF)")
+	olahSt.Set(2, "Bahan Diolah: 0 Kali")
+	UI.Segment(MasakPage, "Bahan Olah", {
+		{key = "PotongGagak", text = "GAGAK"}, {key = "PotongAyamKampung", text = "AYAM"}, {key = "GilingKopi", text = "KOPI"},
+	}, function() return olahSel end, function(k) olahSel = k end)
+
+	-- UI panggang
+	UI.Section(MasakPage, "AUTO PANGGANG BABI (PEMANGANG)")
+	local pgSt
+	FlagToggle(MasakPage, "Auto Panggang", "Hanya babi dewasa & tidak terkunci. Berdiri dekat pemangang.", "AutoPanggangActive", function(v)
+		if v then PG.bad = {} end
+		pgSt.Set(1, v and "Status: Menuju pemangang..." or "Status: Berhenti")
+	end)
+	pgSt = UI.Status(MasakPage, 3)
+	pgSt.Set(1, "Status: Siap (OFF)")
+	pgSt.Set(2, "Dipanggang: 0 Babi | 0 Porsi")
+	pgSt.Set(3, "Babi dipilih: AUTO")
+	local pgList = UI.List(MasakPage, 120)
+
+	pcall(function()
+		local c = require(RS:WaitForChild("GameConfig", 5)).Panggang
+		if c and tonumber(c.BeratMin) then PG.minKg = tonumber(c.BeratMin) end
+	end)
+	local function IsBabi(t)
+		return t:IsA("Tool") and t:GetAttribute("babiBerat") ~= nil
+			and (t:GetAttribute("LokSumber") == "Babi Ngepet" or string.find(t.Name, "Babi Ngepet", 1, true) ~= nil)
+	end
+	local function ScanBabi()
+		local out = {}
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if IsBabi(t) then
+					out[#out + 1] = {tool = t, kg = tonumber(t:GetAttribute("babiBerat")) or 0, locked = t:GetAttribute("babiKunci") == true, id = t:GetAttribute("idBabi") or t.Name}
+				end
+			end
+		end
+		scan(LocalPlayer:FindFirstChildOfClass("Backpack"))
+		scan(LocalPlayer.Character)
+		table.sort(out, function(a, b) return a.kg < b.kg end)
+		return out
+	end
+	local function Usable(b)
+		local until_ = PG.bad[b.id]
+		if until_ and tick() < until_ then return false end
+		return b.kg >= PG.minKg and not b.locked
+	end
+	local function PickBabi()
+		local want = getgenv().PanggangBabiKg
+		local all = ScanBabi()
+		for _, b in ipairs(all) do
+			if Usable(b) and (want == "auto" or b.kg == want) then return b, all end
+		end
+		return nil, all
+	end
+	local pgSig = ""
+	local function RefreshPg(force)
+		local all = ScanBabi()
+		local want = getgenv().PanggangBabiKg
+		local groups, order = {}, {}
+		for _, b in ipairs(all) do
+			local k = b.kg .. (b.locked and "L" or "")
+			if not groups[k] then
+				groups[k] = {kg = b.kg, locked = b.locked, n = 0}
+				order[#order + 1] = k
+			end
+			groups[k].n += 1
+		end
+		local sig = tostring(want) .. "|"
+		for _, k in ipairs(order) do sig = sig .. k .. "x" .. groups[k].n .. "," end
+		if sig ~= pgSig or force then
+			pgSig = sig
+			pgList.Clear()
+			pgList.Add("AUTO (dewasa terringan)", want == "auto", function()
+				getgenv().PanggangBabiKg = "auto"
+				RefreshPg(true)
+			end, false, 24)
+			for _, k in ipairs(order) do
+				local g = groups[k]
+				local txt = g.kg .. " kg" .. (g.n > 1 and (" x" .. g.n) or "") .. (g.locked and " (kunci)" or "")
+				local bad = g.locked or g.kg < PG.minKg
+				pgList.Add(txt, want == g.kg and not g.locked, function()
+					if g.locked then pgSt.Set(1, "Babi " .. g.kg .. " kg terkunci, buka kunci di tas dulu") return end
+					if g.kg < PG.minKg then pgSt.Set(1, "Babi " .. g.kg .. " kg belum dewasa (min " .. PG.minKg .. " kg)") return end
+					getgenv().PanggangBabiKg = g.kg
+					RefreshPg(true)
+				end, false, 24, bad)
+			end
+			pgList.Done()
+		end
+		if want == "auto" then
+			pgSt.Set(3, "Babi dipilih: AUTO (dewasa terringan, min " .. PG.minKg .. " kg)")
+		else
+			local n = 0
+			for _, b in ipairs(all) do
+				if b.kg == want and Usable(b) then n += 1 end
+			end
+			pgSt.Set(3, string.format("Babi dipilih: %d kg (%s)", want, n > 0 and ("di tas: " .. n .. " ekor") or "tidak ada di tas"))
+		end
+	end
+	RefreshPg(true)
+	H.RefreshPg = RefreshPg
+
+	-- cari kompor
+	local STOVE_RANGE = 15
+	local stoveObj, stoveT = nil, 0
+	local function StoveWord(s, strict)
+		s = string.lower(tostring(s or ""))
+		if s == "" then return false end
+		local words = strict and {"kompor", "stove", "masak", "cook"} or {"kompor", "stove", "pcook", "pmasak"}
+		for _, w in ipairs(words) do
+			if string.find(s, w, 1, true) then return true end
+		end
+		return false
+	end
+	local function PosOf(o)
+		if not o then return nil end
+		if o:IsA("Attachment") then return o.WorldPosition end
+		if o:IsA("BasePart") then return o.Position end
+		if o:IsA("Model") then return o:GetPivot().Position end
+		local bp = o:FindFirstChildWhichIsA("BasePart", true)
+		return bp and bp.Position or nil
+	end
+	local function FindKiosModel()
+		local folder = workspace:FindFirstChild("KiosAktif")
+		if not folder then return nil end
+		local k = folder:FindFirstChild("Kios_" .. LocalPlayer.Name)
+		if not k then
+			for _, c in ipairs(folder:GetChildren()) do
+				if c:GetAttribute("OwnerUserId") == LocalPlayer.UserId then k = c break end
+			end
+		end
+		return k
+	end
+	local function ScanStove()
+		local hrp = H.Live()
+		local me = hrp and hrp.Position
+		local ch = LocalPlayer.Character
+		local best, bestD
+		local function consider(o)
+			if not o or (ch and o:IsDescendantOf(ch)) then return end
+			local p = PosOf(o)
+			if not p then return end
+			local d = me and (me - p).Magnitude or 0
+			if not bestD or d < bestD then best, bestD = o, d end
+		end
+		local function scanIn(root)
+			for _, d in ipairs(root:GetDescendants()) do
+				if d:IsA("ProximityPrompt") then
+					if StoveWord(d.ObjectText, true) or StoveWord(d.ActionText, true) then consider(d.Parent) end
+				elseif d:IsA("Attachment") or d:IsA("BasePart") or d:IsA("Model") then
+					if StoveWord(d.Name) then consider(d) end
+				end
+			end
+		end
+		local k = FindKiosModel()
+		if k then
+			scanIn(k)
+			if best then return best end
+		end
+		scanIn(workspace)
+		return best
+	end
+	local function StovePos()
+		if stoveObj and stoveObj.Parent then
+			local p = PosOf(stoveObj)
+			if p then return p end
+		end
+		stoveObj = nil
+		if tick() - stoveT < 10 then return nil end
+		stoveT = tick()
+		stoveObj = ScanStove()
+		return PosOf(stoveObj)
+	end
+	local function GoStove()
+		if getgenv().PH_Repairing then return false end
+		local hrp = H.Live()
+		if not hrp then return false end
+		local p = StovePos()
+		if not p then
+			cookSt.Set(1, "Kompor tidak ditemukan, dekati kompor manual")
+			return false
+		end
+		if (hrp.Position - p).Magnitude <= STOVE_RANGE then return true end
+		cookSt.Set(1, "Menuju kompor...")
+		local ok = H.TeleportTo(p + Vector3.new(0, 3, 0), function()
+			return not H.Run() or not getgenv().AutoMasakActive or not H.Live()
+		end)
+		task.wait(0.5)
+		return ok
+	end
+
+	task.spawn(function()
+		while H.Run() do
+			task.wait(2.0)
+			local R = H.R
+			if getgenv().AutoMasakActive and R.Stove and R.StovePoll then
+				GoStove()
+				local ok, res = pcall(function() return R.StovePoll:InvokeServer() end)
+				if ok and type(res) == "table" and res.ok then
+					local slots = res.slots or {}
+					local maxQ = res.maxQueue or 3
+					local free = maxQ - #slots
+					if free > 0 then
+						local made, err = 0, nil
+						for _ = 1, free do
+							cookSt.Set(1, "Memasak " .. menuSel .. " di Kompor...")
+							local ok2, r2 = pcall(function() return R.Stove:InvokeServer(menuSel) end)
+							if ok2 and type(r2) == "table" and r2.ok then
+								made += 1
+								Q.Dapur += 1
+								cookSt.Set(2, "Makanan Dimasak: " .. Q.Dapur .. " Porsi")
+								task.wait(0.3)
+							else
+								if ok2 and type(r2) == "table" then err = r2.err or r2.error or r2.msg or r2.reason end
+								break
+							end
+						end
+						if made > 0 then
+							cookSt.Set(1, "Sukses memasak " .. menuSel .. " x" .. made .. "!")
+						elseif err and string.find(string.lower(tostring(err)), "dekati", 1, true) then
+							cookSt.Set(1, "Dekati kompor dulu")
+							stoveObj, stoveT = nil, 0
+						else
+							cookSt.Set(1, "Bahan " .. menuSel .. " belum cukup di tas" .. (err and (" (" .. tostring(err) .. ")") or ""))
+						end
+					else
+						cookSt.Set(1, "Antrian kompor penuh (" .. #slots .. "/" .. maxQ .. ")")
+					end
+				end
+			end
+			if getgenv().AutoOlahActive and R.OlahStart and R.OlahPoll then
+				local ok, res = pcall(function() return R.OlahPoll:InvokeServer() end)
+				if ok and type(res) == "table" and res.ok then
+					olahSt.Set(1, "Mengolah " .. olahSel .. "...")
+					local ok2, r2 = pcall(function() return R.OlahStart:InvokeServer(olahSel, 1) end)
+					if ok2 and type(r2) == "table" and r2.ok then
+						Q.Olah += 1
+						olahSt.Set(2, "Bahan Diolah: " .. Q.Olah .. " Kali")
+						olahSt.Set(1, "Berhasil mengolah " .. olahSel .. "!")
+					else
+						olahSt.Set(1, "Bahan olahan belum tersedia di tas")
+					end
+				end
+			end
+			task.wait(3.0)
+		end
+	end)
+
+	-- panggang babi
+	do
+		local RANGE = 8
+		local pkios, ppos, pprompt, pmem
+		local notifs = {}
+		local fails = 0
+		local wasBusy = false
+		local function Say(t) pgSt.Set(1, t) end
+
+		local function FindPemangang()
+			if pkios and pkios.Parent and ppos and ppos.Parent and pprompt and pprompt.Parent then return true end
+			pkios, ppos, pprompt, pmem = nil, nil, nil, nil
+			local k = FindKiosModel()
+			if not k then return false end
+			local at = k:FindFirstChild("pPangang", true)
+			local pr = at and at:FindFirstChildWhichIsA("ProximityPrompt")
+			if not pr then
+				for _, d in ipairs(k:GetDescendants()) do
+					if d:IsA("ProximityPrompt") and (d.Name == "PanggangPrompt" or d.ActionText == "Panggang Babi") then
+						pr, at = d, d.Parent
+						break
+					end
+				end
+			end
+			if not (at and pr) then return false end
+			pkios, ppos, pprompt = k, at, pr
+			pmem = k:FindFirstChild("Pemangang", true)
+			return true
+		end
+		local function Busy()
+			return pmem ~= nil and pmem.Parent ~= nil and pmem:GetAttribute("Memanggang") == true
+		end
+		local function LabelText(name)
+			if not ppos then return nil end
+			for _, d in ipairs(ppos:GetDescendants()) do
+				if d:IsA("TextLabel") and d.Name == name and d.Text ~= "" then return d.Text end
+			end
+			return nil
+		end
+
+		-- tangkap notifikasi game (balasan server)
+		task.spawn(function()
+			local pg = LocalPlayer:WaitForChild("PlayerGui", 10)
+			local ng = pg and pg:WaitForChild("NotifGui", 10)
+			if not ng then return end
+			local function push(t)
+				if not t or t == "" or t == "Notification Message" then return end
+				local last = notifs[#notifs]
+				if last and last.text == t and tick() - last.t < 0.6 then return end
+				notifs[#notifs + 1] = {t = tick(), text = t}
+				if #notifs > 30 then table.remove(notifs, 1) end
+			end
+			local function hook(l)
+				H.Conn(l:GetPropertyChangedSignal("Text"):Connect(function() push(l.Text) end))
+			end
+			for _, d in ipairs(ng:GetDescendants()) do
+				if d:IsA("TextLabel") then hook(d) end
+			end
+			H.Conn(ng.DescendantAdded:Connect(function(d)
+				if d:IsA("TextLabel") then
+					hook(d)
+					task.delay(0.1, function() push(d.Text) end)
+				end
+			end))
+		end)
+		local function NotifSince(t0)
+			local found
+			for _, n in ipairs(notifs) do
+				if n.t >= t0 then
+					local l = string.lower(n.text)
+					if string.find(l, "anggang", 1, true) or string.find(l, "dewasa", 1, true) or string.find(l, "dekat", 1, true)
+						or string.find(l, "jauh", 1, true) or string.find(l, "babi", 1, true) then
+						found = n.text
+					end
+				end
+			end
+			return found
+		end
+		local function GoPemangang()
+			local hrp = H.Live()
+			if not hrp then return false end
+			local p = ppos.WorldPosition
+			if (hrp.Position - p).Magnitude <= RANGE then return true end
+			Say("Menuju pemangang...")
+			local ok = H.TeleportTo(p + Vector3.new(0, 3, 4), function()
+				return not H.Run() or not getgenv().AutoPanggangActive or not H.Live()
+			end)
+			task.wait(0.5)
+			return ok
+		end
+		local function EquipBabi(b)
+			local _, hum = H.Live()
+			if not hum then return false end
+			local t = b.tool
+			if not t or not t.Parent then return false end
+			if t.Parent == LocalPlayer.Character then return true end
+			pcall(function() hum:EquipTool(t) end)
+			for _ = 1, 15 do
+				if t.Parent == LocalPlayer.Character then return true end
+				task.wait(0.1)
+			end
+			return false
+		end
+		local function Grill(b)
+			local t0 = tick()
+			if not EquipBabi(b) then return false, "Gagal memegang babi " .. b.kg .. " kg" end
+			task.wait(0.3)
+			pcall(function() pprompt:InputHoldBegin() end)
+			task.wait((pprompt.HoldDuration or 0.6) + 0.15)
+			pcall(function() pprompt:InputHoldEnd() end)
+			for _ = 1, 20 do
+				task.wait(0.2)
+				if Busy() then return true, NotifSince(t0) end
+			end
+			return false, NotifSince(t0)
+		end
+
+		local function Step()
+			if getgenv().PH_Repairing then return end
+			if not FindPemangang() then Say("Pemangang tidak ditemukan (butuh Market Lv 6)") return end
+			if Busy() then
+				wasBusy = true
+				Say("Memanggang... " .. (LabelText("Sisa") or "") .. " | Antre: " .. (LabelText("Antre") or "?"))
+				return
+			end
+			if wasBusy then
+				wasBusy = false
+				Say("Panggangan selesai, lanjut babi berikutnya...")
+			end
+			local b = PickBabi()
+			if not b then
+				local w = getgenv().PanggangBabiKg
+				Say(w == "auto" and ("Menunggu babi dewasa (min " .. PG.minKg .. " kg) di tas") or ("Babi " .. tostring(w) .. " kg habis / tidak ada di tas"))
+				return
+			end
+			if not GoPemangang() then return end
+			Say("Memanggang babi " .. b.kg .. " kg...")
+			local ok, msg = Grill(b)
+			if ok then
+				fails = 0
+				Q.Panggang += 1
+				local por = tonumber(string.match(tostring(msg or ""), "(%d+)%s*[Pp]orsi")) or 0
+				PG.porsi += por
+				pgSt.Set(2, "Dipanggang: " .. Q.Panggang .. " Babi | " .. PG.porsi .. " Porsi")
+				Say(msg and ("Berhasil: " .. msg) or ("Berhasil memanggang babi " .. b.kg .. " kg"))
+				return
+			end
+			local low = string.lower(tostring(msg or ""))
+			if string.find(low, "dewasa", 1, true) then
+				PG.bad[b.id] = tick() + 120
+				Say("Ditolak: " .. tostring(msg))
+			elseif string.find(low, "dekat", 1, true) or string.find(low, "jauh", 1, true) then
+				pkios, ppos, pprompt, pmem = nil, nil, nil, nil
+				Say("Dekati pemangang dulu")
+			else
+				fails += 1
+				Say("Gagal memanggang: " .. tostring(msg or "tidak ada balasan") .. " (" .. fails .. "/4)")
+				if fails >= 4 then
+					PG.bad[b.id] = tick() + 120
+					fails = 0
+				end
+			end
+		end
+		task.spawn(function()
+			while H.Run() do
+				task.wait(1.5)
+				if getgenv().AutoPanggangActive then
+					local ok, err = pcall(Step)
+					if not ok then
+						warn("[Pasar Hutan] Auto Panggang error:", err)
+						Say("Error: " .. tostring(err))
+						task.wait(3)
+					end
+				end
+			end
+		end)
+	end
+
+	task.spawn(function()
+		while H.Run() do
+			task.wait(1.5)
+			if Main.Visible and MasakPage.Visible then
+				pcall(RefreshMenus, false)
+				pcall(RefreshPg, false)
+			end
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- TAB TUYUL & PET
+------------------------------------------------------------------
+do
+	UI.Section(TuyulPage, "AUTO SUAP TUYUL LIAR")
+	local tSt
+	FlagToggle(TuyulPage, "Auto Suap Tuyul Liar", "Dekati Tuyul Liar & beri Sate Kepiting.", "AutoTuyulLiarActive", function(v)
+		tSt.Set(1, v and "Status: Menunggu Tuyul Liar muncul..." or "Status: Berhenti")
+	end, true)
+	tSt = UI.Status(TuyulPage, 2)
+	tSt.Set(1, "Status: Siap (OFF)")
+	tSt.Set(2, "Suap Berhasil: 0 Kali")
+
+	UI.Section(TuyulPage, "SISTEM PET TUYUL")
+	local pSt = UI.Status(TuyulPage, 2)
+	pSt.Set(1, "Status Pet: Memeriksa...")
+	pSt.Set(2, "Auto Latih melatih pet tiap 240 detik untuk EXP.")
+	UI.Button(TuyulPage, "Panggil Pet", "Panggil pet tuyul ke sisimu.", "PANGGIL", function()
+		if H.R.Pet then
+			H.R.Pet:FireServer("panggil")
+			pSt.Set(1, "Perintah: Memanggil pet tuyul...")
+			task.delay(2, function() if H.Run() then pSt.Set(1, "Pet Tuyul: Siap") end end)
+		end
+	end, C.accent)
+	FlagToggle(TuyulPage, "Auto Latih", "Latih pet otomatis tiap 240 detik.", "AutoLatihPetActive", function(v)
+		if v and H.R.Pet then H.R.Pet:FireServer("latih") end
+	end)
+	UI.Button(TuyulPage, "Jaga Ternak", "Tugaskan pet menjaga peternakan.", "JAGA", function()
+		if H.R.Pet then
+			H.R.Pet:FireServer("ternak")
+			pSt.Set(1, "Pet Tuyul ditugaskan: Jaga Peternakan!")
+		end
+	end, C.good)
+
+	task.spawn(function()
+		local lastTrain = 0
+		while H.Run() do
+			task.wait(1.0)
+			if getgenv().AutoLatihPetActive and H.R.Pet then
+				if (tick() - lastTrain) > 240 then
+					pcall(function() H.R.Pet:FireServer("latih") end)
+					lastTrain = tick()
+					pSt.Set(1, "Pet Tuyul dilatih (EXP bertambah)!")
+				end
+			end
+			if getgenv().AutoTuyulLiarActive then
+				local model = workspace:FindFirstChild("TuyulLiar")
+				if model and model:IsA("Model") then
+					local prm = model:FindFirstChildWhichIsA("ProximityPrompt", true)
+					local hrp = H.Live()
+					if prm and prm.Enabled and hrp then
+						tSt.Set(1, "Tuyul Liar Terdeteksi! Mendekat...")
+						local pos = model:GetPivot().Position + Vector3.new(0, 1.5, 0)
+						local sate = H.FindTool("SateKepiting") or H.FindTool("Sate Kepiting")
+						if sate and LocalPlayer.Character then
+							local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+							if hum and sate.Parent ~= LocalPlayer.Character then
+								hum:EquipTool(sate)
+								task.wait(0.2)
+							end
+						end
+						H.FlyFloat(true)
+						H.TeleportTo(pos, function() return not H.Run() or not getgenv().AutoTuyulLiarActive or not H.Live() end)
+						tSt.Set(1, "Memberi Sate Kepiting ke Tuyul Liar...")
+						H.Fire(prm, 0.35)
+						task.wait(0.3)
+						Q.Tuyul += 1
+						tSt.Set(2, "Suap Berhasil: " .. Q.Tuyul .. " Kali")
+						task.wait(1.5)
+					end
+				else
+					tSt.Set(1, "Menunggu Tuyul Liar muncul di map...")
+				end
+			end
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- AUTO PERBAIKI ALAT (di tab Auto Farm)
+------------------------------------------------------------------
+do
+	local RS = H.RS
+	local DUR_MIN = 100
+	local cool = {}
+	UI.Section(FarmPage, "AUTO PERBAIKI KAPAK & BELIUNG (Dur < 100)")
+	local rSt
+	FlagToggle(FarmPage, "Auto Perbaiki", "Jalan otomatis saat farm kayu/batu.", "AutoRepairActive", function(v)
+		rSt.Set(1, v and "Status: Aktif (jalan saat farm kayu/batu)" or "Status: Berhenti")
+	end)
+	rSt = UI.Status(FarmPage, 2)
+	rSt.Set(1, "Status: Siap (OFF)")
+	rSt.Set(2, "Diperbaiki: 0 kali")
+	local count = 0
+
+	local function CraftPos()
+		local folder = workspace:FindFirstChild("KiosAktif")
+		if not folder then return nil end
+		local k = folder:FindFirstChild("Kios_" .. LocalPlayer.Name)
+		if not k then
+			for _, c in ipairs(folder:GetChildren()) do
+				if c:GetAttribute("OwnerUserId") == LocalPlayer.UserId then k = c break end
+			end
+		end
+		local p = k and k:FindFirstChild("pCraft", true)
+		if p and p:IsA("Attachment") then return p.WorldPosition end
+		if p and p:IsA("BasePart") then return p.Position end
+		return nil
+	end
+	local function NeedRepair()
+		local out, now = {}, tick()
+		local function scan(c)
+			if not c then return end
+			for _, t in ipairs(c:GetChildren()) do
+				if t:IsA("Tool") and t:GetAttribute("AlatTambang") then
+					local d, m = t:GetAttribute("Dur"), t:GetAttribute("DurMaks")
+					if type(d) == "number" and type(m) == "number" and d < DUR_MIN and d < m and (not cool[t] or now > cool[t]) then
+						table.insert(out, t)
+					end
+				end
+			end
+		end
+		scan(LocalPlayer:FindFirstChildOfClass("Backpack"))
+		scan(LocalPlayer.Character)
+		return out
+	end
+	local function AlatKey(t)
+		local id = t:GetAttribute("AlatId")
+		if id and tostring(id) ~= "" then return tostring(id) end
+		return "toko:" .. tostring(t:GetAttribute("ToolName") or t.Name)
+	end
+
+	task.spawn(function()
+		while H.Run() do
+			task.wait(2)
+			if not getgenv().AutoRepairActive then continue end
+			if not (getgenv().PohonFarmActive or getgenv().BatuFarmActive) then
+				rSt.Set(1, "Status: Siaga (jalan saat farm kayu/batu)")
+				continue
+			end
+			local list = NeedRepair()
+			if #list == 0 then
+				rSt.Set(1, "Status: Alat aman (Dur >= " .. DUR_MIN .. ")")
+				continue
+			end
+			local craft = CraftPos()
+			local remote = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("TempaAksi") or H.R.Tempa
+			if not remote then
+				pcall(H.LoadRemotes)
+				remote = H.R.Tempa
+			end
+			if not craft or not remote then
+				rSt.Set(1, not craft and "Meja Tempa kios tidak ditemukan" or "Remote TempaAksi tidak ditemukan")
+				task.wait(5)
+				continue
+			end
+			local hrp = H.Live()
+			if not hrp then continue end
+			local saved = hrp.Position
+			local floatOn = hrp:FindFirstChild("FlyFloat") ~= nil
+			getgenv().PH_Repairing = true
+			local ok, err = pcall(function()
+				task.wait(1.0)
+				rSt.Set(1, "Menuju Meja Tempa...")
+				local _, hum = H.Live()
+				if hum then hum:UnequipTools() end
+				H.FlyFloat(true)
+				H.TeleportTo(craft + Vector3.new(0, 3, 0), function() return not H.Run() or not H.Live() end)
+				task.wait(0.6)
+				for _, tool in ipairs(list) do
+					if not H.Run() then break end
+					local nm = tostring(tool:GetAttribute("NamaTampil") or tool.Name)
+					local dur = tonumber(tool:GetAttribute("Dur")) or 0
+					local key = AlatKey(tool)
+					rSt.Set(1, "Memperbaiki " .. nm .. " (" .. math.floor(dur) .. ")...")
+					local s, res = pcall(function() return remote:InvokeServer({aksi = "perbaiki", kunci = key, darurat = false}) end)
+					local good = s and type(res) == "table" and res.ok
+					if not good and dur <= 0 then
+						s, res = pcall(function() return remote:InvokeServer({aksi = "perbaiki", kunci = key, darurat = true}) end)
+						good = s and type(res) == "table" and res.ok
+					end
+					if good then
+						count += 1
+						rSt.Set(2, "Diperbaiki: " .. count .. " kali")
+						rSt.Set(1, "Berhasil memperbaiki " .. nm)
+					else
+						cool[tool] = tick() + 60
+						local why = (s and type(res) == "table" and res.reason) or "gagal"
+						rSt.Set(1, "Gagal " .. nm .. ": " .. tostring(why))
+					end
+					task.wait(0.5)
+				end
+				rSt.Set(1, "Kembali ke lokasi farm...")
+				H.TeleportTo(saved, function() return not H.Run() or not H.Live() end)
+				H.FlyFloat(floatOn)
+			end)
+			getgenv().PH_Repairing = false
+			if not ok then
+				warn("[Pasar Hutan] Auto Perbaiki error:", err)
+				rSt.Set(1, "Error perbaikan, coba lagi...")
+				task.wait(3)
+			end
+		end
+	end)
+end
+
+------------------------------------------------------------------
+-- TAB PLAYER (anti AFK, walkspeed, anti petir, teleport)
+------------------------------------------------------------------
+do
+	local RunService = game:GetService("RunService")
+	local RS = H.RS
+
+	UI.Section(PlayerPage, "PLAYER SETTINGS")
+	UI.Input(PlayerPage, "WalkSpeed", "Kecepatan jalan karakter", "", "50", function(t)
+		local num = tonumber(t)
+		if num and IsVerified() then
+			pcall(function()
+				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+				if hum then hum.WalkSpeed = num end
+			end)
+		end
+	end)
+	UI.Toggle(PlayerPage, "Anti-AFK", "Cegah kick karena idle.", true, function(v) getgenv().AntiAFKRunning = v end)
+	LocalPlayer.Idled:Connect(function()
+		if getgenv().AntiAFKRunning then
+			VirtualUser:CaptureController()
+			VirtualUser:ClickButton2(Vector2.new(0, 0))
+		end
+	end)
+
+	-- anti petir
+	UI.Section(PlayerPage, "ANTI PETIR")
+	local pSt
+	FlagToggle(PlayerPage, "Anti Petir", "Saat hujan siang, menjauh otomatis dari titik sambaran. Payung membuat kebal.", "AntiPetirActive", function(v)
+		if not v then pSt.Set(1, "Anti Petir: nonaktif") end
+	end)
+	pSt = UI.Status(PlayerPage, 1)
+	local dodged = 0
+	pSt.Set(1, "Menghindar: 0 kali")
+	local radius = 9
+	pcall(function() radius = require(RS:WaitForChild("SiangConfig", 2)).Hujan.BlastRadius or 9 end)
+	radius += 6
+	local dangers = {}
+	local function HoldingUmbrella()
+		local ch = LocalPlayer.Character
+		local t = ch and ch:FindFirstChildOfClass("Tool")
+		return t ~= nil and t.Name:lower():find("payung") ~= nil
+	end
+	if H.R.Petir then
+		H.Conn(H.R.Petir.OnClientEvent:Connect(function(d)
+			if not H.Run() or not getgenv().AntiPetirActive then return end
+			if type(d) ~= "table" or not d.w or typeof(d.p) ~= "Vector3" then return end
+			table.insert(dangers, {pos = d.p, untilT = tick() + (tonumber(d.t) or 1.35) + 0.5})
+			pSt.Set(1, "Petir terdeteksi! Menghindar...")
+		end))
+	else
+		pSt.Set(1, "Remote Petir tidak aktif / tidak ada")
+	end
+	H.Conn(RunService.Heartbeat:Connect(function()
+		if not H.Run() then return end
+		if #dangers == 0 then H.PetirDanger = false return end
+		if not getgenv().AntiPetirActive then
+			table.clear(dangers)
+			H.PetirDanger = false
+			return
+		end
+		H.PetirDanger = true
+		local hrp = H.Live()
+		if not hrp then return end
+		local now = tick()
+		for i = #dangers, 1, -1 do
+			local d = dangers[i]
+			if now > d.untilT then
+				table.remove(dangers, i)
+			elseif not HoldingUmbrella() then
+				local diff = hrp.Position - d.pos
+				if diff.Magnitude < radius then
+					local flat = Vector3.new(diff.X, 0, diff.Z)
+					local dir = (flat.Magnitude < 0.5) and Vector3.new(1, 0, 0) or flat.Unit
+					hrp.CFrame = CFrame.new(Vector3.new(d.pos.X, hrp.Position.Y, d.pos.Z) + dir * (radius + 2))
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					dodged += 1
+					pSt.Set(1, "Menghindar: " .. dodged .. " kali")
+				end
+			end
+		end
+	end))
+	task.spawn(function()
+		while H.Run() do
+			task.wait(1)
+			if getgenv().AntiPetirActive and workspace:GetAttribute("Cuaca") == "Hujan" and workspace:GetAttribute("Phase") == "Siang" then
+				local ch = LocalPlayer.Character
+				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+				if hum and hum.Health > 0 and not ch:FindFirstChildOfClass("Tool") then
+					local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+					if bp then
+						for _, t in ipairs(bp:GetChildren()) do
+							if t:IsA("Tool") and t.Name:lower():find("payung") then
+								hum:EquipTool(t)
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+	end)
+
+	-- teleport
+	UI.Section(PlayerPage, "TELEPORT")
+	local tpMode = "bertahap"
+	local tpBusy = false
+	local target = nil
+	UI.Segment(PlayerPage, "Mode Teleport", {{key = "bertahap", text = "BERTAHAP"}, {key = "instan", text = "INSTAN"}},
+		function() return tpMode end, function(k) tpMode = k end)
+
+	local function GoTo(pos)
+		local hrp = H.Live()
+		if not hrp then return false end
+		if tpMode == "instan" then
+			hrp.CFrame = CFrame.new(pos)
+		else
+			H.FlyFloat(true)
+			H.TeleportTo(pos)
+			H.FlyFloat(false)
+		end
+		return true
+	end
+
+	UI.Button(PlayerPage, "NPC Pria Misterius", "Pasar Hutan, dekat lampu gantung pasar.", "TELEPORT", function(btn)
+		if tpBusy then return end
+		if not H.Live() then Flash(btn, "Belum siap", false) return end
+		local pos = Vector3.new(1880.5, 114.5, 187.2)
+		local npc = workspace:FindFirstChild("NPC") and workspace.NPC:FindFirstChild("NpcMisterius")
+		if npc and npc:IsA("BasePart") then pos = npc.Position + Vector3.new(0, 2, 0) end
+		tpBusy = true
+		GoTo(pos)
+		tpBusy = false
+		Flash(btn, "Sampai ✓", true)
+	end, C.accent)
+
+	local tpInfo = UI.Status(PlayerPage, 1)
+	tpInfo.Set(1, "Pilih pemain dari daftar di bawah:")
+	local plist = UI.List(PlayerPage, 130)
+	local function RefreshPlayers()
+		plist.Clear()
+		local others = {}
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer then table.insert(others, p) end
+		end
+		table.sort(others, function(a, b) return a.DisplayName:lower() < b.DisplayName:lower() end)
+		if target and not target.Parent then target = nil end
+		if #others == 0 then
+			tpInfo.Set(1, "Tidak ada pemain lain di map")
+			plist.Done()
+			return
+		end
+		tpInfo.Set(1, target and ("Target: " .. target.DisplayName .. " (@" .. target.Name .. ")") or "Pilih pemain dari daftar di bawah:")
+		for _, p in ipairs(others) do
+			plist.Add(p.DisplayName .. " (@" .. p.Name .. ")", p == target, function()
+				target = p
+				RefreshPlayers()
+			end, false, 24)
+		end
+		plist.Done()
+	end
+	RefreshPlayers()
+	H.Conn(Players.PlayerAdded:Connect(function() task.wait(0.5) if H.Run() then RefreshPlayers() end end))
+	H.Conn(Players.PlayerRemoving:Connect(function(p)
+		if target == p then target = nil end
+		task.wait(0.2)
+		if H.Run() then RefreshPlayers() end
+	end))
+
+	UI.Button(PlayerPage, "Teleport ke Pemain", "Pindah ke pemain yang dipilih.", "TELEPORT", function(btn)
+		if tpBusy then return end
+		if not target or not target.Parent then Flash(btn, "Pilih pemain", false) return end
+		local tr = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+		if not tr then Flash(btn, "Tidak ada karakter", false) return end
+		if not H.Live() then Flash(btn, "Belum siap", false) return end
+		tpBusy = true
+		GoTo(tr.Position + Vector3.new(0, 2.5, 0))
+		tpBusy = false
+		Flash(btn, "Sampai ✓", true)
+	end, C.good)
+end
+
+------------------------------------------------------------------
+-- BACKPACK EVENT, OnVerified
+------------------------------------------------------------------
+do
+	local function Wire()
+		local bp = LocalPlayer:FindFirstChildOfClass("Backpack") or LocalPlayer:WaitForChild("Backpack", 10)
+		if not bp then return end
+		local function changed()
+			task.wait(0.2)
+			if not H.Run() then return end
+			if H.RefreshSeeds then pcall(H.RefreshSeeds) end
+			if Main.Visible and LapakPage.Visible and H.RefreshLapak then pcall(H.RefreshLapak) end
+		end
+		H.Conn(bp.ChildAdded:Connect(changed))
+		H.Conn(bp.ChildRemoved:Connect(changed))
+	end
+	Wire()
+	H.Conn(LocalPlayer.CharacterAdded:Connect(function()
+		task.wait(1)
+		if not H.Run() then return end
+		Wire()
+		if H.RefreshSeeds then pcall(H.RefreshSeeds) end
+	end))
+end
+
+OnVerified = function()
+	-- default Pasar Hutan: siram & panen aktif setelah key valid
+	for _, f in ipairs({"AutoSiramActive", "AutoPanenActive"}) do
+		getgenv()[f] = true
+		local s = ToggleSetters[f]
+		if s then pcall(s, true) end
+	end
+	if H.ResumeLapak and not getgenv().AutoKelolaLapakActive then
+		H.ResumeLapak = false
+		getgenv().AutoKelolaLapakActive = true
+		local s = ToggleSetters["AutoKelolaLapakActive"]
+		if s then pcall(s, true) end
+	end
+end
+
+------------------------------------------------------------------
+-- SETTINGS
+------------------------------------------------------------------
+UI.Section(SettingsPage, "SETTINGS & PERFORMANCE")
+
+UI.Button(SettingsPage, "Stop Semua Fitur", "Matikan semua auto farm, kebun, ternak, dll.", "STOP", function(btn)
+	StopAll()
+	Flash(btn, "Dihentikan ✓", true)
+end, Color3.fromRGB(180, 50, 50))
+
+UI.Button(SettingsPage, "Anti-Lag", "Matikan bayangan & partikel untuk naikkan FPS.", "Aktifkan", function(btn)
+	pcall(function()
+		Lighting.GlobalShadows = false
+		Lighting.FogEnd = 999999
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then v.Enabled = false end
+		end
+		btn.Text = "Aktif ✓"
+	end)
+end)
+
+local BlackScreenGui = nil
+local bsToggle
+bsToggle = UI.Toggle(SettingsPage, "Black Screen (Battery Saver)", "Layar hitam hemat baterai. Sentuh layar untuk kembali.", false, function(v)
+	if v then
+		if not BlackScreenGui then
+			BlackScreenGui = New("ScreenGui", {Name = "UbeyBlackScreen", DisplayOrder = 999999, IgnoreGuiInset = true, ResetOnSpawn = false}, GuiParent)
+			local frame = New("Frame", {Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(2, 2, 5)}, BlackScreenGui)
+			Label(frame, "🌙 " .. HUB_TITLE .. " - BATTERY SAVER AKTIF\n(Sentuh layar untuk kembali)", 13, C.accent, Enum.Font.GothamBold,
+				UDim2.new(0, 0, 0.45, 0), UDim2.new(1, 0, 0, 60), Enum.TextXAlignment.Center).TextWrapped = true
+			frame.InputBegan:Connect(function()
+				BlackScreenGui.Enabled = false
+				bsToggle.Set(false)
+			end)
+		else
+			BlackScreenGui.Enabled = true
+		end
+	elseif BlackScreenGui then
+		BlackScreenGui.Enabled = false
+	end
+end)
+
+UI.Section(SettingsPage, "KONFIGURASI", C.warn)
+UI.Button(SettingsPage, "Simpan Konfigurasi", "Simpan semua pengaturan ke file.", "Simpan", function(btn)
+	SaveConfig()
+	Flash(btn, "Tersimpan ✓", true)
+end, C.good)
+
+UI.Button(SettingsPage, "Reset Konfigurasi & Clear Key", "Hapus config dan key tersimpan.", "Reset", function(btn)
+	ResetConfig()
+	KeyBox.Text = ""
+	Flash(btn, "Direset ✓", true)
+	task.wait(0.5)
+	Lock("Key dihapus. Masukkan key lagi.")
+end, Color3.fromRGB(180, 50, 50))
+
+------------------------------------------------------------------
+-- CREDITS
+------------------------------------------------------------------
+UI.Section(CreditsPage, "CREDITS")
+UI.Button(CreditsPage, "Created By UBEY", "Terima kasih sudah memakai " .. HUB_TITLE .. ". Fitur Pasar Hutan by PemudaTampan.", "Discord", function(btn)
+	pcall(function() if setclipboard then setclipboard(DISCORD_LINK) end end)
+	Flash(btn, "Link disalin ✓", true)
+end, Color3.fromRGB(88, 101, 242))
+
+------------------------------------------------------------------
+-- FLOATING LOGO
+------------------------------------------------------------------
+local Float = New("ImageButton", {
+	Size = UDim2.new(0, 60, 0, 60), Position = UDim2.new(0, 20, 0, 120),
+	Image = LOGO_ASSET, BackgroundColor3 = C.bg, AutoButtonColor = false, ZIndex = 50
+}, Gui)
+Round(Float, 30)
+New("UIStroke", {Color = C.accent, Thickness = 2}, Float)
+local floatMoved = MakeDraggable(Float)
+
+Float.MouseButton1Click:Connect(function()
+	if floatMoved() then return end
+	if not IsVerified() then
+		KeyFrame.Visible = not KeyFrame.Visible
+		Main.Visible = false
+	else
+		Main.Visible = not Main.Visible
+		KeyFrame.Visible = false
+	end
+end)
